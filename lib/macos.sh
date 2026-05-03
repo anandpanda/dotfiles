@@ -17,6 +17,7 @@ install_modern_cli_macos() {
     #   - delta is `git-delta` in brew (binary still 'delta')
     #   - tealdeer is `tealdeer` in brew (provides 'tldr' command)
     local pkgs=(
+        # Round 1: modern CLI stack
         bat
         eza
         fd
@@ -27,6 +28,11 @@ install_modern_cli_macos() {
         sd
         tealdeer
         git-delta
+        # Round 2: shell-integration tools
+        fzf
+        zoxide
+        direnv
+        atuin
     )
 
     # One-time brew update so we have the latest formulae
