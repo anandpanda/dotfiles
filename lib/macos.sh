@@ -70,6 +70,24 @@ install_modern_cli_macos() {
         tldr --update 2>/dev/null || true
     fi
 
+    # Round 4: Ghostty terminal emulator (cask)
+    if ! brew list --cask ghostty >/dev/null 2>&1; then
+        if brew install --cask ghostty >/dev/null 2>&1; then
+            log_info "Ghostty installed (cask)"
+        else
+            log_warn "Ghostty install failed (try: brew install --cask ghostty manually)"
+        fi
+    else
+        # Already installed — try upgrading
+        if brew outdated --cask ghostty >/dev/null 2>&1; then
+            brew upgrade --cask ghostty >/dev/null 2>&1 \
+                && log_info "Ghostty upgraded" \
+                || log_warn "Ghostty upgrade failed"
+        else
+            log_skip "Ghostty (cask, already at latest)"
+        fi
+    fi
+
     # Round 3: JetBrainsMono Nerd Font via brew cask
     if ! brew list --cask font-jetbrains-mono-nerd-font >/dev/null 2>&1; then
         if brew install --cask font-jetbrains-mono-nerd-font >/dev/null 2>&1; then
