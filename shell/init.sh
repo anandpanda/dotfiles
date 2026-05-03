@@ -3,6 +3,14 @@
 # Each integration uses `command -v` guards so missing tools degrade silently.
 
 # =============================================================================
+# Timezone — anchor prompt clock and `date` to IST.
+# Containers (Coder workspaces, CI, Docker) default to UTC; this overrides.
+# Pre-existing TZ wins, so per-machine override stays easy:
+#   export TZ='America/New_York'  # in ~/.zshrc.local before sourcing init.sh
+# =============================================================================
+export TZ="${TZ:-Asia/Kolkata}"
+
+# =============================================================================
 # fzf — fuzzy finder (Ctrl-R history, Ctrl-T file picker, Alt-C cd picker)
 # Uses fd for file traversal (faster, respects .gitignore) + bat/eza for previews.
 # Color palette: Catppuccin Mocha — matches zellij/lazygit.
@@ -71,6 +79,30 @@ command -v atuin >/dev/null 2>&1 && \
 # Activates per-shell; respects .mise.toml / .tool-versions in cwd.
 # =============================================================================
 command -v mise >/dev/null 2>&1 && eval "$(mise activate zsh)"
+
+# =============================================================================
+# starship — cross-shell prompt (Catppuccin Mocha, two-line)
+# Must run AFTER tool integrations (so version detectors see them on PATH)
+# but BEFORE syntax-highlighting (which has to be last).
+# Overrides any existing prompt (p10k, oh-my-zsh themes, etc.) by design.
+# =============================================================================
+if command -v starship >/dev/null 2>&1; then
+    export STARSHIP_CONFIG="$HOME/.config/starship/starship.toml"
+
+    # Detach any prior prompt manager (p10k, oh-my-zsh themes) so starship wins
+    # cleanly. Without this, p10k's precmd hooks keep rewriting PROMPT every
+    # render and you see a flicker / split prompt.
+    autoload -Uz add-zsh-hook 2>/dev/null
+    for _hook in _p9k_precmd _p9k_precmd_first _p9k_do_nothing; do
+        if typeset -f "$_hook" >/dev/null 2>&1; then
+            add-zsh-hook -d precmd "$_hook" 2>/dev/null
+        fi
+    done
+    unset _hook
+    unset -f powerlevel10k_plugin_unload 2>/dev/null
+
+    eval "$(starship init zsh)"
+fi
 
 # =============================================================================
 # Zsh plugins — autosuggestions, syntax-highlighting, completions
