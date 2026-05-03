@@ -1,0 +1,63 @@
+# Ghostty — GPU-accelerated terminal emulator
+# Docs: https://ghostty.org/docs/config
+# Config format: key = value, one per line. Lists by repeating the key.
+
+# ===== Theme =====
+# Built-in since 1.0; matches our zellij/lazygit/fzf palette.
+theme = catppuccin-mocha
+background-opacity = 1.0
+background-blur = false
+
+# ===== Font =====
+# JetBrainsMono Nerd Font is installed by dotfiles install.sh on both OSes.
+font-family = JetBrainsMono Nerd Font
+font-size = 14
+font-feature = +liga    # ligatures (==, =>, !=, etc.)
+font-thicken = true     # nicer rendering on macOS retina
+
+# ===== Window / chrome =====
+window-padding-x = 12
+window-padding-y = 12
+window-padding-balance = true
+window-decoration = true
+window-save-state = always
+confirm-close-surface = false
+# quit-after-last-window-closed intentionally not set — let Mac stay Mac
+# (app stays in dock after last window closes; Cmd-Q to fully quit).
+
+# ===== Cursor =====
+cursor-style = block
+cursor-style-blink = false
+mouse-hide-while-typing = true
+
+# ===== Selection / clipboard =====
+# copy-on-select intentionally NOT set — selecting text in the terminal
+# should not silently overwrite the system clipboard. Use Cmd-C / Ctrl-Shift-C.
+clipboard-read = allow
+clipboard-write = allow
+clipboard-paste-protection = true
+
+# ===== Scrollback =====
+scrollback-limit = 50000
+
+# ===== Shell integration =====
+# Auto-detects zsh/bash/fish; injects OSC-133 prompt marks (Ctrl+Up/Down to
+# jump between prompts), cursor shape per vi mode, and `sudo` env passthrough.
+shell-integration = detect
+shell-integration-features = cursor,sudo,title
+
+# ===== macOS-specific =====
+# Treat Option as Alt so Alt-C (fzf cd-picker) and other Alt bindings work.
+macos-option-as-alt = true
+# Native tabs in the titlebar (vs separate tab bar)
+macos-titlebar-style = tabs
+# Don't quit when last window closes — keep dock icon
+macos-non-native-fullscreen = visible-menu
+
+# ===== Keybinds =====
+# Sensible defaults are already great; only override if you have a reason.
+# Leave Cmd-T (new tab), Cmd-N (new window), Cmd-W (close), Cmd-K (clear) defaults.
+
+# ===== Misc =====
+# Don't auto-update from within the app — let brew handle it.
+auto-update = off
