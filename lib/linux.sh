@@ -341,4 +341,10 @@ install_modern_cli_linux() {
     install_gh_extensions   || log_warn "gh extensions install had issues (continuing)"
     install_nerd_font_linux || log_warn "Nerd Font install had issues (continuing)"
     install_zsh_plugins     || log_warn "zsh plugins install had issues (continuing)"
+
+    # Round 4: Ghostty (GUI app — skip on Linux, hint only)
+    # No official .deb/apt; flatpak works on desktop Linux but not in headless
+    # containers. Config still ships via configs/ghostty/ for use on macOS or
+    # Linux desktops where the user installs Ghostty themselves.
+    log_skip "Ghostty (GUI terminal — install via flathub on desktop Linux: flatpak install flathub com.mitchellh.ghostty)"
 }
