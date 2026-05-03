@@ -71,7 +71,8 @@ bash install.sh
    - Linux: apt where available; static binary from GitHub releases otherwise
    - macOS: Homebrew across the board
 3. **Wires shell integrations + aliases** by appending `source <repo>/shell/init.sh` and `source <repo>/shell/aliases.sh` to `~/.zshrc.local` (init first, aliases after)
-4. **Symlinks tool configs** from `configs/<tool>/` into `~/.config/<tool>/` (zellij, atuin, mise, lazygit, bat, btop). Edits at `~/.config/<tool>/<file>` flow back to the repo automatically. Pre-existing `~/.config/<tool>/` dirs are backed up to `*.backup.<timestamp>` before linking.
+4. **Symlinks tool configs** from `configs/<tool>/` into `~/.config/<tool>/` (zellij, atuin, mise, lazygit, bat, btop, ghostty, starship). Edits at `~/.config/<tool>/<file>` flow back to the repo automatically. Pre-existing `~/.config/<tool>/` dirs are backed up to `*.backup.<timestamp>` before linking.
+5. **Backfills shell history into atuin** — runs `atuin import auto` on first install, sentinel-guarded so re-runs skip.
 
 That's it. **`install.sh` does NOT touch `~/.claude/`.**
 
