@@ -19,7 +19,8 @@ dotfiles/
 │   ├── linux.sh                #   apt + GitHub static binary fallback
 │   └── macos.sh                #   Homebrew
 ├── shell/
-│   └── aliases.sh              # universal nav + safety + modern CLI stack aliases
+│   ├── aliases.sh              # universal nav + safety + modern CLI stack aliases
+│   └── init.sh                 # tool integrations (fzf, zoxide, direnv, atuin)
 ├── git/
 │   └── gitconfig               # identity, signing, delta as pager, aliases
 └── claude/                     # PURE REFERENCE — install.sh never touches this
@@ -53,10 +54,11 @@ bash install.sh
 
 1. Installs **system deps**: jq (required), gh, uv, semgrep
 2. Installs the **modern CLI stack** (cross-platform, no Rust toolchain needed):
-   - bat, eza, fd, ripgrep, dust, duf, btop, sd, tldr, git-delta
+   - **Round 1**: bat, eza, fd, ripgrep, dust, duf, btop, sd, tldr, git-delta
+   - **Round 2**: fzf, zoxide, direnv, atuin
    - Linux: apt where available; static binary from GitHub releases otherwise
    - macOS: Homebrew across the board
-3. **Wires shell aliases** by appending `source <repo>/shell/aliases.sh` to `~/.zshrc.local`
+3. **Wires shell integrations + aliases** by appending `source <repo>/shell/init.sh` and `source <repo>/shell/aliases.sh` to `~/.zshrc.local` (init first, aliases after)
 
 That's it. **`install.sh` does NOT touch `~/.claude/`.**
 
@@ -131,6 +133,36 @@ git push                      # when YOU decide; never auto-pushed
 ```
 
 The exception: `~/.claude/settings.json` is generated from the template, not symlinked. To change settings durably, edit `~/dotfiles/claude/settings.template.json` and re-run the `sed` regeneration command above.
+
+## Round 2 tools — opt-in steps
+
+Most Round 2 tools work after install.sh + new shell session. Two require one-time per-machine action:
+
+**atuin** — backfill existing zsh history into the sqlite db (one-time):
+```bash
+atuin import auto
+```
+
+**atuin sync** (optional, opt-in for cross-machine history):
+```bash
+# Once, on the first machine:
+atuin register -u <username> -e <email>
+# On other machines:
+atuin login -u <username>
+atuin sync
+```
+
+**Ctrl-R policy:** fzf keeps Ctrl-R for inline history search. atuin records to sqlite + syncs in background but does NOT grab keybindings. For archival/cross-device search, run `atuin search` directly.
+
+If you prefer atuin's TUI for Ctrl-R: edit `shell/init.sh` and remove `--disable-ctrl-r --disable-up-arrow` from the atuin init line.
+
+**direnv** — opt-in per project:
+```bash
+# In any project root:
+echo 'export FOO=bar' > .envrc
+direnv allow
+# Now FOO is set when you cd into this dir; unset when you leave
+```
 
 ## Environment variables
 
