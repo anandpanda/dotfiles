@@ -1,0 +1,21 @@
+# Never commit credentials or runtime state
+.credentials.json
+*.credentials*
+*.token
+
+# OS noise
+.DS_Store
+Thumbs.db
+
+# Editor noise
+.vscode/
+.idea/
+*.swp
+
+# Plans are work-tied / project-specific — never sync across machines
+claude/plans/
+
+# Memory entries are personal preferences only — keep behavioral ones in repo,
+# never commit project_*.md or work-specific findings.
+# Project-specific memory (machine/work-only):
+claude/memory/project_*.md
