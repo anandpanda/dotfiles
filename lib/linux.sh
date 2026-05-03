@@ -255,6 +255,11 @@ install_gh_extensions() {
     done
 }
 
+install_starship_linux() {
+    # No apt package on Ubuntu 22.04/24.04; static binary from GitHub.
+    gh_install starship/starship "starship-${ARCH}-unknown-linux-musl.tar.gz" starship
+}
+
 # Install JetBrainsMono Nerd Font into ~/.local/share/fonts/
 install_nerd_font_linux() {
     local font_dir="$HOME/.local/share/fonts"
@@ -341,6 +346,9 @@ install_modern_cli_linux() {
     install_gh_extensions   || log_warn "gh extensions install had issues (continuing)"
     install_nerd_font_linux || log_warn "Nerd Font install had issues (continuing)"
     install_zsh_plugins     || log_warn "zsh plugins install had issues (continuing)"
+
+    # Round 5: Prompt
+    install_starship_linux  || log_warn "starship install had issues (continuing)"
 
     # Round 4: Ghostty (GUI app — skip on Linux, hint only)
     # No official .deb/apt; flatpak works on desktop Linux but not in headless

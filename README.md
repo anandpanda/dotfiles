@@ -30,7 +30,8 @@ dotfiles/
 │   ├── lazygit/config.yml      #   Catppuccin Mocha, delta pager, NF v3
 │   ├── bat/config              #   Coldark-Dark theme, line numbers, italics
 │   ├── btop/btop.conf          #   tokyo-night theme, vim keys, rounded corners
-│   └── ghostty/config          #   Catppuccin Mocha, JetBrainsMono NF, shell integ
+│   ├── ghostty/config          #   Catppuccin Mocha, JetBrainsMono NF, shell integ
+│   └── starship/starship.toml  #   Catppuccin Mocha, two-line prompt
 └── claude/                     # PURE REFERENCE — install.sh never touches this
     ├── settings.template.json  # ~/.claude/settings.json template (substitute $HOME)
     ├── statusline.sh           # custom Claude Code status line
@@ -66,6 +67,7 @@ bash install.sh
    - **Round 2**: fzf, zoxide, direnv, atuin
    - **Round 3**: lazygit, zellij, mise, pnpm (via corepack), JetBrainsMono Nerd Font, gh extensions (gh-dash, gh-poi), zsh plugins (autosuggestions, syntax-highlighting, completions)
    - **Round 4**: Ghostty (macOS only — via brew cask; Linux ships config only, install via flathub on desktop Linux)
+   - **Round 5**: starship (cross-shell prompt — overrides any existing p10k/oh-my-zsh theme)
    - Linux: apt where available; static binary from GitHub releases otherwise
    - macOS: Homebrew across the board
 3. **Wires shell integrations + aliases** by appending `source <repo>/shell/init.sh` and `source <repo>/shell/aliases.sh` to `~/.zshrc.local` (init first, aliases after)

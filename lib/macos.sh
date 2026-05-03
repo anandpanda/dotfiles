@@ -38,6 +38,8 @@ install_modern_cli_macos() {
         zellij
         mise
         pnpm
+        # Round 5: prompt
+        starship
     )
 
     # One-time brew update so we have the latest formulae
