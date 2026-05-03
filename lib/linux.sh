@@ -171,6 +171,142 @@ install_atuin_linux() {
     fi
 }
 
+# Round 3: workflow & polish bundle
+
+install_lazygit_linux() {
+    if apt_has lazygit; then
+        sudo apt-get install -y -q lazygit >/dev/null 2>&1 \
+            && log_info "lazygit (apt up-to-date or upgraded)" \
+            || log_warn "lazygit apt install failed"
+    else
+        # lazygit asset: lazygit_<ver>_linux_x86_64.tar.gz (lowercase 'linux')
+        gh_install jesseduffield/lazygit "lazygit_.*_linux_${ARCH}\\.tar\\.gz$" lazygit
+    fi
+}
+
+install_zellij_linux() {
+    if apt_has zellij; then
+        sudo apt-get install -y -q zellij >/dev/null 2>&1 \
+            && log_info "zellij (apt up-to-date or upgraded)" \
+            || log_warn "zellij apt install failed"
+    else
+        # zellij asset: zellij-x86_64-unknown-linux-musl.tar.gz
+        gh_install zellij-org/zellij "zellij-${ARCH}-unknown-linux-musl.tar.gz" zellij
+    fi
+}
+
+install_mise_linux() {
+    if apt_has mise; then
+        sudo apt-get install -y -q mise >/dev/null 2>&1 \
+            && log_info "mise (apt up-to-date or upgraded)" \
+            || log_warn "mise apt install failed"
+    else
+        # mise asset: mise-v<ver>-linux-x64.tar.gz (note: x64 not x86_64)
+        gh_install jdx/mise "mise-v.*-linux-${ARCH/x86_64/x64}\.tar\.gz$" mise
+    fi
+}
+
+install_pnpm_linux() {
+    # pnpm needs Node + corepack. The standalone tarball has a multi-file
+    # structure (binary + dist/) that doesn't drop cleanly via gh_install.
+    # Instead, rely on corepack (ships with Node 16+) to manage pnpm.
+    if have pnpm; then
+        log_skip "pnpm (already on PATH)"
+        return 0
+    fi
+    if have corepack; then
+        # corepack enable creates a shim at /usr/bin/pnpm — needs sudo.
+        # First pnpm invocation will download pnpm itself (one-time, ~5MB).
+        if sudo corepack enable pnpm 2>/dev/null; then
+            log_info "pnpm enabled via corepack (first run will download pnpm)"
+            return 0
+        fi
+        log_warn "corepack enable pnpm failed (try: sudo corepack enable pnpm)"
+        return 1
+    fi
+    if apt_has pnpm; then
+        sudo apt-get install -y -q pnpm 2>/dev/null \
+            && log_info "pnpm (apt up-to-date or upgraded)" \
+            || log_warn "pnpm apt install failed"
+        return $?
+    fi
+    log_warn "pnpm: install Node first (try 'mise use -g node@lts'), then re-run install.sh"
+}
+
+# Install gh CLI extensions (no-op if gh not installed; idempotent — gh skips already-installed)
+install_gh_extensions() {
+    if ! command -v gh >/dev/null 2>&1; then
+        log_skip "gh extensions (gh CLI not installed)"
+        return 0
+    fi
+    log_step "gh extensions"
+    local extensions=(
+        "dlvhdr/gh-dash"      # PR/issue dashboard
+        "mislav/gh-poi"       # cleanup merged branches
+    )
+    for ext in "${extensions[@]}"; do
+        if gh extension list 2>/dev/null | grep -q "$ext"; then
+            log_skip "gh ext $ext (already installed)"
+        else
+            gh extension install "$ext" >/dev/null 2>&1 \
+                && log_info "gh ext $ext installed" \
+                || log_warn "gh ext $ext install failed"
+        fi
+    done
+}
+
+# Install JetBrainsMono Nerd Font into ~/.local/share/fonts/
+install_nerd_font_linux() {
+    local font_dir="$HOME/.local/share/fonts"
+    local marker="$font_dir/.jetbrainsmono-nerd-installed"
+    if [ -f "$marker" ]; then
+        log_skip "JetBrainsMono Nerd Font (already installed)"
+        return 0
+    fi
+    log_step "JetBrainsMono Nerd Font"
+    mkdir -p "$font_dir"
+    local tmp
+    tmp="$(mktemp -d)"
+    if curl -fsSL "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip" -o "$tmp/JBMono.zip"; then
+        if command -v unzip >/dev/null 2>&1; then
+            unzip -q -o "$tmp/JBMono.zip" -d "$font_dir" "*.ttf"
+            command -v fc-cache >/dev/null 2>&1 && fc-cache -f "$font_dir" >/dev/null 2>&1
+            touch "$marker"
+            log_info "JetBrainsMono Nerd Font installed to $font_dir"
+        else
+            log_warn "unzip not installed — install with: sudo apt install unzip"
+        fi
+    else
+        log_warn "Nerd Font download failed"
+    fi
+    rm -rf "$tmp"
+}
+
+# Install zsh plugins (clone to ~/.local/share/zsh-plugins/<name>/)
+install_zsh_plugins() {
+    log_step "Zsh plugins"
+    local plugin_dir="$HOME/.local/share/zsh-plugins"
+    mkdir -p "$plugin_dir"
+    local plugins=(
+        "zsh-users/zsh-autosuggestions"
+        "zsh-users/zsh-syntax-highlighting"
+        "zsh-users/zsh-completions"
+    )
+    for repo in "${plugins[@]}"; do
+        local name="${repo##*/}"
+        local target="$plugin_dir/$name"
+        if [ -d "$target/.git" ]; then
+            (cd "$target" && git pull --quiet 2>/dev/null) \
+                && log_info "$name (updated)" \
+                || log_warn "$name update failed"
+        else
+            git clone --quiet --depth 1 "https://github.com/$repo.git" "$target" \
+                && log_info "$name cloned" \
+                || log_warn "$name clone failed"
+        fi
+    done
+}
+
 # Orchestrator — runs all per-tool installers, tolerates individual failures.
 install_modern_cli_linux() {
     log_step "Modern CLI stack (Linux)"
@@ -196,4 +332,13 @@ install_modern_cli_linux() {
     install_zoxide_linux    || log_warn "zoxide install had issues (continuing)"
     install_direnv_linux    || log_warn "direnv install had issues (continuing)"
     install_atuin_linux     || log_warn "atuin install had issues (continuing)"
+
+    # Round 3: workflow & polish
+    install_lazygit_linux   || log_warn "lazygit install had issues (continuing)"
+    install_zellij_linux    || log_warn "zellij install had issues (continuing)"
+    install_mise_linux      || log_warn "mise install had issues (continuing)"
+    install_pnpm_linux      || log_warn "pnpm install had issues (continuing)"
+    install_gh_extensions   || log_warn "gh extensions install had issues (continuing)"
+    install_nerd_font_linux || log_warn "Nerd Font install had issues (continuing)"
+    install_zsh_plugins     || log_warn "zsh plugins install had issues (continuing)"
 }

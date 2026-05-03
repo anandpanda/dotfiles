@@ -56,6 +56,7 @@ bash install.sh
 2. Installs the **modern CLI stack** (cross-platform, no Rust toolchain needed):
    - **Round 1**: bat, eza, fd, ripgrep, dust, duf, btop, sd, tldr, git-delta
    - **Round 2**: fzf, zoxide, direnv, atuin
+   - **Round 3**: lazygit, zellij, mise, pnpm (via corepack), JetBrainsMono Nerd Font, gh extensions (gh-dash, gh-poi), zsh plugins (autosuggestions, syntax-highlighting, completions)
    - Linux: apt where available; static binary from GitHub releases otherwise
    - macOS: Homebrew across the board
 3. **Wires shell integrations + aliases** by appending `source <repo>/shell/init.sh` and `source <repo>/shell/aliases.sh` to `~/.zshrc.local` (init first, aliases after)
@@ -163,6 +164,26 @@ echo 'export FOO=bar' > .envrc
 direnv allow
 # Now FOO is set when you cd into this dir; unset when you leave
 ```
+
+## Round 3 tools — opt-in steps
+
+**Nerd Font** — set your terminal's font to "JetBrainsMono Nerd Font" after install. Without this, prompt glyphs (icons in starship, p10k, etc.) render as boxes.
+
+**mise** — install runtimes per project or globally:
+```bash
+mise use -g node@lts python@3.12   # global defaults
+mise use node@20                   # per-project (creates .mise.toml)
+```
+
+**pnpm** — already enabled via corepack. First `pnpm <cmd>` call downloads pnpm itself (one-time, ~5MB).
+
+**lazygit** — TUI for git. Run `lazygit` in any repo for full-screen status/stage/commit/log/branch UI.
+
+**zellij** — terminal multiplexer. Run `zellij` to start a session. Built-in tutorial via the status bar at the bottom.
+
+**gh extensions:**
+- `gh dash` — interactive PR/issue dashboard
+- `gh poi` — interactive cleanup of merged branches
 
 ## Environment variables
 
