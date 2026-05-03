@@ -1,0 +1,139 @@
+{
+  "env": {
+    "ESLINT_USE_FLAT_CONFIG": "false",
+    "GIT_PAGER": "cat",
+    "PAGER": "cat",
+    "GIT_EDITOR": "true",
+    "PYTHONUNBUFFERED": "1",
+    "PYTHONDONTWRITEBYTECODE": "1",
+    "POETRY_VIRTUALENVS_IN_PROJECT": "true",
+    "FORCE_COLOR": "1"
+  },
+  "includeCoAuthoredBy": false,
+  "permissions": {
+    "allow": [
+      "Bash(make *)",
+      "Bash(zamp *)",
+      "Bash(poetry run *)",
+      "Bash(pytest *)",
+      "Bash(python3 -c *)",
+      "Bash(npm run *)",
+      "Bash(npm install *)",
+      "Bash(turbo run *)",
+      "Bash(npx jest *)",
+      "Bash(npx eslint *)",
+      "Bash(npx tsc *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git pull *)",
+      "Bash(git fetch *)",
+      "Bash(git branch *)",
+      "Bash(git stash *)",
+      "Bash(gh pr view *)",
+      "Bash(gh pr list *)",
+      "Bash(gh pr checkout *)",
+      "Bash(gh api *)",
+      "Bash(gh run *)",
+      "Bash(gh auth *)",
+      "Bash(psql *)",
+      "Bash(browser-use *)",
+      "Bash(curl *)",
+      "Bash(git clone *)",
+      "WebFetch",
+      "WebSearch"
+    ],
+    "deny": [
+      "Bash(git push --force origin main)",
+      "Bash(git push --force origin master)",
+      "Bash(git push -f origin main)",
+      "Bash(git push -f origin master)"
+    ],
+    "defaultMode": "plan",
+    "additionalDirectories": [
+      "/tmp",
+      "__HOME__/.cache",
+      "__HOME__/.local",
+      "__HOME__/.claude"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read|Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "__HOME__/.claude/hooks/pre-tool-use.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "__HOME__/.claude/hooks/session-start.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "__HOME__/.claude/hooks/log-stop.sh",
+            "timeout": 10,
+            "async": true
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "idle_prompt",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "printf '\\a'",
+            "timeout": 1
+          }
+        ]
+      }
+    ]
+  },
+  "statusLine": {
+    "type": "command",
+    "command": "__HOME__/.claude/statusline.sh"
+  },
+  "enabledPlugins": {
+    "claude-md-management@claude-plugins-official": true,
+    "session-report@claude-plugins-official": true,
+    "security-guidance@claude-plugins-official": true,
+    "skill-creator@claude-plugins-official": true,
+    "pr-review-toolkit@claude-plugins-official": true,
+    "code-review@claude-plugins-official": true,
+    "explanatory-output-style@claude-plugins-official": true,
+    "hookify@claude-plugins-official": true,
+    "claude-code-setup@claude-plugins-official": true,
+    "frontend-design@claude-plugins-official": true,
+    "context7@claude-plugins-official": true,
+    "serena@claude-plugins-official": true,
+    "superpowers@claude-plugins-official": true,
+    "playwright@claude-plugins-official": true,
+    "pydantic-ai@claude-plugins-official": true,
+    "feature-dev@claude-plugins-official": true,
+    "remember@claude-plugins-official": true,
+    "chrome-devtools-mcp@claude-plugins-official": true,
+    "semgrep@claude-plugins-official": true,
+    "figma@claude-plugins-official": true
+  },
+  "spinnerTipsEnabled": false,
+  "effortLevel": "xhigh",
+  "remoteControlAtStartup": true
+}

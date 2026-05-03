@@ -1,0 +1,53 @@
+[user]
+	name = Anand Panda
+	email = anand@zamp.ai
+
+[commit]
+	gpgsign = true
+
+[gpg]
+	format = ssh
+
+[init]
+	defaultBranch = main
+
+[pull]
+	ff = only
+
+[core]
+	pager = delta
+
+[interactive]
+	diffFilter = delta --color-only
+
+[delta]
+	navigate = true
+	line-numbers = true
+	side-by-side = true
+
+[merge]
+	conflictstyle = zdiff3
+
+[credential "https://github.com"]
+	helper = !/usr/bin/gh auth git-credential
+
+[credential "https://gist.github.com"]
+	helper = !/usr/bin/gh auth git-credential
+
+# Aliases — add your own here as you accumulate them
+[alias]
+	st = status -sb
+	co = checkout
+	br = branch
+	last = log -1 HEAD
+	unstage = reset HEAD --
+	lg = log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+
+# NOTE: signingkey path is per-machine.
+# - On Coder: /home/coder/.ssh/git-commit-signing/coder (Coder-managed)
+# - On Mac:   ~/.ssh/id_ed25519.pub (or wherever your signing key is)
+# install.sh detects and sets the correct path in ~/.gitconfig.local, which is
+# included below.
+
+[include]
+	path = ~/.gitconfig.local
