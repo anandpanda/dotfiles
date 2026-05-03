@@ -1,0 +1,62 @@
+# lazygit — terminal UI for git
+# Docs: https://github.com/jesseduffield/lazygit/blob/master/docs/Config.md
+# Theme: Catppuccin Mocha (manually transcribed — lazygit has no theme system,
+# colors are set per-element).
+
+gui:
+  nerdFontsVersion: "3"
+  showFileTree: true
+  showRandomTip: false
+  showCommandLog: false
+  showBottomLine: true
+  scrollHeight: 4
+  scrollPastBottom: true
+  mouseEvents: true
+  skipDiscardChangeWarning: false
+  skipStashWarning: false
+
+  # Catppuccin Mocha palette
+  theme:
+    activeBorderColor:
+      - "#89b4fa"   # blue
+      - bold
+    inactiveBorderColor:
+      - "#a6adc8"   # subtext0
+    optionsTextColor:
+      - "#89b4fa"
+    selectedLineBgColor:
+      - "#313244"   # surface0
+    cherryPickedCommitBgColor:
+      - "#45475a"   # surface1
+    cherryPickedCommitFgColor:
+      - "#f5c2e7"   # pink
+    unstagedChangesColor:
+      - "#f38ba8"   # red
+    defaultFgColor:
+      - "#cdd6f4"   # text
+
+git:
+  paging:
+    colorArg: always
+    pager: delta --dark --paging=never
+  commit:
+    signOff: false
+  merging:
+    manualCommit: false
+    args: ""
+  log:
+    order: topo-order
+    showGraph: always
+    showWholeGraph: false
+  autoFetch: true
+  autoRefresh: true
+  fetchAll: true
+  branchLogCmd: 'git log --graph --color=always --abbrev-commit --decorate --date=relative --pretty=medium {{branchName}} --'
+
+# Confirm before quitting only when there's something to lose
+confirmOnQuit: false
+quitOnTopLevelReturn: false
+disableStartupPopups: true
+notARepository: "prompt"
+
+# Keybindings — leave defaults. Vim-flavored navigation already works (h/j/k/l, gg/G, /, n/N).
