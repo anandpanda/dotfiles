@@ -163,6 +163,36 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# 5. atuin: backfill existing shell history (one-time per machine)
+# ---------------------------------------------------------------------------
+# `atuin import auto` reads ~/.zsh_history (or bash equivalent) and stamps
+# every command into atuin's sqlite db. Idempotent on subsequent runs only
+# via a sentinel file — atuin itself doesn't track "already imported", and
+# re-running causes duplicates. Sentinel lives in atuin's data dir so it
+# travels with the db.
+
+log_step "Step 5: atuin history backfill"
+
+ATUIN_DATA="$HOME/.local/share/atuin"
+ATUIN_SENTINEL="$ATUIN_DATA/.imported-by-dotfiles"
+
+if ! command -v atuin >/dev/null 2>&1; then
+    log_skip "atuin not installed — skipping import"
+elif [ -f "$ATUIN_SENTINEL" ]; then
+    log_skip "atuin history already imported (sentinel: $ATUIN_SENTINEL)"
+elif [ ! -f "$HOME/.zsh_history" ] && [ ! -f "$HOME/.bash_history" ]; then
+    log_skip "no shell history file found — nothing to import"
+else
+    if atuin import auto >/dev/null 2>&1; then
+        mkdir -p "$ATUIN_DATA"
+        touch "$ATUIN_SENTINEL"
+        log_info "atuin: imported existing shell history"
+    else
+        log_warn "atuin import failed (continuing — re-try manually with 'atuin import auto')"
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # Done
 # ---------------------------------------------------------------------------
 
