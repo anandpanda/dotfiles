@@ -85,23 +85,31 @@ esac
 # 3. Wire shell aliases into ~/.zshrc.local
 # ---------------------------------------------------------------------------
 
-log_step "Step 3: Wire shell aliases"
+log_step "Step 3: Wire shell init + aliases"
 
-SOURCE_LINE="source $DOTFILES/shell/aliases.sh"
+SOURCE_INIT="source $DOTFILES/shell/init.sh"
+SOURCE_ALIASES="source $DOTFILES/shell/aliases.sh"
 
 # Create ~/.zshrc.local if missing
 [ -f "$ZSHRC_LOCAL" ] || touch "$ZSHRC_LOCAL"
 
-if grep -qF "$SOURCE_LINE" "$ZSHRC_LOCAL" 2>/dev/null; then
-    log_skip "Shell aliases already sourced from $ZSHRC_LOCAL"
-else
-    {
-        echo ""
-        echo "# dotfiles: portable shell aliases (modern CLI stack + nav + safety)"
-        echo "$SOURCE_LINE"
-    } >> "$ZSHRC_LOCAL"
-    log_info "Appended source line to $ZSHRC_LOCAL"
-fi
+# Source init.sh BEFORE aliases.sh — init defines functions/keybindings that
+# may be referenced by aliases or follow-on tools.
+header_added=false
+for line in "$SOURCE_INIT" "$SOURCE_ALIASES"; do
+    name="$(basename "${line##* }")"
+    if grep -qF "$line" "$ZSHRC_LOCAL" 2>/dev/null; then
+        log_skip "$name already sourced from $ZSHRC_LOCAL"
+    else
+        if ! $header_added; then
+            echo "" >> "$ZSHRC_LOCAL"
+            echo "# dotfiles: shell integrations + portable aliases" >> "$ZSHRC_LOCAL"
+            header_added=true
+        fi
+        echo "$line" >> "$ZSHRC_LOCAL"
+        log_info "Appended source for $name to $ZSHRC_LOCAL"
+    fi
+done
 
 # Ensure ~/.zshrc itself sources ~/.zshrc.local on bare systems
 ZSHRC="$HOME/.zshrc"

@@ -128,6 +128,49 @@ install_delta_linux() {
     fi
 }
 
+# Round 2: shell-integration tools
+
+install_fzf_linux() {
+    if apt_has fzf; then
+        sudo apt-get install -y -q fzf >/dev/null 2>&1 \
+            && log_info "fzf (apt up-to-date or upgraded)" \
+            || log_warn "fzf apt install failed"
+    else
+        gh_install junegunn/fzf "fzf-.*-linux_amd64.tar.gz" fzf
+    fi
+}
+
+install_zoxide_linux() {
+    if apt_has zoxide; then
+        sudo apt-get install -y -q zoxide >/dev/null 2>&1 \
+            && log_info "zoxide (apt up-to-date or upgraded)" \
+            || log_warn "zoxide apt install failed"
+    else
+        gh_install ajeetdsouza/zoxide "zoxide-.*-${ARCH}-unknown-linux-musl.tar.gz" zoxide
+    fi
+}
+
+install_direnv_linux() {
+    if apt_has direnv; then
+        sudo apt-get install -y -q direnv >/dev/null 2>&1 \
+            && log_info "direnv (apt up-to-date or upgraded)" \
+            || log_warn "direnv apt install failed"
+    else
+        # direnv ships bare binaries: direnv.linux-amd64
+        gh_install direnv/direnv "direnv\.linux-${ARCH/x86_64/amd64}$" direnv
+    fi
+}
+
+install_atuin_linux() {
+    if apt_has atuin; then
+        sudo apt-get install -y -q atuin >/dev/null 2>&1 \
+            && log_info "atuin (apt up-to-date or upgraded)" \
+            || log_warn "atuin apt install failed"
+    else
+        gh_install atuinsh/atuin "atuin-${ARCH}-unknown-linux-musl.tar.gz" atuin
+    fi
+}
+
 # Orchestrator — runs all per-tool installers, tolerates individual failures.
 install_modern_cli_linux() {
     log_step "Modern CLI stack (Linux)"
@@ -147,4 +190,10 @@ install_modern_cli_linux() {
     install_sd_linux        || log_warn "sd install had issues (continuing)"
     install_tealdeer_linux  || log_warn "tealdeer install had issues (continuing)"
     install_delta_linux     || log_warn "delta install had issues (continuing)"
+
+    # Round 2: shell-integration tools
+    install_fzf_linux       || log_warn "fzf install had issues (continuing)"
+    install_zoxide_linux    || log_warn "zoxide install had issues (continuing)"
+    install_direnv_linux    || log_warn "direnv install had issues (continuing)"
+    install_atuin_linux     || log_warn "atuin install had issues (continuing)"
 }
