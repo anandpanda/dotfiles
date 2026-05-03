@@ -1,0 +1,26 @@
+# mise — runtime version manager (Node, Python, Go, etc.)
+# Docs: https://mise.jdx.dev/configuration.html
+# This is the GLOBAL config. Per-project config goes in <project>/.mise.toml
+
+[settings]
+# Read .nvmrc, .python-version, .tool-versions etc. — drop-in replacement
+# for nvm/pyenv/asdf without forcing repos to adopt mise's own format.
+idiomatic_version_file_enable_tools = ["node", "python", "ruby", "go"]
+
+# Don't prompt before installing missing runtimes when entering a project dir
+# (still prints what it's doing — just skips the y/N).
+not_found_auto_install = true
+
+# Show a progress bar during installs instead of silent multi-second hangs
+status = { show_tools = true, show_env = false }
+
+# Faster activation — skip features we don't use
+experimental = true
+
+# Don't pollute every shell with mise PATH entries for tools we haven't asked for
+# (only activate per-project via .mise.toml or globally-pinned tools below)
+
+# Pin global defaults here if you want them on every machine, e.g.:
+# [tools]
+# node = "lts"
+# python = "3.12"

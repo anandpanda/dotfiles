@@ -1,0 +1,30 @@
+# atuin — sqlite-backed shell history
+# Docs: https://docs.atuin.sh/configuration/config/
+# Note: Ctrl-R is owned by fzf; atuin records + syncs in background.
+# For archival/cross-device search: `atuin search` directly.
+
+# Search across all sessions/hosts by default (we sync across machines)
+search_mode = "fuzzy"
+filter_mode = "global"
+filter_mode_shell_up_key_binding = "session"
+
+# Press Enter to execute the highlighted command (vs just selecting it)
+enter_accept = true
+
+# Inline TUI height (rows). Default 40 is too tall for tmux/zellij splits.
+inline_height = 20
+
+# Show preview of full command in the search UI
+show_preview = true
+
+# Don't sync automatically on every shell start — we run `atuin sync` manually
+auto_sync = true
+sync_frequency = "10m"
+sync_address = "https://api.atuin.sh"
+
+# Keep shell up-arrow scoped to the current session (already disabled in init.sh)
+# This is the fallback if someone re-enables atuin's up-arrow binding.
+
+# History deduplication — store, but skip duplicates in search results
+dialect = "us"
+update_check = false

@@ -124,6 +124,45 @@ if [ -f "$ZSHRC" ] && ! grep -qF '.zshrc.local' "$ZSHRC" 2>/dev/null; then
 fi
 
 # ---------------------------------------------------------------------------
+# 4. Symlink tool configs into ~/.config/
+# ---------------------------------------------------------------------------
+# Each subdir of $DOTFILES/configs/ maps to ~/.config/<tool>/.
+# We symlink the directory, so edits to ~/.config/<tool>/<file> flow back
+# to the dotfiles repo automatically.
+
+log_step "Step 4: Deploy tool configs (~/.config symlinks)"
+
+CONFIG_SRC="$DOTFILES/configs"
+CONFIG_DST="$HOME/.config"
+mkdir -p "$CONFIG_DST"
+
+if [ -d "$CONFIG_SRC" ]; then
+    for tool_dir in "$CONFIG_SRC"/*/; do
+        [ -d "$tool_dir" ] || continue
+        tool="$(basename "$tool_dir")"
+        target="$CONFIG_DST/$tool"
+
+        # If target is already the right symlink, skip
+        if [ -L "$target" ] && [ "$(readlink "$target")" = "${tool_dir%/}" ]; then
+            log_skip "$tool config (already symlinked)"
+            continue
+        fi
+
+        # If target exists as a real directory, back it up before linking
+        if [ -e "$target" ] && [ ! -L "$target" ]; then
+            backup="$target.backup.$(date +%Y%m%d-%H%M%S)"
+            mv "$target" "$backup"
+            log_warn "$tool: existing $target moved to $backup"
+        fi
+
+        ln -sfn "${tool_dir%/}" "$target"
+        log_info "$tool config symlinked → $target"
+    done
+else
+    log_skip "configs/ directory missing — nothing to deploy"
+fi
+
+# ---------------------------------------------------------------------------
 # Done
 # ---------------------------------------------------------------------------
 

@@ -1,0 +1,35 @@
+// zellij — terminal multiplexer
+// Theme: Catppuccin Mocha (built-in since zellij 0.40+)
+// Docs: https://zellij.dev/documentation/options.html
+
+theme "catppuccin-mocha"
+default_shell "zsh"
+default_layout "compact"
+
+// Mouse support — click to select panes, scroll for history
+mouse_mode true
+
+// Don't ask "do you want to quit?" every single time
+on_force_close "quit"
+
+// Don't ship the welcome screen on a fresh session
+pane_frames false
+simplified_ui true
+
+// Copy to system clipboard on Linux + macOS
+copy_command "xclip -selection clipboard"   // Linux X11
+// copy_command "wl-copy"                    // Linux Wayland — uncomment if needed
+// copy_command "pbcopy"                     // macOS — uncomment if needed
+copy_clipboard "system"
+copy_on_select true
+
+// Scrollback we can actually use
+scroll_buffer_size 50000
+
+// Don't auto-update — we manage versions via apt/brew
+ui {
+    pane_frames {
+        rounded_corners true
+        hide_session_name false
+    }
+}
