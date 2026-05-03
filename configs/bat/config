@@ -1,0 +1,28 @@
+# bat — `cat` with syntax highlighting + git integration
+# Docs: https://github.com/sharkdp/bat#configuration-file
+# Built-in themes that pair well with Catppuccin Mocha terminal:
+#   - "Coldark-Dark"   → cool blues, closest to Mocha
+#   - "TwoDark"        → balanced, popular default
+#   - "gruvbox-dark"   → warmer alternative
+# We pick Coldark-Dark — palette matches Mocha without needing a custom theme cache.
+--theme="Coldark-Dark"
+
+# Show line numbers, git changes in the gutter, and a header per file
+--style="numbers,changes,header,grid"
+
+# Map common no-extension files to a syntax so `bat Dockerfile`, `bat .gitignore` etc. light up
+--map-syntax "*.jenkinsfile:Groovy"
+--map-syntax ".ignore:Git Ignore"
+--map-syntax ".dockerignore:Git Ignore"
+--map-syntax "*.conf:INI"
+--map-syntax ".env:DotENV"
+--map-syntax ".env.*:DotENV"
+
+# Italic text in supported terminals (kitty, ghostty, wezterm — skipped on Apple Terminal.app)
+--italic-text=always
+
+# Soft wrap long lines (vs hard cutoff)
+--wrap=auto
+
+# Use the system pager (less) for output longer than the screen
+--pager="less -FR"

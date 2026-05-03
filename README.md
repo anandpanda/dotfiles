@@ -23,6 +23,13 @@ dotfiles/
 │   └── init.sh                 # tool integrations (fzf, zoxide, direnv, atuin)
 ├── git/
 │   └── gitconfig               # identity, signing, delta as pager, aliases
+├── configs/                    # tool configs — install.sh symlinks into ~/.config/
+│   ├── zellij/config.kdl       #   Catppuccin Mocha, mouse, copy-on-select
+│   ├── atuin/config.toml       #   sqlite-backed history, 10m auto-sync
+│   ├── mise/config.toml        #   reads .nvmrc/.python-version, auto-install
+│   ├── lazygit/config.yml      #   Catppuccin Mocha, delta pager, NF v3
+│   ├── bat/config              #   Coldark-Dark theme, line numbers, italics
+│   └── btop/btop.conf          #   tokyo-night theme, vim keys, rounded corners
 └── claude/                     # PURE REFERENCE — install.sh never touches this
     ├── settings.template.json  # ~/.claude/settings.json template (substitute $HOME)
     ├── statusline.sh           # custom Claude Code status line
@@ -60,8 +67,13 @@ bash install.sh
    - Linux: apt where available; static binary from GitHub releases otherwise
    - macOS: Homebrew across the board
 3. **Wires shell integrations + aliases** by appending `source <repo>/shell/init.sh` and `source <repo>/shell/aliases.sh` to `~/.zshrc.local` (init first, aliases after)
+4. **Symlinks tool configs** from `configs/<tool>/` into `~/.config/<tool>/` (zellij, atuin, mise, lazygit, bat, btop). Edits at `~/.config/<tool>/<file>` flow back to the repo automatically. Pre-existing `~/.config/<tool>/` dirs are backed up to `*.backup.<timestamp>` before linking.
 
 That's it. **`install.sh` does NOT touch `~/.claude/`.**
+
+### Theme
+
+All tools share **Catppuccin Mocha** (zellij, lazygit, fzf colors) plus matching dark themes for built-in ones (bat: Coldark-Dark, btop: tokyo-night). Set your terminal background to `#1e1e2e` for full cohesion.
 
 ## Deploying Claude Code config (manual, opt-in)
 
