@@ -1,0 +1,2 @@
+- [No Claude attribution anywhere in commits/PRs](feedback_external_attribution.md) — global rule: never add Co-Authored-By, 🤖, or "Generated with Claude Code" to any commit or PR (internal or external). Settings flag handles trailers; PR bodies/templates need manual stripping.
+- [Never push to remote without explicit permission](feedback_no_auto_git_push.md) — never run `git push` or push-equivalent commands without an explicit confirmation in the current turn; "commit" ≠ "push".
