@@ -492,43 +492,17 @@ fi  # end Step 7
 if should_run work; then
 log_step "Step 8: Symlink work-workspace into ~/work/"
 
-work_WORKSPACE_SRC="$DOTFILES/work-workspace"
 work_DST="$HOME/work"
+LINK_SCRIPT="$DOTFILES/work-workspace/link-here.sh"
 
 if [ ! -d "$work_DST" ]; then
     log_skip "$work_DST not found — skipping (machine doesn't have the work workspace)"
-elif [ ! -d "$work_WORKSPACE_SRC" ]; then
-    log_skip "$work_WORKSPACE_SRC not in dotfiles — nothing to deploy"
+elif [ ! -x "$LINK_SCRIPT" ]; then
+    log_skip "$LINK_SCRIPT missing or not executable"
 else
-    # .claude/ — directory symlink
-    src="$work_WORKSPACE_SRC/.claude"
-    target="$work_DST/.claude"
-    if [ -L "$target" ] && [ "$(readlink "$target")" = "$src" ]; then
-        log_skip ".claude already symlinked"
-    else
-        if [ -e "$target" ] && [ ! -L "$target" ]; then
-            backup="$target.backup.$(date +%Y%m%d-%H%M%S)"
-            mv "$target" "$backup"
-            log_warn "moved existing $target → $backup"
-        fi
-        ln -sfn "$src" "$target"
-        log_info ".claude symlinked → $target"
-    fi
-
-    # .mcp.json — file symlink
-    src="$work_WORKSPACE_SRC/.mcp.json"
-    target="$work_DST/.mcp.json"
-    if [ -L "$target" ] && [ "$(readlink "$target")" = "$src" ]; then
-        log_skip ".mcp.json already symlinked"
-    else
-        if [ -e "$target" ] && [ ! -L "$target" ]; then
-            backup="$target.backup.$(date +%Y%m%d-%H%M%S)"
-            mv "$target" "$backup"
-            log_warn "moved existing $target → $backup"
-        fi
-        ln -sfn "$src" "$target"
-        log_info ".mcp.json symlinked → $target"
-    fi
+    # Delegate to the standalone link-here.sh so logic is shared with the
+    # ad-hoc 'bash work-workspace/link-here.sh /some/dir' use case.
+    bash "$LINK_SCRIPT" "$work_DST" 2>&1 | sed 's/^/    /'
 fi
 fi  # end Step 8
 
