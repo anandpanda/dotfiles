@@ -397,8 +397,8 @@ else
                     continue
                 fi
                 # Capture stderr to categorize the failure mode
-                output="$("$cli" --install-extension "$ext" 2>&1)"
-                if [ $? -eq 0 ] && ! printf '%s' "$output" | grep -qiE 'not found|declared to not run'; then
+                output="$("$cli" --install-extension "$ext" 2>&1)" && rc=0 || rc=$?
+                if [ $rc -eq 0 ] && ! printf '%s' "$output" | grep -qiE 'not found|declared to not run'; then
                     installed_count=$((installed_count + 1))
                 elif printf '%s' "$output" | grep -qi 'not found'; then
                     not_in_marketplace=$((not_in_marketplace + 1))
