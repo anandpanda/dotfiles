@@ -19,3 +19,16 @@ claude/plans/
 # never commit project_*.md or work-specific findings.
 # Project-specific memory (machine/work-only):
 claude/memory/project_*.md
+
+# Claude Code local state — auto-generated per machine. The .local.json
+# convention is "do not commit" (e.g. enabled MCP servers, session state).
+**/.claude/settings.local.json
+**/.claude/.session-cache.json
+**/.claude/.mcp-needs-auth-cache.json
+**/.claude/projects/
+**/.claude/sessions/
+**/.claude/cache/
+
+# Backups created by install.sh / link-here.sh (target-side, but defensive
+# in case any land inside the repo)
+*.backup.[0-9]*
