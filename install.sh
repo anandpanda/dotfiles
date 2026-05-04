@@ -34,6 +34,7 @@ Steps (run all by default):
   atuin       Step 5: atuin history backfill (first run only)
   extensions  Step 6: VS Code / Cursor extensions
   settings    Step 7: VS Code / Cursor user settings (deep-merge)
+  work        Step 8: Symlink work-workspace into ~/work/ (skipped if dir absent)
 
 Dependencies (auto-resolved — running a step also runs its prerequisites):
   cli depends on deps
@@ -65,7 +66,7 @@ esac
 # (in topo order), then X. Hard-coded since the graph is small + static.
 
 case "$STEP" in
-    all)        STEPS_TO_RUN=(deps cli shell configs atuin extensions settings) ;;
+    all)        STEPS_TO_RUN=(deps cli shell configs atuin extensions settings work) ;;
     deps)       STEPS_TO_RUN=(deps) ;;
     cli)        STEPS_TO_RUN=(deps cli) ;;
     shell)      STEPS_TO_RUN=(shell) ;;
@@ -73,6 +74,7 @@ case "$STEP" in
     atuin)      STEPS_TO_RUN=(deps cli atuin) ;;
     extensions) STEPS_TO_RUN=(extensions) ;;
     settings)   STEPS_TO_RUN=(settings) ;;
+    work)       STEPS_TO_RUN=(work) ;;
     *)
         echo "Error: unknown step '$STEP'." >&2
         echo "Run 'bash install.sh help' for valid step names." >&2
@@ -476,6 +478,59 @@ else
 fi
 
 fi  # end Step 7
+
+# ---------------------------------------------------------------------------
+# 8. Symlink work-workspace into ~/work/ (Anand's work workspace, optional)
+# ---------------------------------------------------------------------------
+# If ~/work/ exists on this machine, link our workspace-scoped Claude config
+# (.claude/) and MCP config (.mcp.json) into it. Edits at ~/work/.claude/<f>
+# flow back to the dotfiles repo automatically. Pre-existing real files/dirs
+# get backed up to *.backup.<timestamp> first.
+#
+# Skipped silently on machines without ~/work/ (e.g. personal laptops).
+
+if should_run work; then
+log_step "Step 8: Symlink work-workspace into ~/work/"
+
+work_WORKSPACE_SRC="$DOTFILES/work-workspace"
+work_DST="$HOME/work"
+
+if [ ! -d "$work_DST" ]; then
+    log_skip "$work_DST not found — skipping (machine doesn't have the work workspace)"
+elif [ ! -d "$work_WORKSPACE_SRC" ]; then
+    log_skip "$work_WORKSPACE_SRC not in dotfiles — nothing to deploy"
+else
+    # .claude/ — directory symlink
+    src="$work_WORKSPACE_SRC/.claude"
+    target="$work_DST/.claude"
+    if [ -L "$target" ] && [ "$(readlink "$target")" = "$src" ]; then
+        log_skip ".claude already symlinked"
+    else
+        if [ -e "$target" ] && [ ! -L "$target" ]; then
+            backup="$target.backup.$(date +%Y%m%d-%H%M%S)"
+            mv "$target" "$backup"
+            log_warn "moved existing $target → $backup"
+        fi
+        ln -sfn "$src" "$target"
+        log_info ".claude symlinked → $target"
+    fi
+
+    # .mcp.json — file symlink
+    src="$work_WORKSPACE_SRC/.mcp.json"
+    target="$work_DST/.mcp.json"
+    if [ -L "$target" ] && [ "$(readlink "$target")" = "$src" ]; then
+        log_skip ".mcp.json already symlinked"
+    else
+        if [ -e "$target" ] && [ ! -L "$target" ]; then
+            backup="$target.backup.$(date +%Y%m%d-%H%M%S)"
+            mv "$target" "$backup"
+            log_warn "moved existing $target → $backup"
+        fi
+        ln -sfn "$src" "$target"
+        log_info ".mcp.json symlinked → $target"
+    fi
+fi
+fi  # end Step 8
 
 # ---------------------------------------------------------------------------
 # Done
