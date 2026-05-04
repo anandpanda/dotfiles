@@ -129,14 +129,28 @@ echo "    NOTE     = This script will NOT touch ~/.claude/. Use it as you wish."
 if should_run deps; then
 log_step "Step 1: System dependencies"
 
+# jq — auto-installed via the OS package manager if missing.
+# (We still bail if brew is missing on Mac — that's a one-time user setup,
+# too invasive to auto-install Homebrew silently.)
 if need jq; then
-    log_err "jq missing — install via your package manager:"
-    echo   "        Linux: sudo apt install -y jq"
-    echo   "        Mac:   brew install jq"
-    echo   "      Then re-run this script."
-    exit 1
+    case "$OS" in
+        macos)
+            if need brew; then
+                log_err "jq missing AND Homebrew not installed."
+                echo   "  Install Homebrew first from https://brew.sh, then re-run."
+                exit 1
+            fi
+            log_step "Installing jq via brew..."
+            brew install jq >/dev/null 2>&1 || { log_err "brew install jq failed"; exit 1; }
+            ;;
+        linux)
+            log_step "Installing jq via apt..."
+            sudo apt-get update -qq 2>/dev/null
+            sudo apt-get install -y -q jq >/dev/null 2>&1 || { log_err "apt install jq failed"; exit 1; }
+            ;;
+    esac
 fi
-log_info "jq"
+log_info "jq ($(jq --version 2>/dev/null))"
 
 if need gh; then
     log_warn "gh CLI missing (optional)"
