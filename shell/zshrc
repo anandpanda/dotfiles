@@ -1,0 +1,133 @@
+#!/usr/bin/env zsh
+# ~/dotfiles/shell/zshrc — sourced by ~/.zshrc on interactive shell start.
+# Tool integrations (starship, fzf, atuin, zoxide, direnv, mise, zsh
+# plugins) live in ~/dotfiles/shell/init.sh, sourced via ~/.zshrc.local
+# at the bottom of this file. This file is the SHELL BASE: PATH, history,
+# completion, options, keybindings.
+
+# =============================================================================
+# PATH — typeset -U dedups, path/PATH stay synced
+# Only what install.sh actually populates: ~/.local/bin (gh_install target).
+# Cargo/bun/etc removed — we don't ship them; user can add per-machine in
+# ~/.zshrc.local if they install Rust or Bun later.
+# =============================================================================
+typeset -U path PATH
+path=(
+    "$HOME/.local/bin"
+    $path
+)
+
+# Homebrew on macOS — sets PATH, MANPATH, HOMEBREW_*
+if [[ -f "/opt/homebrew/bin/brew" ]]; then
+    eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [[ -f "/usr/local/bin/brew" ]]; then
+    eval "$(/usr/local/bin/brew shellenv)"
+fi
+
+# =============================================================================
+# Editor — modern non-modal CLI editor (no vim).
+# Preference: micro (Ctrl+S like every other app) → nano → vi (POSIX last
+# resort). Override per-machine in ~/.zshrc.local if you want something else.
+# =============================================================================
+if command -v micro &>/dev/null; then
+    export EDITOR='micro' VISUAL='micro'
+elif command -v nano &>/dev/null; then
+    export EDITOR='nano' VISUAL='nano'
+else
+    export EDITOR='vi' VISUAL='vi'
+fi
+
+# =============================================================================
+# History — large, deduplicated, shared between sessions
+# HISTSIZE=50000 is community consensus for "big enough you almost never
+# lose a command". atuin reads from $HISTFILE for its initial import.
+# =============================================================================
+export HISTFILE="$HOME/.zsh_history"
+export HISTSIZE=50000
+export SAVEHIST=50000
+setopt EXTENDED_HISTORY          # ':<start>:<elapsed>;<command>' format
+setopt INC_APPEND_HISTORY        # Append immediately, not on shell exit
+setopt SHARE_HISTORY             # Share across all running sessions
+setopt HIST_EXPIRE_DUPS_FIRST    # Trim duplicates first when over HISTSIZE
+setopt HIST_IGNORE_DUPS          # Don't record event matching previous
+setopt HIST_IGNORE_ALL_DUPS      # Drop older duplicates
+setopt HIST_FIND_NO_DUPS         # Skip dupes during search
+setopt HIST_IGNORE_SPACE         # Lines starting with space aren't recorded
+setopt HIST_SAVE_NO_DUPS         # Don't write dupes to file
+setopt HIST_VERIFY               # !! and ^ expansion shows command first
+setopt HIST_REDUCE_BLANKS        # Strip extraneous whitespace
+
+# =============================================================================
+# zsh options — modern defaults
+# Sourced from: 'man zshoptions' + Apple's /etc/zshrc + community surveys.
+# =============================================================================
+setopt AUTO_CD               # `dirname` w/o `cd` works
+setopt EXTENDED_GLOB         # ^, ~, # special chars in globs
+setopt GLOB_DOTS             # * matches dotfiles too
+setopt NUMERIC_GLOB_SORT     # foo2 before foo10
+setopt INTERACTIVE_COMMENTS  # # at REPL is a comment
+setopt AUTO_PUSHD            # cd auto-pushes to dirstack
+setopt PUSHD_IGNORE_DUPS
+setopt PUSHD_SILENT
+setopt COMPLETE_IN_WORD      # Tab-complete from middle of word
+setopt ALWAYS_TO_END         # Move cursor to end after completion
+setopt NO_BEEP               # No terminal bell
+setopt PROMPT_SUBST          # Allow $vars and `cmd` in prompt (starship needs this)
+
+# WORDCHARS — Ctrl-W kills one path component, not the whole path.
+# Default removes /, so 'foo/bar/baz' Ctrl-W deletes 'baz', then 'bar', etc.
+WORDCHARS='*?_-.[]~&;!#$%^(){}<>'
+
+# =============================================================================
+# Keybindings — emacs mode (the zsh default; explicit so override-proof)
+# Modern shells expect emacs (paste-then-edit, arrow keys move cursor freely).
+# Vi mode is opt-in; we don't want it.
+# =============================================================================
+bindkey -e
+export KEYTIMEOUT=1   # 10ms ESC delay (default 400ms is painful even outside vi mode)
+
+# =============================================================================
+# Completion — zsh's built-in compsys
+# Modern best-practice from prezto/zim communities.
+# =============================================================================
+# Cache compinit results to ~/.cache/zsh/zcompdump (faster shell startup)
+ZCOMPDUMP="${XDG_CACHE_HOME:-$HOME/.cache}/zsh/zcompdump-$ZSH_VERSION"
+mkdir -p "${ZCOMPDUMP:h}"
+
+# Add zsh-completions (cloned by install.sh) to fpath BEFORE compinit
+ZSH_PLUGIN_DIR="$HOME/.local/share/zsh-plugins"
+[[ -d "$ZSH_PLUGIN_DIR/zsh-completions/src" ]] && \
+    fpath=("$ZSH_PLUGIN_DIR/zsh-completions/src" $fpath)
+
+autoload -Uz compinit
+# -d: custom dump file location (faster than the default ~/.zcompdump rebuild)
+compinit -d "$ZCOMPDUMP"
+
+# Style completions — case-insensitive, partial match, substring match,
+# colored, menu-select, cached.
+zstyle ':completion:*' menu select
+zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' 'r:|=*' 'l:|=* r:|=*'
+zstyle ':completion:*' list-colors "${(s.:.)LS_COLORS}"
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path "${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
+zstyle ':completion:*' verbose yes
+zstyle ':completion:*:descriptions' format '%B%F{yellow}%d%f%b'
+zstyle ':completion:*:warnings' format '%B%F{red}No matches for: %d%f%b'
+
+# =============================================================================
+# Pager / man — colored, modern less defaults
+# =============================================================================
+export LESS='-R -F -X -i -M -j5'   # raw colors, no-clobber, smart-case, status, scrollback
+export PAGER='less'
+# If bat is installed, use it for man pages (syntax-highlighted)
+if command -v bat &>/dev/null; then
+    export MANPAGER="sh -c 'col -bx | bat --language man --plain --paging=always'"
+else
+    export MANPAGER='less -R'
+fi
+
+# =============================================================================
+# Source ~/.zshrc.local — wires in shell/init.sh + shell/aliases.sh + any
+# machine-local additions (atuin sync creds, work-only env vars, etc.)
+# =============================================================================
+[[ -f "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"

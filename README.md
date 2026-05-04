@@ -62,6 +62,24 @@ cd ~/dotfiles
 bash install.sh
 ```
 
+### Coder workspace personalization (one-time)
+
+For Coder workspaces, point your user-level dotfiles URL at this repo so it auto-runs `install.sh` on every workspace creation/rebuild:
+
+1. Coder admin UI → User Settings → Dotfiles
+2. Set repository URL to: `https://github.com/anandpanda/dotfiles`
+3. Save
+
+After that, every fresh Coder workspace bootstraps with the full CLI stack, settings, and shell config without manual cloning.
+
+### Default editor: micro
+
+`$EDITOR` and `$VISUAL` resolve to **`micro`** (modern non-modal CLI editor — Ctrl+S/Ctrl+Q like every other app). Falls back to `nano` then `vi` if micro isn't installed. Override per-machine in `~/.zshrc.local`:
+
+```bash
+export EDITOR='nvim'  # or whatever you prefer
+```
+
 `install.sh` is **idempotent** and:
 
 1. Installs **system deps**: jq (required), gh, uv, semgrep
@@ -73,7 +91,7 @@ bash install.sh
    - **Round 5**: starship (cross-shell prompt — overrides any existing p10k/oh-my-zsh theme)
    - Linux: apt where available; static binary from GitHub releases otherwise
    - macOS: Homebrew across the board
-3. **Wires shell integrations + aliases** by appending `source <repo>/shell/init.sh` and `source <repo>/shell/aliases.sh` to `~/.zshrc.local` (init first, aliases after)
+3. **Wires shell config**: writes a managed `~/.zshrc` (3-line stub sourcing `shell/zshrc`) and appends `source <repo>/shell/init.sh` + `source <repo>/shell/aliases.sh` to `~/.zshrc.local`. `shell/zshrc` provides PATH, history, completion, zsh options, emacs keybindings, EDITOR=micro. Pre-existing `~/.zshrc` (or Coder-deployed symlink) is replaced or backed up to `*.backup.<timestamp>`.
 4. **Symlinks tool configs** from `configs/<tool>/` into `~/.config/<tool>/` (zellij, atuin, mise, lazygit, bat, btop, ghostty, starship). Edits at `~/.config/<tool>/<file>` flow back to the repo automatically. Pre-existing `~/.config/<tool>/` dirs are backed up to `*.backup.<timestamp>` before linking.
 5. **Backfills shell history into atuin** — runs `atuin import auto` on first install, sentinel-guarded so re-runs skip.
 6. **Installs VS Code / Cursor extensions** from `configs/vscode/extensions.txt` — single union list (works on both VS Code Marketplace and Cursor's Open VSX). Each IDE installs what its marketplace has and gracefully skips the rest, with categorized output (`new`, `already-present`, `not-in-marketplace`, `ui-only-deferred`, `failed`). Final `--update-extensions` pass upgrades anything outdated.

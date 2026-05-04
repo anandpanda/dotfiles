@@ -40,6 +40,8 @@ install_modern_cli_macos() {
         pnpm
         # Round 5: prompt
         starship
+        # Round 8: editor (used as $EDITOR in shell/zshrc)
+        micro
     )
 
     # One-time brew update so we have the latest formulae
