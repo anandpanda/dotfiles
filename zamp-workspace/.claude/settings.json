@@ -1,0 +1,46 @@
+{
+  "_comment": "Workspace-level Claude Code config for /home/coder/zamp. Hooks and skills here are layered on top of ~/.claude (system/dotfiles) when working anywhere under this directory.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/coder/zamp/.claude/hooks/personal-pre-tool.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/coder/zamp/.claude/hooks/personal-post-tool.sh",
+            "timeout": 15
+          },
+          {
+            "type": "command",
+            "command": "/home/coder/zamp/.claude/hooks/factual-file-scan.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "/home/coder/zamp/.claude/hooks/factual-stop-check.sh",
+            "timeout": 3
+          }
+        ]
+      }
+    ]
+  }
+}

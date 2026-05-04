@@ -1,0 +1,53 @@
+{
+  "mcpServers": {
+    "memory": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-memory"
+      ],
+      "env": {}
+    },
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    },
+    "grafana": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-grafana-npx"
+      ],
+      "env": {
+        "GRAFANA_URL": "http://localhost:3001"
+      }
+    },
+    "postgres": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "@henkey/postgres-mcp-server"
+      ],
+      "env": {
+        "DATABASE_URL": "postgres://ap-agent:bmMLvpejA@zamp-dev-mum-coder-db-proxy.proxy-cbgi6ga0uw5v.ap-south-1.rds.amazonaws.com:5432/pantheon?sslmode=require"
+      }
+    },
+    "temporal": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "-y",
+        "temporal-mcp"
+      ],
+      "env": {
+        "TEMPORAL_ADDRESS": "zamp-dev-aws-mum.dkqth.tmprl.cloud:7233",
+        "TEMPORAL_NAMESPACE": "zamp-dev-aws-mum.dkqth",
+        "TEMPORAL_TLS_CERT_PATH": "/home/coder/zamp/services/pantheon/.temporal-cert",
+        "TEMPORAL_TLS_KEY_PATH": "/home/coder/zamp/services/pantheon/.temporal-key"
+      }
+    }
+  }
+}
