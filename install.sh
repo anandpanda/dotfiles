@@ -295,6 +295,89 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# 7. VS Code / Cursor user settings (deep-merge, not symlink)
+# ---------------------------------------------------------------------------
+# Reads configs/vscode/settings.json — our curated preferences only — and
+# deep-merges into each detected user settings.json. Symlinking would clobber
+# per-machine state (codesandbox project IDs, gemini project, machine-specific
+# terminal profiles, theme tweaks). Merge preserves all that — only our keys
+# overwrite.
+#
+# Coverage: VS Code + Cursor × Mac + Linux. Each (IDE, OS) settings dir we
+# find gets the merge applied. Pre-merge backup at *.backup.<timestamp>.
+
+log_step "Step 7: VS Code / Cursor user settings (deep-merge)"
+
+VSCODE_SETTINGS_SRC="$DOTFILES/configs/vscode/settings.json"
+MERGE_HELPER="$DOTFILES/lib/merge_jsonc.py"
+
+if [ ! -f "$VSCODE_SETTINGS_SRC" ]; then
+    log_skip "$VSCODE_SETTINGS_SRC not found — skipping"
+elif ! command -v python3 >/dev/null 2>&1; then
+    log_warn "python3 not found — cannot deep-merge JSONC settings, skipping"
+else
+    # Per-IDE per-OS user settings dirs.
+    # Two flavors per Linux box: desktop (when VS Code/Cursor runs natively)
+    # and SSH-server (when an editor is connected remotely; the server stores
+    # its own User dir under ~/.{vscode,cursor}-server/data/).
+    declare -a settings_dirs=()
+    case "$OS" in
+        macos)
+            settings_dirs=(
+                "$HOME/Library/Application Support/Code/User"
+                "$HOME/Library/Application Support/Cursor/User"
+            )
+            ;;
+        linux)
+            settings_dirs=(
+                "$HOME/.config/Code/User"            # VS Code desktop
+                "$HOME/.config/Cursor/User"          # Cursor desktop
+                "$HOME/.vscode-server/data/User"     # VS Code SSH-server (remote workspace)
+                "$HOME/.cursor-server/data/User"     # Cursor SSH-server (remote workspace)
+            )
+            ;;
+    esac
+
+    for dir in "${settings_dirs[@]}"; do
+        target="$dir/settings.json"
+        # Derive a friendly IDE name from the path. Desktop dirs end in
+        # "/<IDE>/User"; SSH-server dirs in "/<IDE>-server/data/User".
+        case "$dir" in
+            *Cursor*|*cursor-server*) ide_name="Cursor" ;;
+            *Code*|*vscode-server*)   ide_name="VS Code" ;;
+            *)                        ide_name="$(basename "$(dirname "$dir")")" ;;
+        esac
+        # Append " (SSH server)" suffix to disambiguate when both desktop
+        # and server dirs exist on the same machine.
+        case "$dir" in
+            *-server/data/User) ide_name="$ide_name (SSH server)" ;;
+        esac
+
+        if [ ! -d "$dir" ]; then
+            log_skip "$ide_name not installed (no $dir)"
+            continue
+        fi
+
+        if [ ! -f "$target" ]; then
+            cp "$VSCODE_SETTINGS_SRC" "$target"
+            log_info "$ide_name: created $target with our settings"
+            continue
+        fi
+
+        backup="$target.backup.$(date +%Y%m%d-%H%M%S)"
+        cp "$target" "$backup"
+
+        if merged=$(python3 "$MERGE_HELPER" "$target" "$VSCODE_SETTINGS_SRC" 2>&1); then
+            printf '%s\n' "$merged" > "$target"
+            log_info "$ide_name: merged → $target (backup: $(basename "$backup"))"
+        else
+            log_warn "$ide_name: merge failed — keeping original. Error: $merged"
+            rm -f "$backup"
+        fi
+    done
+fi
+
+# ---------------------------------------------------------------------------
 # Done
 # ---------------------------------------------------------------------------
 
