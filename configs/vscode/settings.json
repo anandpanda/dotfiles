@@ -22,8 +22,8 @@
   "files.trimFinalNewlines": true,
 
   "workbench.startupEditor": "none",
-  "workbench.iconTheme": "material-icon-theme",
-  "workbench.colorTheme": "One Dark Pro Darker",
+  "workbench.iconTheme": "catppuccin-perfect-mocha",
+  "workbench.colorTheme": "One Dark Pro Night Flat",
   "workbench.editor.wrapTabs": true,
   "workbench.editor.enablePreview": false,
   "workbench.editor.pinnedTabsOnSeparateRow": true,
