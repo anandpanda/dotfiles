@@ -492,43 +492,17 @@ fi  # end Step 7
 if should_run zamp; then
 log_step "Step 8: Symlink zamp-workspace into ~/zamp/"
 
-ZAMP_WORKSPACE_SRC="$DOTFILES/zamp-workspace"
 ZAMP_DST="$HOME/zamp"
+LINK_SCRIPT="$DOTFILES/zamp-workspace/link-here.sh"
 
 if [ ! -d "$ZAMP_DST" ]; then
     log_skip "$ZAMP_DST not found — skipping (machine doesn't have the zamp workspace)"
-elif [ ! -d "$ZAMP_WORKSPACE_SRC" ]; then
-    log_skip "$ZAMP_WORKSPACE_SRC not in dotfiles — nothing to deploy"
+elif [ ! -x "$LINK_SCRIPT" ]; then
+    log_skip "$LINK_SCRIPT missing or not executable"
 else
-    # .claude/ — directory symlink
-    src="$ZAMP_WORKSPACE_SRC/.claude"
-    target="$ZAMP_DST/.claude"
-    if [ -L "$target" ] && [ "$(readlink "$target")" = "$src" ]; then
-        log_skip ".claude already symlinked"
-    else
-        if [ -e "$target" ] && [ ! -L "$target" ]; then
-            backup="$target.backup.$(date +%Y%m%d-%H%M%S)"
-            mv "$target" "$backup"
-            log_warn "moved existing $target → $backup"
-        fi
-        ln -sfn "$src" "$target"
-        log_info ".claude symlinked → $target"
-    fi
-
-    # .mcp.json — file symlink
-    src="$ZAMP_WORKSPACE_SRC/.mcp.json"
-    target="$ZAMP_DST/.mcp.json"
-    if [ -L "$target" ] && [ "$(readlink "$target")" = "$src" ]; then
-        log_skip ".mcp.json already symlinked"
-    else
-        if [ -e "$target" ] && [ ! -L "$target" ]; then
-            backup="$target.backup.$(date +%Y%m%d-%H%M%S)"
-            mv "$target" "$backup"
-            log_warn "moved existing $target → $backup"
-        fi
-        ln -sfn "$src" "$target"
-        log_info ".mcp.json symlinked → $target"
-    fi
+    # Delegate to the standalone link-here.sh so logic is shared with the
+    # ad-hoc 'bash zamp-workspace/link-here.sh /some/dir' use case.
+    bash "$LINK_SCRIPT" "$ZAMP_DST" 2>&1 | sed 's/^/    /'
 fi
 fi  # end Step 8
 
