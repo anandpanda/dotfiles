@@ -144,3 +144,19 @@ fi
 # machine-local additions (atuin sync creds, work-only env vars, etc.)
 # =============================================================================
 [[ -f "$HOME/.zshrc.local" ]] && source "$HOME/.zshrc.local"
+
+# =============================================================================
+# Step 7 trigger: deploy IDE user settings on first interactive shell after
+# VS Code / Cursor's SSH server provisions its User dir. install.sh's Step 7
+# can't do this because Coder runs install.sh before any IDE has connected,
+# so the dirs don't exist yet at install time. Sentinel keeps the cost at
+# two stat()s per shell after the first successful merge.
+# =============================================================================
+for _srv in "$HOME/.vscode-server/data/User" "$HOME/.cursor-server/data/User"; do
+    [[ -d "$_srv" ]] || continue
+    [[ -f "$_srv/.dotfiles-merged" ]] && continue
+    if [[ -f "$HOME/dotfiles/install.sh" ]]; then
+        bash "$HOME/dotfiles/install.sh" settings >/dev/null 2>&1 && touch "$_srv/.dotfiles-merged"
+    fi
+done
+unset _srv
