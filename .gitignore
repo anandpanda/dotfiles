@@ -28,6 +28,8 @@ claude/memory/project_*.md
 **/.claude/projects/
 **/.claude/sessions/
 **/.claude/cache/
+**/.claude/scheduled_tasks.lock
+**/.claude/*.lock
 
 # Backups created by install.sh / link-here.sh (target-side, but defensive
 # in case any land inside the repo)

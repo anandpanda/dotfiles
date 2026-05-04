@@ -241,16 +241,47 @@ for line in "$SOURCE_INIT" "$SOURCE_ALIASES"; do
     fi
 done
 
-# Ensure ~/.zshrc itself sources ~/.zshrc.local on bare systems
+# Manage ~/.zshrc — write a 3-line stub that sources our shell/zshrc.
+# Cases handled:
+#   - missing                                 → write stub
+#   - symlink to coderv2/dotfiles (Coder's)   → remove symlink, write stub
+#   - already managed (marker line found)     → skip (idempotent)
+#   - real file with other content            → backup to *.backup.<ts>, write stub
+#   - symlink to something else               → backup the link, write stub
 ZSHRC="$HOME/.zshrc"
-ZSHRC_LOCAL_SOURCE='[ -f "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"'
-if [ -f "$ZSHRC" ] && ! grep -qF '.zshrc.local' "$ZSHRC" 2>/dev/null; then
-    {
-        echo ""
-        echo "# dotfiles: source machine-local shell extensions"
-        echo "$ZSHRC_LOCAL_SOURCE"
-    } >> "$ZSHRC"
-    log_info "Added .zshrc.local sourcing to $ZSHRC"
+ZSHRC_MARKER='dotfiles/shell/zshrc'
+ZSHRC_STUB='# Sourced by zsh on interactive shell start.
+# Managed by ~/dotfiles. Edits to this file may be overwritten on next install.sh run.
+[ -f "$HOME/dotfiles/shell/zshrc" ] && source "$HOME/dotfiles/shell/zshrc"'
+
+write_zshrc_stub() { printf '%s\n' "$ZSHRC_STUB" > "$ZSHRC"; }
+backup_and_write_zshrc() {
+    local bk="$ZSHRC.backup.$(date +%Y%m%d-%H%M%S)"
+    mv "$ZSHRC" "$bk"
+    log_warn "$ZSHRC: backed up existing → $(basename "$bk")"
+    write_zshrc_stub
+    log_info "$ZSHRC: wrote managed stub"
+}
+
+if [ ! -e "$ZSHRC" ] && [ ! -L "$ZSHRC" ]; then
+    write_zshrc_stub
+    log_info "$ZSHRC: created managed stub"
+elif [ -L "$ZSHRC" ]; then
+    target="$(readlink "$ZSHRC")"
+    case "$target" in
+        */coderv2/dotfiles/*)
+            rm "$ZSHRC"
+            write_zshrc_stub
+            log_info "$ZSHRC: replaced Coder dotfiles symlink with our managed stub"
+            ;;
+        *)
+            backup_and_write_zshrc
+            ;;
+    esac
+elif grep -qF "$ZSHRC_MARKER" "$ZSHRC" 2>/dev/null; then
+    log_skip "$ZSHRC: already managed by dotfiles"
+else
+    backup_and_write_zshrc
 fi
 
 fi  # end Step 3

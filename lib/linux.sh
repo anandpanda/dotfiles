@@ -262,6 +262,23 @@ install_starship_linux() {
     gh_install starship/starship "starship-${ARCH}-unknown-linux-musl.tar.gz" starship
 }
 
+install_micro_linux() {
+    # micro — modern non-modal CLI editor; Ctrl+S/C/V like every other app.
+    # Used as $EDITOR in shell/zshrc. Available in apt since Ubuntu 22.04+.
+    if apt_has micro; then
+        sudo apt-get install -y -q micro >/dev/null 2>&1 \
+            && log_info "micro (apt up-to-date or upgraded)" \
+            || log_warn "micro apt install failed"
+    else
+        # GitHub release asset: micro-<ver>-linux64.tgz (or linux-arm64.tgz)
+        case "$ARCH" in
+            x86_64) gh_install zyedidia/micro "micro-.*-linux64\.tgz$" micro ;;
+            aarch64) gh_install zyedidia/micro "micro-.*-linux-arm64\.tgz$" micro ;;
+            *) log_warn "micro: unsupported arch $ARCH, skipping" ;;
+        esac
+    fi
+}
+
 # Install JetBrainsMono Nerd Font into ~/.local/share/fonts/
 install_nerd_font_linux() {
     local font_dir="$HOME/.local/share/fonts"
@@ -351,6 +368,9 @@ install_modern_cli_linux() {
 
     # Round 5: Prompt
     install_starship_linux  || log_warn "starship install had issues (continuing)"
+
+    # Round 8: Editor (used as $EDITOR in shell/zshrc)
+    install_micro_linux     || log_warn "micro install had issues (continuing)"
 
     # Round 4: Ghostty (GUI app — skip on Linux, hint only)
     # No official .deb/apt; flatpak works on desktop Linux but not in headless
