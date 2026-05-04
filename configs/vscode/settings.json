@@ -1,0 +1,86 @@
+{
+  "editor.fontFamily": "'JetBrainsMono Nerd Font Mono', 'JetBrainsMonoNL Nerd Font', Menlo, Consolas, monospace",
+  "editor.fontWeight": "normal",
+  "editor.fontLigatures": false,
+  "editor.cursorBlinking": "smooth",
+  "editor.cursorSmoothCaretAnimation": "on",
+  "editor.smoothScrolling": true,
+  "editor.linkedEditing": true,
+  "editor.stickyTabStops": true,
+  "editor.bracketPairColorization.independentColorPoolPerBracketType": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.formatOnSave": true,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.suggestSelection": "first",
+  "editor.mouseWheelZoom": true,
+  "editor.stickyScroll.enabled": true,
+
+  "files.autoSave": "afterDelay",
+  "files.autoSaveDelay": 500,
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+
+  "workbench.startupEditor": "none",
+  "workbench.iconTheme": "material-icon-theme",
+  "workbench.colorTheme": "One Dark Pro Darker",
+  "workbench.editor.wrapTabs": true,
+  "workbench.editor.enablePreview": false,
+  "workbench.editor.pinnedTabsOnSeparateRow": true,
+  "workbench.commandPalette.preserveInput": true,
+  "window.titleBarStyle": "custom",
+  "window.menuBarVisibility": "compact",
+
+  "terminal.integrated.fontFamily": "'JetBrainsMono Nerd Font Mono', 'JetBrainsMonoNL Nerd Font'",
+  "terminal.integrated.fontLigatures": true,
+  "terminal.integrated.cursorStyle": "line",
+  "terminal.integrated.cursorBlinking": true,
+  "terminal.integrated.cursorWidth": 2,
+  "terminal.integrated.cursorStyleInactive": "line",
+  "terminal.integrated.allowChords": false,
+  "terminal.integrated.enableMultiLinePasteWarning": "never",
+  "terminal.integrated.smoothScrolling": true,
+
+  "explorer.confirmDelete": false,
+  "explorer.compactFolders": false,
+
+  "git.confirmSync": false,
+  "git.autofetch": true,
+  "git.openRepositoryInParentFolders": "always",
+  "diffEditor.renderSideBySide": false,
+  "scm.defaultViewMode": "tree",
+
+  "[cpp]": {
+    "editor.formatOnSave": false
+  },
+  "[python]": {
+    "editor.tabSize": 4,
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true
+  },
+  "[markdown]": {
+    "editor.wordWrap": "on",
+    "editor.formatOnSave": false
+  },
+  "[json]": {
+    "editor.tabSize": 2
+  },
+  "[jsonc]": {
+    "editor.tabSize": 2
+  },
+
+  "prettier.tabWidth": 4,
+  "eslint.format.enable": true,
+  "breadcrumbs.enabled": true,
+  "security.workspace.trust.untrustedFiles": "open",
+
+  "claudeCode.preferredLocation": "panel",
+  "claudeCode.allowDangerouslySkipPermissions": true,
+
+  "github.copilot.enable": {
+    "*": true,
+    "plaintext": false,
+    "markdown": false,
+    "scminput": false
+  }
+}
