@@ -11,7 +11,7 @@
 
 install_bat_linux() {
     if apt_has bat; then
-        sudo apt-get install -y -q bat >/dev/null 2>&1 \
+        sudo apt-get install -y -q bat \
             && log_info "bat (apt up-to-date or upgraded)" \
             || log_warn "bat apt install failed"
         # On Debian/Ubuntu the binary is 'batcat' due to a name clash; symlink it
@@ -27,7 +27,7 @@ install_bat_linux() {
 
 install_eza_linux() {
     if apt_has eza; then
-        sudo apt-get install -y -q eza >/dev/null 2>&1 \
+        sudo apt-get install -y -q eza \
             && log_info "eza (apt up-to-date or upgraded)" \
             || log_warn "eza apt install failed"
     else
@@ -37,7 +37,7 @@ install_eza_linux() {
 
 install_fd_linux() {
     if apt_has fd-find; then
-        sudo apt-get install -y -q fd-find >/dev/null 2>&1 \
+        sudo apt-get install -y -q fd-find \
             && log_info "fd (apt up-to-date or upgraded)" \
             || log_warn "fd apt install failed"
         if have fdfind && ! have fd; then
@@ -52,7 +52,7 @@ install_fd_linux() {
 
 install_ripgrep_linux() {
     if apt_has ripgrep; then
-        sudo apt-get install -y -q ripgrep >/dev/null 2>&1 \
+        sudo apt-get install -y -q ripgrep \
             && log_info "ripgrep (apt up-to-date or upgraded)" \
             || log_warn "ripgrep apt install failed"
     else
@@ -63,7 +63,7 @@ install_ripgrep_linux() {
 install_dust_linux() {
     # 'du-dust' only landed in Ubuntu 25.04+; prefer GitHub binary on LTS releases
     if apt_has du-dust; then
-        sudo apt-get install -y -q du-dust >/dev/null 2>&1 \
+        sudo apt-get install -y -q du-dust \
             && log_info "dust (apt up-to-date or upgraded)" \
             || log_warn "dust apt install failed"
     else
@@ -73,7 +73,7 @@ install_dust_linux() {
 
 install_duf_linux() {
     if apt_has duf; then
-        sudo apt-get install -y -q duf >/dev/null 2>&1 \
+        sudo apt-get install -y -q duf \
             && log_info "duf (apt up-to-date or upgraded)" \
             || log_warn "duf apt install failed"
     else
@@ -83,7 +83,7 @@ install_duf_linux() {
 
 install_btop_linux() {
     if apt_has btop; then
-        sudo apt-get install -y -q btop >/dev/null 2>&1 \
+        sudo apt-get install -y -q btop \
             && log_info "btop (apt up-to-date or upgraded)" \
             || log_warn "btop apt install failed"
     else
@@ -94,7 +94,7 @@ install_btop_linux() {
 
 install_sd_linux() {
     if apt_has sd; then
-        sudo apt-get install -y -q sd >/dev/null 2>&1 \
+        sudo apt-get install -y -q sd \
             && log_info "sd (apt up-to-date or upgraded)" \
             || log_warn "sd apt install failed"
     else
@@ -105,7 +105,7 @@ install_sd_linux() {
 install_tealdeer_linux() {
     # tealdeer provides the 'tldr' command — fast Rust client (vs the Node tldr)
     if apt_has tealdeer; then
-        sudo apt-get install -y -q tealdeer >/dev/null 2>&1 \
+        sudo apt-get install -y -q tealdeer \
             && log_info "tealdeer (apt up-to-date or upgraded)" \
             || log_warn "tealdeer apt install failed"
     else
@@ -119,7 +119,7 @@ install_tealdeer_linux() {
 
 install_delta_linux() {
     if apt_has git-delta; then
-        sudo apt-get install -y -q git-delta >/dev/null 2>&1 \
+        sudo apt-get install -y -q git-delta \
             && log_info "delta (apt up-to-date or upgraded)" \
             || log_warn "delta apt install failed"
     else
@@ -132,7 +132,7 @@ install_delta_linux() {
 
 install_fzf_linux() {
     if apt_has fzf; then
-        sudo apt-get install -y -q fzf >/dev/null 2>&1 \
+        sudo apt-get install -y -q fzf \
             && log_info "fzf (apt up-to-date or upgraded)" \
             || log_warn "fzf apt install failed"
     else
@@ -142,7 +142,7 @@ install_fzf_linux() {
 
 install_zoxide_linux() {
     if apt_has zoxide; then
-        sudo apt-get install -y -q zoxide >/dev/null 2>&1 \
+        sudo apt-get install -y -q zoxide \
             && log_info "zoxide (apt up-to-date or upgraded)" \
             || log_warn "zoxide apt install failed"
     else
@@ -152,7 +152,7 @@ install_zoxide_linux() {
 
 install_direnv_linux() {
     if apt_has direnv; then
-        sudo apt-get install -y -q direnv >/dev/null 2>&1 \
+        sudo apt-get install -y -q direnv \
             && log_info "direnv (apt up-to-date or upgraded)" \
             || log_warn "direnv apt install failed"
     else
@@ -163,7 +163,7 @@ install_direnv_linux() {
 
 install_atuin_linux() {
     if apt_has atuin; then
-        sudo apt-get install -y -q atuin >/dev/null 2>&1 \
+        sudo apt-get install -y -q atuin \
             && log_info "atuin (apt up-to-date or upgraded)" \
             || log_warn "atuin apt install failed"
     else
@@ -175,7 +175,7 @@ install_atuin_linux() {
 
 install_lazygit_linux() {
     if apt_has lazygit; then
-        sudo apt-get install -y -q lazygit >/dev/null 2>&1 \
+        sudo apt-get install -y -q lazygit \
             && log_info "lazygit (apt up-to-date or upgraded)" \
             || log_warn "lazygit apt install failed"
     else
@@ -186,7 +186,7 @@ install_lazygit_linux() {
 
 install_zellij_linux() {
     if apt_has zellij; then
-        sudo apt-get install -y -q zellij >/dev/null 2>&1 \
+        sudo apt-get install -y -q zellij \
             && log_info "zellij (apt up-to-date or upgraded)" \
             || log_warn "zellij apt install failed"
     else
@@ -197,7 +197,7 @@ install_zellij_linux() {
 
 install_mise_linux() {
     if apt_has mise; then
-        sudo apt-get install -y -q mise >/dev/null 2>&1 \
+        sudo apt-get install -y -q mise \
             && log_info "mise (apt up-to-date or upgraded)" \
             || log_warn "mise apt install failed"
     else
@@ -250,7 +250,7 @@ install_gh_extensions() {
         if printf '%s\n' "$installed_exts" | grep -q "$ext"; then
             log_skip "gh ext $ext (already installed)"
         else
-            gh extension install "$ext" >/dev/null 2>&1 \
+            gh extension install "$ext" \
                 && log_info "gh ext $ext installed" \
                 || log_warn "gh ext $ext install failed"
         fi
@@ -266,7 +266,7 @@ install_micro_linux() {
     # micro — modern non-modal CLI editor; Ctrl+S/C/V like every other app.
     # Used as $EDITOR in shell/zshrc. Available in apt since Ubuntu 22.04+.
     if apt_has micro; then
-        sudo apt-get install -y -q micro >/dev/null 2>&1 \
+        sudo apt-get install -y -q micro \
             && log_info "micro (apt up-to-date or upgraded)" \
             || log_warn "micro apt install failed"
     else
