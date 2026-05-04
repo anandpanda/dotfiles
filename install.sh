@@ -217,6 +217,40 @@ fi  # end Step 2
 if should_run shell; then
 log_step "Step 3: Wire shell init + aliases"
 
+# 3a. ~/dotfiles symlink — the managed ~/.zshrc stub (written below) sources
+#     $HOME/dotfiles/shell/zshrc. On Coder workspaces the repo lives under
+#     /home/coder/.config/coderv2/dotfiles/, so without this symlink the stub
+#     silently no-ops and the user gets a bare-default zsh prompt.
+if [ -L "$HOME/dotfiles" ] && [ "$(readlink "$HOME/dotfiles")" = "$DOTFILES" ]; then
+    log_skip "$HOME/dotfiles already linked"
+elif [ -e "$HOME/dotfiles" ] || [ -L "$HOME/dotfiles" ]; then
+    log_warn "$HOME/dotfiles exists and isn't our symlink — leaving alone"
+else
+    ln -s "$DOTFILES" "$HOME/dotfiles"
+    log_info "$HOME/dotfiles -> $DOTFILES"
+fi
+
+# 3b. login shell -> zsh. Coder's base image leaves users on /bin/bash, so
+#     VS Code's integrated terminal launches bash regardless of how the
+#     dotfiles are wired. chsh once and the styled prompt comes back.
+zsh_path="$(command -v zsh || true)"
+if [ -z "$zsh_path" ]; then
+    log_warn "zsh not on PATH — cannot chsh; install zsh and re-run 'bash install.sh shell'"
+else
+    case "$OS" in
+        linux) current_shell="$(getent passwd "$USER" | cut -d: -f7)" ;;
+        macos) current_shell="$(dscl . -read "/Users/$USER" UserShell 2>/dev/null | awk '{print $2}')" ;;
+        *)     current_shell="" ;;
+    esac
+    if [ "$current_shell" = "$zsh_path" ]; then
+        log_skip "login shell already $zsh_path"
+    elif sudo -n true 2>/dev/null; then
+        sudo chsh -s "$zsh_path" "$USER" && log_info "login shell -> $zsh_path (was $current_shell)"
+    else
+        log_warn "would chsh -s $zsh_path $USER but no passwordless sudo; run: sudo chsh -s $zsh_path $USER"
+    fi
+fi
+
 SOURCE_INIT="source $DOTFILES/shell/init.sh"
 SOURCE_ALIASES="source $DOTFILES/shell/aliases.sh"
 
