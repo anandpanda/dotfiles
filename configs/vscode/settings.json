@@ -22,7 +22,7 @@
   "files.trimFinalNewlines": true,
 
   "workbench.startupEditor": "none",
-  "workbench.iconTheme": "catppuccin-perfect-mocha",
+  "workbench.iconTheme": "catppuccin-mocha",
   "workbench.colorTheme": "One Dark Pro Night Flat",
   "workbench.editor.wrapTabs": true,
   "workbench.editor.enablePreview": false,
