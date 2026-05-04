@@ -57,7 +57,7 @@ NOT in this repo (deliberately):
 ## Bootstrapping a new machine
 
 ```bash
-git clone https://github.com/pandaAtZamp/dotfiles.git ~/dotfiles
+git clone https://github.com/anandpanda/dotfiles.git ~/dotfiles
 cd ~/dotfiles
 bash install.sh
 ```
