@@ -244,8 +244,10 @@ install_gh_extensions() {
         "dlvhdr/gh-dash"      # PR/issue dashboard
         "mislav/gh-poi"       # cleanup merged branches
     )
+    local installed_exts
+    installed_exts="$(gh extension list 2>/dev/null || true)"
     for ext in "${extensions[@]}"; do
-        if gh extension list 2>/dev/null | grep -q "$ext"; then
+        if printf '%s\n' "$installed_exts" | grep -q "$ext"; then
             log_skip "gh ext $ext (already installed)"
         else
             gh extension install "$ext" >/dev/null 2>&1 \

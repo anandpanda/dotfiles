@@ -47,9 +47,9 @@ install_modern_cli_macos() {
 
     for pkg in "${pkgs[@]}"; do
         if brew list --formula "$pkg" >/dev/null 2>&1; then
-            # Installed — try upgrading
-            if brew outdated --formula "$pkg" >/dev/null 2>&1; then
-                # Outdated — upgrade
+            # Installed — check if outdated (brew outdated exits 0 either way;
+            # it prints the package name only when an update is available).
+            if [ -n "$(brew outdated --formula "$pkg" 2>/dev/null)" ]; then
                 if brew upgrade "$pkg" >/dev/null 2>&1; then
                     log_info "$pkg upgraded"
                 else
@@ -80,8 +80,8 @@ install_modern_cli_macos() {
             log_warn "Ghostty install failed (try: brew install --cask ghostty manually)"
         fi
     else
-        # Already installed — try upgrading
-        if brew outdated --cask ghostty >/dev/null 2>&1; then
+        # Already installed — check if outdated
+        if [ -n "$(brew outdated --cask ghostty 2>/dev/null)" ]; then
             brew upgrade --cask ghostty >/dev/null 2>&1 \
                 && log_info "Ghostty upgraded" \
                 || log_warn "Ghostty upgrade failed"
@@ -120,8 +120,10 @@ install_gh_extensions() {
     fi
     log_step "gh extensions"
     local extensions=("dlvhdr/gh-dash" "mislav/gh-poi")
+    local installed_exts
+    installed_exts="$(gh extension list 2>/dev/null || true)"
     for ext in "${extensions[@]}"; do
-        if gh extension list 2>/dev/null | grep -q "$ext"; then
+        if printf '%s\n' "$installed_exts" | grep -q "$ext"; then
             log_skip "gh ext $ext (already installed)"
         else
             gh extension install "$ext" >/dev/null 2>&1 \
