@@ -184,6 +184,14 @@ else
     log_info "gh"
 fi
 
+# zsh — required for Step 3's chsh and as the shell shell/zshrc targets.
+# macOS ships zsh as default since Catalina; only Linux ever needs to install.
+if [ "$OS" = "linux" ] && need zsh; then
+    log_step "Installing zsh via apt..."
+    sudo apt-get install -y -q zsh >/dev/null 2>&1 || { log_err "apt install zsh failed"; exit 1; }
+fi
+[ "$OS" = "linux" ] && log_info "zsh ($(zsh --version 2>/dev/null))"
+
 if need uv; then
     echo "    Installing uv..."
     curl -LsSf https://astral.sh/uv/install.sh | sh
