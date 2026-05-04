@@ -32,6 +32,9 @@ dotfiles/
 │   ├── btop/btop.conf          #   tokyo-night theme, vim keys, rounded corners
 │   ├── ghostty/config          #   Catppuccin Mocha, JetBrainsMono NF, shell integ
 │   └── starship/starship.toml  #   Catppuccin Mocha, two-line prompt
+├── work-workspace/             # Workspace-scoped Claude config for ~/work
+│   ├── .claude/                #   CLAUDE.md, settings, agents, hooks, skills, commands
+│   └── .mcp.json               #   workspace MCP servers (memory, github, grafana, postgres)
 └── claude/                     # PURE REFERENCE — install.sh never touches this
     ├── settings.template.json  # ~/.claude/settings.json template (substitute $HOME)
     ├── statusline.sh           # custom Claude Code status line
