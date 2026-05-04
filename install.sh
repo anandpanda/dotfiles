@@ -170,7 +170,7 @@ if need jq; then
         linux)
             log_step "Installing jq via apt..."
             sudo apt-get update -qq 2>/dev/null
-            sudo apt-get install -y -q jq >/dev/null 2>&1 || { log_err "apt install jq failed"; exit 1; }
+            sudo apt-get install -y -q jq || { log_err "apt install jq failed"; exit 1; }
             ;;
     esac
 fi
@@ -188,7 +188,7 @@ fi
 # macOS ships zsh as default since Catalina; only Linux ever needs to install.
 if [ "$OS" = "linux" ] && need zsh; then
     log_step "Installing zsh via apt..."
-    sudo apt-get install -y -q zsh >/dev/null 2>&1 || { log_err "apt install zsh failed"; exit 1; }
+    sudo apt-get install -y -q zsh || { log_err "apt install zsh failed"; exit 1; }
 fi
 [ "$OS" = "linux" ] && log_info "zsh ($(zsh --version 2>/dev/null))"
 
