@@ -84,7 +84,20 @@ WORDCHARS='*?_-.[]~&;!#$%^(){}<>'
 # Vi mode is opt-in; we don't want it.
 # =============================================================================
 bindkey -e
-export KEYTIMEOUT=1   # 10ms ESC delay (default 400ms is painful even outside vi mode)
+# KEYTIMEOUT NOT set to 1 — 10ms breaks multi-byte arrow key sequences (^[[A
+# etc. arrive as separate bytes; at 10ms zsh sees only the ESC and discards
+# the rest, making up/down arrows unresponsive). Default 40 (400ms) is fine
+# in emacs mode; only matters for vi-mode ESC→command-mode snappiness.
+
+# Up/Down arrow → prefix-match history search.
+# Without anything typed: walks history line-by-line (default behavior).
+# With prefix typed: only cycles through history entries that START with
+# what's already on the line. Much more useful than naive history walk.
+# Bindings cover both regular ANSI sequences AND tput sequences (some terms).
+bindkey '^[[A' history-search-backward    # Up arrow (xterm/most)
+bindkey '^[[B' history-search-forward     # Down arrow (xterm/most)
+bindkey '^[OA' history-search-backward    # Up arrow (some terms in app mode)
+bindkey '^[OB' history-search-forward     # Down arrow (some terms in app mode)
 
 # =============================================================================
 # Completion — zsh's built-in compsys
