@@ -1,0 +1,106 @@
+# VS Code / Cursor extensions — installed by install.sh Step 6.
+# Format: one extension ID per line. Lines starting with # are comments.
+# Order doesn't matter; install.sh installs missing ones, then runs
+# `--update-extensions` to upgrade any outdated ones in one pass.
+#
+# When extension packs exist, prefer the PACK over individual members —
+# upstream pack maintainers manage member updates for us.
+
+# ===== Themes =====
+catppuccin.catppuccin-vsc          # Catppuccin theme — matches our terminal stack
+catppuccin.catppuccin-vsc-icons    # matching icon set
+vincesalvino.dark-plus-black       # alternate dark theme
+zhuangtongfa.material-theme        # One Dark Pro
+pkief.material-icon-theme          # alternate icon set
+vscode-icons-team.vscode-icons     # alternate icon set
+
+# ===== Git / GitHub workflow =====
+eamodio.gitlens
+codezombiech.gitignore
+github.vscode-github-actions
+github.vscode-pull-request-github
+waderyan.gitblame                  # inline git blame
+redhat.vscode-yaml                 # YAML LSP — schema-aware editing for .github/workflows, k8s
+davidanson.vscode-markdownlint     # markdown linting for PR descriptions / READMEs
+
+# Note: github.copilot + github.copilot-chat NOT included — paid product, opt-in
+#       per-machine. Install manually with: code --install-extension github.copilot
+
+# ===== Editing quality-of-life =====
+aaron-bond.better-comments
+adpyke.codesnap                    # screenshot of code with style
+editorconfig.editorconfig          # respect .editorconfig per repo
+esbenp.prettier-vscode             # Prettier formatter
+formulahendry.auto-rename-tag      # rename paired HTML/JSX tags
+formulahendry.code-runner          # run snippets without leaving editor
+nucllear.vscode-extension-auto-import   # auto-import for JS/TS (VS Code Marketplace only)
+steoates.autoimport                # auto-import alternative — works on Cursor too
+usernamehw.errorlens               # inline error/warning display
+
+# ===== Web / JS / React =====
+bradlc.vscode-tailwindcss
+digitalbrainstem.javascript-ejs-support
+dsznajder.es7-react-js-snippets
+ms-vscode.live-server              # live-reload preview
+ritwickdey.liveserver              # alternate live server
+
+# ===== Python =====
+ms-python.python                   # core Python LSP
+ms-python.debugpy                  # debugger
+ms-python.vscode-pylance           # type checking + intellisense
+ms-python.vscode-python-envs       # env management
+charliermarsh.ruff                 # ruff: modern lint+format (Rust-fast)
+ms-python.black-formatter          # Black formatter (still the std for many repos)
+ms-python.isort                    # auto-sort imports
+njpwerner.autodocstring            # generate docstrings from type hints
+
+# ===== Jupyter (pack — auto-installs jupyter-keymap, renderers, cell-tags, slideshow) =====
+ms-toolsai.jupyter
+
+# ===== Go =====
+golang.go
+
+# ===== C/C++ =====
+# Cursor's marketplace mirror lacks the pack metadata + main cpptools,
+# but has the rest. List pack + members so VS Code uses the pack and
+# Cursor still gets the bits it can.
+ms-vscode.cpptools-extension-pack  # VS Code only — Cursor mirror skips
+ms-vscode.cpptools                 # main C++ extension — VS Code only
+ms-vscode.cmake-tools
+ms-vscode.cpptools-themes
+twxs.cmake
+ms-vscode.cpp-devtools             # may not exist anywhere; harmless skip
+
+# ===== Docker =====
+formulahendry.docker-extension-pack    # VS Code Marketplace only
+formulahendry.docker-explorer           # VS Code Marketplace only
+ms-azuretools.vscode-docker             # Microsoft official Docker — works on Cursor too
+
+# ===== Data & files =====
+dotenv.dotenv-vscode               # .env syntax (VS Code Marketplace only)
+mikestead.dotenv                   # .env syntax — works on Cursor too
+mechatroner.rainbow-csv            # csv column coloring
+qwtel.sqlite-viewer                # browse .sqlite files in editor
+nextfaze.json-parse-stringify      # JSON helper (VS Code Marketplace only)
+tomoki1207.pdf                     # view PDFs inside the editor
+
+# ===== Remote / cloud =====
+coder.coder-remote                 # Coder dashboard / launch workspaces
+github.codespaces
+github.remotehub
+ms-vscode-remote.remote-containers
+ms-vscode.azure-repos
+ms-vscode.remote-repositories
+
+# ===== Cursor-only (Anysphere) =====
+# Anysphere publishes only to Cursor's marketplace. VS Code skips with "not found".
+# These are bundled with Cursor itself but listing makes the toolchain self-documenting.
+anysphere.cursorpyright            # Cursor's Pyright fork (Python type checking)
+anysphere.remote-ssh               # Cursor's Remote-SSH client (UI-only — installs on local Cursor)
+
+# ===== Utilities =====
+anthropic.claude-code              # Claude Code in-editor extension
+divyanshuagrawal.competitive-programming-helper
+
+# ===== Dropped intentionally =====
+# .NET stack (csdevkit, csharp, vscode-dotnet-runtime) — not used at Zamp
