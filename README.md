@@ -73,6 +73,7 @@ bash install.sh
 3. **Wires shell integrations + aliases** by appending `source <repo>/shell/init.sh` and `source <repo>/shell/aliases.sh` to `~/.zshrc.local` (init first, aliases after)
 4. **Symlinks tool configs** from `configs/<tool>/` into `~/.config/<tool>/` (zellij, atuin, mise, lazygit, bat, btop, ghostty, starship). Edits at `~/.config/<tool>/<file>` flow back to the repo automatically. Pre-existing `~/.config/<tool>/` dirs are backed up to `*.backup.<timestamp>` before linking.
 5. **Backfills shell history into atuin** — runs `atuin import auto` on first install, sentinel-guarded so re-runs skip.
+6. **Installs VS Code / Cursor extensions** from `configs/vscode/extensions.txt` — single union list (works on both VS Code Marketplace and Cursor's Open VSX). Each IDE installs what its marketplace has and gracefully skips the rest, with categorized output (`new`, `already-present`, `not-in-marketplace`, `ui-only-deferred`, `failed`). Final `--update-extensions` pass upgrades anything outdated.
 
 That's it. **`install.sh` does NOT touch `~/.claude/`.**
 
