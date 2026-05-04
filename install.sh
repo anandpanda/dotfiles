@@ -34,7 +34,12 @@ Steps (run all by default):
   atuin       Step 5: atuin history backfill (first run only)
   extensions  Step 6: VS Code / Cursor extensions
   settings    Step 7: VS Code / Cursor user settings (deep-merge)
-  zamp        Step 8: Symlink zamp-workspace into ~/zamp/ (skipped if dir absent)
+
+Workspace-scoped Claude / MCP config (NOT installed by install.sh):
+  Use the standalone tool to link into a target dir (e.g. your work workspace):
+    cd /path/to/your/workspace
+    bash $DOTFILES/zamp-workspace/link-here.sh
+  See zamp-workspace/link-here.sh for usage.
 
 Dependencies (auto-resolved — running a step also runs its prerequisites):
   cli depends on deps
@@ -66,7 +71,7 @@ esac
 # (in topo order), then X. Hard-coded since the graph is small + static.
 
 case "$STEP" in
-    all)        STEPS_TO_RUN=(deps cli shell configs atuin extensions settings zamp) ;;
+    all)        STEPS_TO_RUN=(deps cli shell configs atuin extensions settings) ;;
     deps)       STEPS_TO_RUN=(deps) ;;
     cli)        STEPS_TO_RUN=(deps cli) ;;
     shell)      STEPS_TO_RUN=(shell) ;;
@@ -74,7 +79,6 @@ case "$STEP" in
     atuin)      STEPS_TO_RUN=(deps cli atuin) ;;
     extensions) STEPS_TO_RUN=(extensions) ;;
     settings)   STEPS_TO_RUN=(settings) ;;
-    zamp)       STEPS_TO_RUN=(zamp) ;;
     *)
         echo "Error: unknown step '$STEP'." >&2
         echo "Run 'bash install.sh help' for valid step names." >&2
@@ -480,33 +484,6 @@ fi
 fi  # end Step 7
 
 # ---------------------------------------------------------------------------
-# 8. Symlink zamp-workspace into ~/zamp/ (Anand's work workspace, optional)
-# ---------------------------------------------------------------------------
-# If ~/zamp/ exists on this machine, link our workspace-scoped Claude config
-# (.claude/) and MCP config (.mcp.json) into it. Edits at ~/zamp/.claude/<f>
-# flow back to the dotfiles repo automatically. Pre-existing real files/dirs
-# get backed up to *.backup.<timestamp> first.
-#
-# Skipped silently on machines without ~/zamp/ (e.g. personal laptops).
-
-if should_run zamp; then
-log_step "Step 8: Symlink zamp-workspace into ~/zamp/"
-
-ZAMP_DST="$HOME/zamp"
-LINK_SCRIPT="$DOTFILES/zamp-workspace/link-here.sh"
-
-if [ ! -d "$ZAMP_DST" ]; then
-    log_skip "$ZAMP_DST not found — skipping (machine doesn't have the zamp workspace)"
-elif [ ! -x "$LINK_SCRIPT" ]; then
-    log_skip "$LINK_SCRIPT missing or not executable"
-else
-    # Delegate to the standalone link-here.sh so logic is shared with the
-    # ad-hoc 'bash zamp-workspace/link-here.sh /some/dir' use case.
-    bash "$LINK_SCRIPT" "$ZAMP_DST" 2>&1 | sed 's/^/    /'
-fi
-fi  # end Step 8
-
-# ---------------------------------------------------------------------------
 # Done
 # ---------------------------------------------------------------------------
 
@@ -530,3 +507,8 @@ echo "      sed \"s|__HOME__|\$HOME|g\" $DOTFILES/claude/settings.template.json 
 echo ""
 echo "    For CLAUDE.md and memory: review ~/dotfiles/claude/CLAUDE.md and"
 echo "    ~/dotfiles/claude/memory/, then merge/copy what you want."
+echo ""
+echo "  Workspace-scoped Claude config (zamp-workspace/): NOT auto-deployed."
+echo "    To link into a workspace dir, cd into it and run:"
+echo "      bash $DOTFILES/zamp-workspace/link-here.sh"
+echo "    (Or pass an explicit path: link-here.sh /path/to/workspace)"
