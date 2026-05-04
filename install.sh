@@ -34,7 +34,12 @@ Steps (run all by default):
   atuin       Step 5: atuin history backfill (first run only)
   extensions  Step 6: VS Code / Cursor extensions
   settings    Step 7: VS Code / Cursor user settings (deep-merge)
-  work        Step 8: Symlink work-workspace into ~/work/ (skipped if dir absent)
+
+Workspace-scoped Claude / MCP config (NOT installed by install.sh):
+  Use the standalone tool to link into a target dir (e.g. your work workspace):
+    cd /path/to/your/workspace
+    bash $DOTFILES/work-workspace/link-here.sh
+  See work-workspace/link-here.sh for usage.
 
 Dependencies (auto-resolved — running a step also runs its prerequisites):
   cli depends on deps
@@ -66,7 +71,7 @@ esac
 # (in topo order), then X. Hard-coded since the graph is small + static.
 
 case "$STEP" in
-    all)        STEPS_TO_RUN=(deps cli shell configs atuin extensions settings work) ;;
+    all)        STEPS_TO_RUN=(deps cli shell configs atuin extensions settings) ;;
     deps)       STEPS_TO_RUN=(deps) ;;
     cli)        STEPS_TO_RUN=(deps cli) ;;
     shell)      STEPS_TO_RUN=(shell) ;;
@@ -74,7 +79,6 @@ case "$STEP" in
     atuin)      STEPS_TO_RUN=(deps cli atuin) ;;
     extensions) STEPS_TO_RUN=(extensions) ;;
     settings)   STEPS_TO_RUN=(settings) ;;
-    work)       STEPS_TO_RUN=(work) ;;
     *)
         echo "Error: unknown step '$STEP'." >&2
         echo "Run 'bash install.sh help' for valid step names." >&2
@@ -480,33 +484,6 @@ fi
 fi  # end Step 7
 
 # ---------------------------------------------------------------------------
-# 8. Symlink work-workspace into ~/work/ (Anand's work workspace, optional)
-# ---------------------------------------------------------------------------
-# If ~/work/ exists on this machine, link our workspace-scoped Claude config
-# (.claude/) and MCP config (.mcp.json) into it. Edits at ~/work/.claude/<f>
-# flow back to the dotfiles repo automatically. Pre-existing real files/dirs
-# get backed up to *.backup.<timestamp> first.
-#
-# Skipped silently on machines without ~/work/ (e.g. personal laptops).
-
-if should_run work; then
-log_step "Step 8: Symlink work-workspace into ~/work/"
-
-work_DST="$HOME/work"
-LINK_SCRIPT="$DOTFILES/work-workspace/link-here.sh"
-
-if [ ! -d "$work_DST" ]; then
-    log_skip "$work_DST not found — skipping (machine doesn't have the work workspace)"
-elif [ ! -x "$LINK_SCRIPT" ]; then
-    log_skip "$LINK_SCRIPT missing or not executable"
-else
-    # Delegate to the standalone link-here.sh so logic is shared with the
-    # ad-hoc 'bash work-workspace/link-here.sh /some/dir' use case.
-    bash "$LINK_SCRIPT" "$work_DST" 2>&1 | sed 's/^/    /'
-fi
-fi  # end Step 8
-
-# ---------------------------------------------------------------------------
 # Done
 # ---------------------------------------------------------------------------
 
@@ -530,3 +507,8 @@ echo "      sed \"s|__HOME__|\$HOME|g\" $DOTFILES/claude/settings.template.json 
 echo ""
 echo "    For CLAUDE.md and memory: review ~/dotfiles/claude/CLAUDE.md and"
 echo "    ~/dotfiles/claude/memory/, then merge/copy what you want."
+echo ""
+echo "  Workspace-scoped Claude config (work-workspace/): NOT auto-deployed."
+echo "    To link into a workspace dir, cd into it and run:"
+echo "      bash $DOTFILES/work-workspace/link-here.sh"
+echo "    (Or pass an explicit path: link-here.sh /path/to/workspace)"
