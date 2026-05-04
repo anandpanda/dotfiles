@@ -65,14 +65,24 @@ command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init zsh)"
 command -v direnv >/dev/null 2>&1 && eval "$(direnv hook zsh)"
 
 # =============================================================================
-# atuin — sqlite-backed history (records + sync); fzf KEEPS Ctrl-R
-# We disable atuin's Ctrl-R + up-arrow bindings deliberately:
-#   - Daily Ctrl-R: fzf is faster and less disruptive
-#   - For archival/cross-device search: run `atuin search` explicitly
-# atuin still records every command to sqlite + syncs (if registered).
+# atuin — sqlite-backed history (records + syncs across machines)
+# Two-key strategy:
+#   Ctrl-R → fzf inline overlay (fast, this-machine only) — set up by fzf above
+#   Alt-R  → atuin full-screen TUI (cross-machine, with metadata)
+# We disable atuin's default Ctrl-R + up-arrow bindings to avoid stomping
+# fzf and our prefix-match up-arrow. Then bind Alt-R to atuin-search
+# explicitly so the powerful TUI is one keypress away when you want it.
+#
+# Mac note: Alt-R sends `^[r` only when terminal treats Option as Meta.
+# Ghostty: we set macos-option-as-alt=true (configs/ghostty/config) ✓
+# Cursor: settings.json has terminal.integrated.macOptionIsMeta=true (default)
+# Terminal.app: Profile → Keyboard → "Use Option as Meta key"
 # =============================================================================
-command -v atuin >/dev/null 2>&1 && \
+if command -v atuin >/dev/null 2>&1; then
     eval "$(atuin init zsh --disable-ctrl-r --disable-up-arrow)"
+    # Bind Alt-R to atuin search TUI (widget registered by atuin init above)
+    bindkey '^[r' atuin-search 2>/dev/null
+fi
 
 # =============================================================================
 # mise — runtime version manager (Python/Node/Go/etc.)
