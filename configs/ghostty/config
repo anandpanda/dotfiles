@@ -4,7 +4,7 @@
 
 # ===== Theme =====
 # Built-in since 1.0; matches our zellij/lazygit/fzf palette.
-theme = catppuccin-mocha
+theme = Catppuccin Mocha
 background-opacity = 1.0
 background-blur = false
 
@@ -12,8 +12,10 @@ background-blur = false
 # JetBrainsMono Nerd Font is installed by dotfiles install.sh on both OSes.
 font-family = JetBrainsMono Nerd Font
 font-size = 14
-font-feature = +liga    # ligatures (==, =>, !=, etc.)
-font-thicken = true     # nicer rendering on macOS retina
+# Ligatures (==, =>, !=, etc.)
+font-feature = +liga
+# Nicer rendering on macOS retina
+font-thicken = true
 
 # ===== Window / chrome =====
 window-padding-x = 12
