@@ -113,6 +113,30 @@ case "$OS" in
     *)           echo "Unsupported OS: $OS — aborting." >&2; exit 1 ;;
 esac
 
+# Hard prereq on macOS: Homebrew. Most of install.sh (Step 2 cli stack,
+# Round 4 Ghostty cask, even Step 1's jq fallback) calls brew. Fail fast
+# with a clear message if missing — better than a confusing 'brew: command
+# not found' error halfway through.
+if [ "$OS" = "macos" ] && ! command -v brew >/dev/null 2>&1; then
+    cat <<'BREW_MISSING' >&2
+
+ERROR: Homebrew is required on macOS but is not installed.
+
+This dotfiles bootstrap calls brew throughout (CLI tools, Ghostty cask,
+fonts, jq, etc.). Install Homebrew first, then re-run:
+
+  /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+After install completes, follow the post-install instructions Homebrew
+prints (it'll tell you to add a line to ~/.zprofile to put brew on PATH),
+open a new shell, then re-run:
+
+  bash install.sh
+
+BREW_MISSING
+    exit 1
+fi
+
 # ---------------------------------------------------------------------------
 # Header
 # ---------------------------------------------------------------------------
