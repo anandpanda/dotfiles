@@ -193,6 +193,108 @@ else
 fi
 
 # ---------------------------------------------------------------------------
+# 6. VS Code / Cursor extensions (install + upgrade)
+# ---------------------------------------------------------------------------
+# Reads configs/vscode/extensions.txt — one extension ID per line, '#' = comment
+# (inline or full-line). Detects which CLIs are present (`code` and/or `cursor`)
+# and runs the install loop for each. Same script works on Mac (installs as
+# LOCAL extensions) and on Linux/Coder (installs as REMOTE-SSH extensions);
+# the CLI auto-scopes to where it runs.
+#
+# Idempotent: already-installed extensions are detected via --list-extensions
+# and skipped silently. Bulk --update-extensions at the end upgrades anything
+# outdated in a single pass.
+
+log_step "Step 6: VS Code / Cursor extensions"
+
+VSCODE_EXTS_FILE="$DOTFILES/configs/vscode/extensions.txt"
+
+if [ ! -f "$VSCODE_EXTS_FILE" ]; then
+    log_skip "$VSCODE_EXTS_FILE not found — skipping"
+else
+    # Detect available CLIs (one or both may exist on a machine)
+    declare -a vscode_clis=()
+    for cli in code cursor code-insiders; do
+        command -v "$cli" >/dev/null 2>&1 && vscode_clis+=("$cli")
+    done
+
+    if [ ${#vscode_clis[@]} -eq 0 ]; then
+        log_skip "No VS Code / Cursor CLI found on PATH — skipping"
+    else
+        # Strip comments + blank lines once into an array
+        declare -a wanted_exts=()
+        while IFS= read -r line; do
+            ext="$(printf '%s' "$line" | awk -F'#' '{print $1}' | sed 's/[[:space:]]*$//')"
+            [ -n "$ext" ] && wanted_exts+=("$ext")
+        done < "$VSCODE_EXTS_FILE"
+
+        # If `code` and `cursor` resolve to the same binary (Cursor's SSH server
+        # ships both as symlinks to one cli), only run the install loop once.
+        declare -A seen_realpaths=()
+        declare -a unique_clis=()
+        for cli in "${vscode_clis[@]}"; do
+            real="$(readlink -f "$(command -v "$cli")" 2>/dev/null || command -v "$cli")"
+            if [ -z "${seen_realpaths[$real]:-}" ]; then
+                seen_realpaths[$real]=1
+                unique_clis+=("$cli")
+            fi
+        done
+
+        for cli in "${unique_clis[@]}"; do
+            log_step "[$cli] installing extensions (${#wanted_exts[@]} wanted)"
+
+            # Snapshot already-installed (lowercase for case-insensitive compare)
+            installed_before="$("$cli" --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]')"
+
+            installed_count=0
+            skipped_count=0
+            not_in_marketplace=0
+            ui_only_refused=0
+            failed_count=0
+            for ext in "${wanted_exts[@]}"; do
+                ext_lower="$(printf '%s' "$ext" | tr '[:upper:]' '[:lower:]')"
+                if printf '%s\n' "$installed_before" | grep -qx "$ext_lower"; then
+                    skipped_count=$((skipped_count + 1))
+                    continue
+                fi
+                # Capture stderr to categorize the failure mode
+                output="$("$cli" --install-extension "$ext" 2>&1)"
+                if [ $? -eq 0 ] && ! printf '%s' "$output" | grep -qiE 'not found|declared to not run'; then
+                    installed_count=$((installed_count + 1))
+                elif printf '%s' "$output" | grep -qi 'not found'; then
+                    not_in_marketplace=$((not_in_marketplace + 1))
+                elif printf '%s' "$output" | grep -qi 'declared to not run'; then
+                    ui_only_refused=$((ui_only_refused + 1))
+                elif printf '%s' "$output" | grep -qi 'already installed'; then
+                    # Edge case: CLI says "already installed" but our snapshot
+                    # missed it (e.g. Cursor hides ms-python.vscode-pylance from
+                    # --list-extensions because anysphere.cursorpyright wins).
+                    skipped_count=$((skipped_count + 1))
+                else
+                    failed_count=$((failed_count + 1))
+                    log_warn "[$cli] failed: $ext — $(printf '%s' "$output" | tail -1)"
+                fi
+            done
+
+            log_info "[$cli] new=$installed_count, already-present=$skipped_count, failed=$failed_count"
+            if [ $not_in_marketplace -gt 0 ]; then
+                log_skip "[$cli] $not_in_marketplace extension(s) not in this CLI's marketplace mirror (Cursor/VS Code marketplaces differ — extensions install on whichever has them)"
+            fi
+            if [ $ui_only_refused -gt 0 ]; then
+                log_skip "[$cli] $ui_only_refused extension(s) declared UI-only — will install on local desktop CLI, not the SSH-server one"
+            fi
+
+            # Upgrade any outdated extensions in one pass
+            if "$cli" --update-extensions >/dev/null 2>&1; then
+                log_info "[$cli] --update-extensions complete"
+            else
+                log_skip "[$cli] --update-extensions not supported on this CLI"
+            fi
+        done
+    fi
+fi
+
+# ---------------------------------------------------------------------------
 # Done
 # ---------------------------------------------------------------------------
 
