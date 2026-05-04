@@ -15,6 +15,86 @@ DOTFILES="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ZSHRC_LOCAL="$HOME/.zshrc.local"
 
 # ---------------------------------------------------------------------------
+# Selective step execution. Default: run all steps.
+# Pass a step name as $1 to run only that step (e.g. `bash install.sh settings`).
+# ---------------------------------------------------------------------------
+
+STEP="${1:-all}"
+
+case "$STEP" in
+    -h|--help|help)
+        cat <<HELP
+usage: bash install.sh [step]
+
+Steps (run all by default):
+  deps        Step 1: System dependencies (jq, gh, uv, semgrep)
+  cli         Step 2: Modern CLI stack (bat, eza, fzf, starship, ...)
+  shell       Step 3: Wire shell init + aliases into ~/.zshrc.local
+  configs     Step 4: Symlink tool configs into ~/.config/<tool>/
+  atuin       Step 5: atuin history backfill (first run only)
+  extensions  Step 6: VS Code / Cursor extensions
+  settings    Step 7: VS Code / Cursor user settings (deep-merge)
+
+Dependencies (auto-resolved — running a step also runs its prerequisites):
+  cli depends on deps
+  atuin depends on cli (which depends on deps)
+  shell, configs, extensions, settings have no deps
+
+Examples:
+  bash install.sh              # run all steps (default)
+  bash install.sh settings     # run only Step 7 (no prereqs)
+  bash install.sh atuin        # runs deps -> cli -> atuin
+  bash install.sh extensions   # run only Step 6 (no prereqs)
+HELP
+        exit 0
+        ;;
+esac
+
+# Step dependency graph. Each step's deps must run first when the step
+# is requested directly. Order within "all" is the canonical sequence.
+#
+#   deps       (no deps — system tools jq/gh/uv/semgrep)
+#   cli        ← deps      (uses jq for gh_install)
+#   shell      (no deps — just appends to ~/.zshrc.local)
+#   configs    (no deps — pure symlinks)
+#   atuin      ← cli       (atuin binary must exist before import)
+#   extensions (no deps — uses editor's own CLI)
+#   settings   (no deps — uses python3 stdlib)
+#
+# Resolution: when user asks for step X, we run X's transitive deps first
+# (in topo order), then X. Hard-coded since the graph is small + static.
+
+case "$STEP" in
+    all)        STEPS_TO_RUN=(deps cli shell configs atuin extensions settings) ;;
+    deps)       STEPS_TO_RUN=(deps) ;;
+    cli)        STEPS_TO_RUN=(deps cli) ;;
+    shell)      STEPS_TO_RUN=(shell) ;;
+    configs)    STEPS_TO_RUN=(configs) ;;
+    atuin)      STEPS_TO_RUN=(deps cli atuin) ;;
+    extensions) STEPS_TO_RUN=(extensions) ;;
+    settings)   STEPS_TO_RUN=(settings) ;;
+    *)
+        echo "Error: unknown step '$STEP'." >&2
+        echo "Run 'bash install.sh help' for valid step names." >&2
+        exit 2
+        ;;
+esac
+
+# Show resolved plan for transparency when not running "all"
+if [ "$STEP" != "all" ]; then
+    echo "==> Target: $STEP — running: ${STEPS_TO_RUN[*]}"
+fi
+
+should_run() {
+    local step="$1"
+    local s
+    for s in "${STEPS_TO_RUN[@]}"; do
+        [ "$s" = "$step" ] && return 0
+    done
+    return 1
+}
+
+# ---------------------------------------------------------------------------
 # Source shared helpers + per-OS install scripts
 # ---------------------------------------------------------------------------
 
@@ -40,6 +120,7 @@ echo "    NOTE     = This script will NOT touch ~/.claude/. Use it as you wish."
 # 1. System dependencies (jq required, gh + uv + semgrep auto-installed)
 # ---------------------------------------------------------------------------
 
+if should_run deps; then
 log_step "Step 1: System dependencies"
 
 if need jq; then
@@ -72,19 +153,24 @@ if need semgrep; then
 fi
 log_info "semgrep ($(semgrep --version 2>/dev/null | head -1))"
 
+fi  # end Step 1
+
 # ---------------------------------------------------------------------------
 # 2. Modern CLI stack (Round 1)
 # ---------------------------------------------------------------------------
 
+if should_run cli; then
 case "$OS" in
     linux) install_modern_cli_linux ;;
     macos) install_modern_cli_macos ;;
 esac
+fi  # end Step 2
 
 # ---------------------------------------------------------------------------
 # 3. Wire shell aliases into ~/.zshrc.local
 # ---------------------------------------------------------------------------
 
+if should_run shell; then
 log_step "Step 3: Wire shell init + aliases"
 
 SOURCE_INIT="source $DOTFILES/shell/init.sh"
@@ -123,6 +209,8 @@ if [ -f "$ZSHRC" ] && ! grep -qF '.zshrc.local' "$ZSHRC" 2>/dev/null; then
     log_info "Added .zshrc.local sourcing to $ZSHRC"
 fi
 
+fi  # end Step 3
+
 # ---------------------------------------------------------------------------
 # 4. Symlink tool configs into ~/.config/
 # ---------------------------------------------------------------------------
@@ -130,6 +218,7 @@ fi
 # We symlink the directory, so edits to ~/.config/<tool>/<file> flow back
 # to the dotfiles repo automatically.
 
+if should_run configs; then
 log_step "Step 4: Deploy tool configs (~/.config symlinks)"
 
 CONFIG_SRC="$DOTFILES/configs"
@@ -162,6 +251,8 @@ else
     log_skip "configs/ directory missing — nothing to deploy"
 fi
 
+fi  # end Step 4
+
 # ---------------------------------------------------------------------------
 # 5. atuin: backfill existing shell history (one-time per machine)
 # ---------------------------------------------------------------------------
@@ -171,6 +262,7 @@ fi
 # re-running causes duplicates. Sentinel lives in atuin's data dir so it
 # travels with the db.
 
+if should_run atuin; then
 log_step "Step 5: atuin history backfill"
 
 ATUIN_DATA="$HOME/.local/share/atuin"
@@ -192,6 +284,8 @@ else
     fi
 fi
 
+fi  # end Step 5
+
 # ---------------------------------------------------------------------------
 # 6. VS Code / Cursor extensions (install + upgrade)
 # ---------------------------------------------------------------------------
@@ -205,6 +299,7 @@ fi
 # and skipped silently. Bulk --update-extensions at the end upgrades anything
 # outdated in a single pass.
 
+if should_run extensions; then
 log_step "Step 6: VS Code / Cursor extensions"
 
 VSCODE_EXTS_FILE="$DOTFILES/configs/vscode/extensions.txt"
@@ -294,6 +389,8 @@ else
     fi
 fi
 
+fi  # end Step 6
+
 # ---------------------------------------------------------------------------
 # 7. VS Code / Cursor user settings (deep-merge, not symlink)
 # ---------------------------------------------------------------------------
@@ -306,6 +403,7 @@ fi
 # Coverage: VS Code + Cursor × Mac + Linux. Each (IDE, OS) settings dir we
 # find gets the merge applied. Pre-merge backup at *.backup.<timestamp>.
 
+if should_run settings; then
 log_step "Step 7: VS Code / Cursor user settings (deep-merge)"
 
 VSCODE_SETTINGS_SRC="$DOTFILES/configs/vscode/settings.json"
@@ -376,6 +474,8 @@ else
         fi
     done
 fi
+
+fi  # end Step 7
 
 # ---------------------------------------------------------------------------
 # Done
