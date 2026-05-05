@@ -112,6 +112,26 @@ if command -v starship >/dev/null 2>&1; then
     unset -f powerlevel10k_plugin_unload 2>/dev/null
 
     eval "$(starship init zsh)"
+
+    # Workaround for VS Code Remote SSH: xterm.js's escape-sequence parser
+    # mishandles fragments when starship's right-prompt bytes arrive split
+    # across SSH 'data' events. Its column counter drifts; when zsh's
+    # menu-select redraws during tab-completion it lands at the wrong column
+    # and leaves stale chars behind ('z z do' when typing 'z do<TAB>'). The
+    # zsh BUFFER stays clean — the bug is purely display.
+    #
+    # Needs BOTH ingredients:
+    #   - TERM_PROGRAM=vscode  (VS Code's xterm.js, not Ghostty/iTerm/etc.)
+    #   - SSH_CONNECTION set    (transport that fragments byte streams)
+    # So local VS Code (Mac/Linux) keeps the full prompt, and Ghostty-over-
+    # SSH keeps it too — only Mac VS Code → Remote SSH workspace strips.
+    if [ "$TERM_PROGRAM" = "vscode" ] && [ -n "$SSH_CONNECTION" ]; then
+        # starship installs a precmd hook that re-sets RPROMPT every prompt;
+        # need a precmd that runs AFTER it to keep it cleared.
+        _strip_rprompt_for_vscode_ssh() { RPROMPT='' }
+        autoload -Uz add-zsh-hook 2>/dev/null
+        add-zsh-hook precmd _strip_rprompt_for_vscode_ssh 2>/dev/null
+    fi
 fi
 
 # =============================================================================
