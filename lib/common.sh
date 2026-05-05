@@ -32,12 +32,6 @@ have() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# apt_has <pkg> — true (0) if the package is available in apt.
-# Doesn't trigger install. Quiet on stderr.
-apt_has() {
-    command -v apt-cache >/dev/null 2>&1 && apt-cache show "$1" >/dev/null 2>&1
-}
-
 # ---------- GitHub release binary installer ----------
 
 # gh_install <repo> <asset-pattern> <bin-name>
