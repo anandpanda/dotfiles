@@ -50,7 +50,11 @@ def load_jsonc(path: str) -> dict:
         text = strip_jsonc(f.read()).strip()
     if not text:
         return {}
-    return json.loads(text)
+    # strict=False lets raw control chars (tab, newline, etc.) appear inside
+    # JSON strings. Spec-illegal but VS Code tolerates them, so settings.json
+    # in the wild often has them — usually a literal newline pasted into a
+    # 'workbench.colorCustomizations' block or similar.
+    return json.loads(text, strict=False)
 
 
 def main():
