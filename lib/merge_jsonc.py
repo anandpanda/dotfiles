@@ -19,16 +19,47 @@ import sys
 
 
 def strip_jsonc(s: str) -> str:
-    """Remove // and /* */ comments from JSONC text.
+    """Remove // and /* */ comments and trailing commas from JSONC text.
 
-    Limitations: // or /* inside a JSON string value would be miscounted as
-    a comment. Acceptable for settings.json which doesn't use // in strings.
+    String-aware: skips comment markers that appear inside JSON strings.
+    Necessary because real settings.json files contain '//' inside URL
+    string values like 'https://json-schema.org/'.
     """
-    s = re.sub(r"//.*?$", "", s, flags=re.MULTILINE)
-    s = re.sub(r"/\*.*?\*/", "", s, flags=re.DOTALL)
-    # Strip trailing commas before } or ] (also legal in JSONC)
-    s = re.sub(r",(\s*[}\]])", r"\1", s)
-    return s
+    out = []
+    i, n = 0, len(s)
+    while i < n:
+        c = s[i]
+        if c == '"':
+            # Copy the whole string verbatim, honoring \" escapes.
+            j = i + 1
+            while j < n:
+                if s[j] == "\\" and j + 1 < n:
+                    j += 2
+                    continue
+                if s[j] == '"':
+                    break
+                j += 1
+            out.append(s[i:j + 1])
+            i = j + 1
+            continue
+        if c == "/" and i + 1 < n and s[i + 1] == "/":
+            while i < n and s[i] != "\n":
+                i += 1
+            continue
+        if c == "/" and i + 1 < n and s[i + 1] == "*":
+            i += 2
+            while i + 1 < n and not (s[i] == "*" and s[i + 1] == "/"):
+                i += 1
+            i = min(i + 2, n)
+            continue
+        out.append(c)
+        i += 1
+    result = "".join(out)
+    # Trailing commas before } or ]. Theoretical false-positives inside
+    # strings (e.g. ",  }" inside a string literal) but real settings.json
+    # doesn't have them; leaving as a regex for simplicity.
+    result = re.sub(r",(\s*[}\]])", r"\1", result)
+    return result
 
 
 def deep_merge(a, b):
