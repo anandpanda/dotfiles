@@ -177,11 +177,9 @@ fi
 log_info "jq ($(jq --version 2>/dev/null))"
 
 if need gh; then
-    log_warn "gh CLI missing (optional)"
-    echo   "        Linux: sudo apt install -y gh"
-    echo   "        Mac:   brew install gh"
+    log_skip "gh CLI not yet installed (will be installed in Step 2: cli)"
 else
-    log_info "gh"
+    log_info "gh ($(gh --version 2>/dev/null | head -1))"
 fi
 
 # zsh — required for Step 3's chsh and as the shell shell/zshrc targets.
@@ -229,7 +227,7 @@ log_step "Step 3: Wire shell init + aliases"
 #     $HOME/dotfiles/shell/zshrc. On Coder workspaces the repo lives under
 #     /home/coder/.config/coderv2/dotfiles/, so without this symlink the stub
 #     silently no-ops and the user gets a bare-default zsh prompt.
-if [ -L "$HOME/dotfiles" ] && [ "$(readlink "$HOME/dotfiles")" = "$DOTFILES" ]; then
+if [ -L "$HOME/dotfiles" ] && [ "$(readlink -f "$HOME/dotfiles")" = "$(readlink -f "$DOTFILES")" ]; then
     log_skip "$HOME/dotfiles already linked"
 elif [ -e "$HOME/dotfiles" ] || [ -L "$HOME/dotfiles" ]; then
     log_warn "$HOME/dotfiles exists and isn't our symlink — leaving alone"
