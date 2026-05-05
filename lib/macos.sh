@@ -42,6 +42,8 @@ install_modern_cli_macos() {
         starship
         # Round 8: editor (used as $EDITOR in shell/zshrc)
         micro
+        # Round 9: GitHub CLI (also enables gh-dash, gh-poi extensions below)
+        gh
     )
 
     # One-time brew update so we have the latest formulae

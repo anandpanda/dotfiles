@@ -15,8 +15,8 @@ The repo has a clean separation:
 dotfiles/
 ├── install.sh                  # bootstrap system tooling (no Claude Code touching)
 ├── lib/                        # OS detection + per-OS install scripts
-│   ├── common.sh               #   detect_os, need, have, apt_has, gh_install, log_*
-│   ├── linux.sh                #   apt + GitHub static binary fallback
+│   ├── common.sh               #   detect_os, need, have, gh_install, log_*
+│   ├── linux.sh                #   GitHub static-binary installs (no apt)
 │   └── macos.sh                #   Homebrew
 ├── shell/
 │   ├── aliases.sh              # universal nav + safety + modern CLI stack aliases
