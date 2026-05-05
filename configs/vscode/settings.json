@@ -40,6 +40,7 @@
   "terminal.integrated.allowChords": false,
   "terminal.integrated.enableMultiLinePasteWarning": "never",
   "terminal.integrated.smoothScrolling": true,
+  "terminal.integrated.gpuAcceleration": "off",
 
   "explorer.confirmDelete": false,
   "explorer.compactFolders": false,
