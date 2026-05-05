@@ -47,14 +47,32 @@ def deep_merge(a, b):
 
 def load_jsonc(path: str) -> dict:
     with open(path, "r", encoding="utf-8") as f:
-        text = strip_jsonc(f.read()).strip()
+        raw = f.read()
+        text = strip_jsonc(raw).strip()
     if not text:
         return {}
     # strict=False lets raw control chars (tab, newline, etc.) appear inside
     # JSON strings. Spec-illegal but VS Code tolerates them, so settings.json
     # in the wild often has them — usually a literal newline pasted into a
     # 'workbench.colorCustomizations' block or similar.
-    return json.loads(text, strict=False)
+    try:
+        return json.loads(text, strict=False)
+    except json.JSONDecodeError as e:
+        # Re-raise with context lines around the failure, since the merge
+        # caller swallows the exception's traceback location and a 'line N
+        # col M' message alone isn't enough to find a typo in a 1000-line
+        # settings.json.
+        lines = raw.splitlines()
+        lo = max(0, e.lineno - 3)
+        hi = min(len(lines), e.lineno + 2)
+        context = "\n".join(
+            f"  {i+1:4d}{'>>' if i+1 == e.lineno else '  '} {lines[i]}"
+            for i in range(lo, hi)
+        )
+        raise json.JSONDecodeError(
+            f"{e.msg} in {path}\n--- context ---\n{context}\n--- /context ---",
+            e.doc, e.pos
+        ) from None
 
 
 def main():
