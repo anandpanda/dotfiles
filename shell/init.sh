@@ -3,6 +3,26 @@
 # Each integration uses `command -v` guards so missing tools degrade silently.
 
 # =============================================================================
+# Locale — pin LC_ALL to an installed UTF-8 locale.
+# Without this, starship miscounts character widths during prompt rendering
+# and tab-completion duplicates the leading chars of the buffer (typing
+# 'cl<TAB>' shows 'clcl', 'z do<TAB>' shows 'z z do', etc). zsh's BUFFER
+# stays clean — it's purely a prompt-redraw display bug.
+# Ref: https://github.com/starship/starship/issues/2176
+# Common trigger: Coder workspaces ship with LANG=en_US.UTF-8 set but only
+# C.UTF-8 actually generated, plus LC_ALL='' (empty), which trips the bug.
+# Pick the best installed UTF-8 locale and pin LC_ALL to it.
+# =============================================================================
+if [ -z "$LC_ALL" ] && command -v locale >/dev/null 2>&1; then
+    _avail="$(locale -a 2>/dev/null)"
+    case "$_avail" in
+        *en_US.utf8*|*en_US.UTF-8*) export LC_ALL="en_US.UTF-8" ;;
+        *C.utf8*|*C.UTF-8*)         export LC_ALL="C.UTF-8" ;;
+    esac
+    unset _avail
+fi
+
+# =============================================================================
 # Timezone — anchor prompt clock and `date` to IST.
 # Containers (Coder workspaces, CI, Docker) default to UTC; this overrides.
 # Pre-existing TZ wins, so per-machine override stays easy:
