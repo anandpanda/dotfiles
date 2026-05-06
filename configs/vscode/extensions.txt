@@ -49,9 +49,8 @@ ms-python.python                   # core Python LSP
 ms-python.debugpy                  # debugger
 ms-python.vscode-pylance           # type checking + intellisense
 ms-python.vscode-python-envs       # env management
-charliermarsh.ruff                 # ruff: modern lint+format (Rust-fast)
+charliermarsh.ruff                 # ruff: modern lint+format (Rust-fast) — also handles import sorting
 ms-python.black-formatter          # Black formatter (still the std for many repos)
-ms-python.isort                    # auto-sort imports
 njpwerner.autodocstring            # generate docstrings from type hints
 
 # ===== Jupyter (pack — auto-installs jupyter-keymap, renderers, cell-tags, slideshow) =====
@@ -104,3 +103,4 @@ divyanshuagrawal.competitive-programming-helper
 
 # ===== Dropped intentionally =====
 # .NET stack (csdevkit, csharp, vscode-dotnet-runtime) — not used at Zamp
+# ms-python.isort — bundled libs ship broken (PackageNotFoundError on import); ruff covers import sorting via the I rule
