@@ -87,6 +87,10 @@ When working inside `services/pantheon`:
 - Creating `*.md` files I didn't ask for.
 - Mocking the database in integration tests.
 - Asking for plan approval via plain text instead of `ExitPlanMode`.
+- **Defensive error handling / silent fallbacks everywhere.** Only catch errors that are expected AND have a specific product-level recovery action. Don't catch `Exception`, don't swallow with `or {}` / `or None` / `or []` / silent `except`. Code you wrote has known contracts — trust them. If the handler does nothing useful, remove it.
+- **Premature infrastructure.** Solve with what already exists first. Only propose new tables, caches, or queues when the simple path is demonstrably insufficient for the actual requirement — not a hypothetical one.
+- **Before claiming any batch or feature complete:** restart the server (`make dev-stop && make dev` in `services/pantheon`) and verify response bodies against real endpoints — not just HTTP status codes.
+- **Don't implement mid-plan without a checkpoint.** When a non-trivial decision point is reached mid-feature (architecture choice, conflicting approach, ambiguous requirement), stop and surface the options before writing code. Listing A/B/C options in prose and then continuing to work while waiting for an answer is the anti-pattern — use `ExitPlanMode` or pause explicitly. Two hard stops happened in this session because of this.
 
 ---
 
