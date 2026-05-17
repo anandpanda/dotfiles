@@ -13,13 +13,22 @@
 # C.UTF-8 actually generated, plus LC_ALL='' (empty), which trips the bug.
 # Pick the best installed UTF-8 locale and pin LC_ALL to it.
 # =============================================================================
-if [ -z "$LC_ALL" ] && command -v locale >/dev/null 2>&1; then
+if command -v locale >/dev/null 2>&1; then
     _avail="$(locale -a 2>/dev/null)"
-    case "$_avail" in
-        *en_US.utf8*|*en_US.UTF-8*) export LC_ALL="en_US.UTF-8" ;;
-        *C.utf8*|*C.UTF-8*)         export LC_ALL="C.UTF-8" ;;
-    esac
-    unset _avail
+    _current_ok=0
+    if [ -n "$LC_ALL" ]; then
+        case "$_avail" in
+            *"$LC_ALL"*) _current_ok=1 ;;
+        esac
+    fi
+    if [ "$_current_ok" -eq 0 ]; then
+        case "$_avail" in
+            *en_US.utf8*|*en_US.UTF-8*) export LC_ALL="en_US.UTF-8" LANG="en_US.UTF-8" ;;
+            *C.utf8*)                   export LC_ALL="C.utf8"     LANG="C.utf8" ;;
+            *C.UTF-8*)                  export LC_ALL="C.UTF-8"    LANG="C.UTF-8" ;;
+        esac
+    fi
+    unset _avail _current_ok
 fi
 
 # =============================================================================
