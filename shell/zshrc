@@ -112,6 +112,13 @@ ZSH_PLUGIN_DIR="$HOME/.local/share/zsh-plugins"
 [[ -d "$ZSH_PLUGIN_DIR/zsh-completions/src" ]] && \
     fpath=("$ZSH_PLUGIN_DIR/zsh-completions/src" $fpath)
 
+# zsh/complist powers the interactive menu (arrow keys, type-to-filter,
+# backspace-to-narrow). Without it, `menu select` silently falls back to a
+# static display: the menu appears on Tab but ignores every subsequent
+# keypress — typing/backspace edit the buffer but the menu doesn't redraw,
+# and Esc/Tab don't dismiss it. Must load BEFORE compinit.
+zmodload zsh/complist
+
 autoload -Uz compinit
 # -d: custom dump file location (faster than the default ~/.zcompdump rebuild)
 compinit -d "$ZCOMPDUMP"
