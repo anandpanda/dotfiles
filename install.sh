@@ -30,10 +30,11 @@ Steps (run all by default):
   deps        Step 1: System dependencies (jq, gh, uv, semgrep)
   cli         Step 2: Modern CLI stack (bat, eza, fzf, starship, ...)
   shell       Step 3: Wire shell init + aliases into ~/.zshrc.local
-  configs     Step 4: Symlink tool configs into ~/.config/<tool>/
-  atuin       Step 5: atuin history backfill (first run only)
-  extensions  Step 6: VS Code / Cursor extensions
-  settings    Step 7: VS Code / Cursor user settings (deep-merge)
+  git         Step 4: Include git/gitconfig from ~/.gitconfig
+  configs     Step 5: Symlink tool configs into ~/.config/<tool>/
+  atuin       Step 6: atuin history backfill (first run only)
+  extensions  Step 7: VS Code / Cursor extensions
+  settings    Step 8: VS Code / Cursor user settings (deep-merge)
 
 Workspace-scoped Claude / MCP config (NOT installed by install.sh):
   Use the standalone tool to link into a target dir (e.g. your work workspace):
@@ -44,7 +45,7 @@ Workspace-scoped Claude / MCP config (NOT installed by install.sh):
 Dependencies (auto-resolved — running a step also runs its prerequisites):
   cli depends on deps
   atuin depends on cli (which depends on deps)
-  shell, configs, extensions, settings have no deps
+  shell, git, configs, extensions, settings have no deps
 
 Examples:
   bash install.sh              # run all steps (default)
@@ -62,6 +63,7 @@ esac
 #   deps       (no deps — system tools jq/gh/uv/semgrep)
 #   cli        ← deps      (uses jq for gh_install)
 #   shell      (no deps — just appends to ~/.zshrc.local)
+#   git        (no deps — adds include.path to ~/.gitconfig)
 #   configs    (no deps — pure symlinks)
 #   atuin      ← cli       (atuin binary must exist before import)
 #   extensions (no deps — uses editor's own CLI)
@@ -71,10 +73,11 @@ esac
 # (in topo order), then X. Hard-coded since the graph is small + static.
 
 case "$STEP" in
-    all)        STEPS_TO_RUN=(deps cli shell configs atuin extensions settings) ;;
+    all)        STEPS_TO_RUN=(deps cli shell git configs atuin extensions settings) ;;
     deps)       STEPS_TO_RUN=(deps) ;;
     cli)        STEPS_TO_RUN=(deps cli) ;;
     shell)      STEPS_TO_RUN=(shell) ;;
+    git)        STEPS_TO_RUN=(git) ;;
     configs)    STEPS_TO_RUN=(configs) ;;
     atuin)      STEPS_TO_RUN=(deps cli atuin) ;;
     extensions) STEPS_TO_RUN=(extensions) ;;
@@ -327,14 +330,51 @@ fi
 fi  # end Step 3
 
 # ---------------------------------------------------------------------------
-# 4. Symlink tool configs into ~/.config/
+# 4. Wire git/gitconfig into ~/.gitconfig
+# ---------------------------------------------------------------------------
+# We don't symlink or overwrite ~/.gitconfig — it holds per-machine state
+# (user.name/email, credential helpers, signing keys). Instead we add a single
+# `include.path` so our shared aliases/settings layer on top. Git applies
+# includes in order, so the user's own ~/.gitconfig keys still win where they
+# overlap. Idempotent: git's include.path is multivar, so we check first and
+# only add when our path isn't already present.
+
+if should_run git; then
+log_step "Step 4: Include git/gitconfig from ~/.gitconfig"
+
+GITCONFIG_SRC="$DOTFILES/git/gitconfig"
+
+if [ ! -f "$GITCONFIG_SRC" ]; then
+    log_skip "$GITCONFIG_SRC not found — nothing to include"
+elif ! command -v git >/dev/null 2>&1; then
+    log_warn "git not on PATH — cannot register include; install git and re-run 'bash install.sh git'"
+else
+    # git canonicalizes include.path values (e.g. expands a leading ~), so we
+    # compare against every existing value rather than a raw string match.
+    already=false
+    while IFS= read -r existing; do
+        [ "$existing" = "$GITCONFIG_SRC" ] && already=true && break
+    done < <(git config --global --get-all include.path 2>/dev/null || true)
+
+    if $already; then
+        log_skip "~/.gitconfig already includes $GITCONFIG_SRC"
+    else
+        git config --global --add include.path "$GITCONFIG_SRC"
+        log_info "~/.gitconfig: added include.path → $GITCONFIG_SRC"
+    fi
+fi
+
+fi  # end Step 4
+
+# ---------------------------------------------------------------------------
+# 5. Symlink tool configs into ~/.config/
 # ---------------------------------------------------------------------------
 # Each subdir of $DOTFILES/configs/ maps to ~/.config/<tool>/.
 # We symlink the directory, so edits to ~/.config/<tool>/<file> flow back
 # to the dotfiles repo automatically.
 
 if should_run configs; then
-log_step "Step 4: Deploy tool configs (~/.config symlinks)"
+log_step "Step 5: Deploy tool configs (~/.config symlinks)"
 
 CONFIG_SRC="$DOTFILES/configs"
 CONFIG_DST="$HOME/.config"
@@ -366,10 +406,10 @@ else
     log_skip "configs/ directory missing — nothing to deploy"
 fi
 
-fi  # end Step 4
+fi  # end Step 5
 
 # ---------------------------------------------------------------------------
-# 5. atuin: backfill existing shell history (one-time per machine)
+# 6. atuin: backfill existing shell history (one-time per machine)
 # ---------------------------------------------------------------------------
 # `atuin import auto` reads ~/.zsh_history (or bash equivalent) and stamps
 # every command into atuin's sqlite db. Idempotent on subsequent runs only
@@ -378,7 +418,7 @@ fi  # end Step 4
 # travels with the db.
 
 if should_run atuin; then
-log_step "Step 5: atuin history backfill"
+log_step "Step 6: atuin history backfill"
 
 ATUIN_DATA="$HOME/.local/share/atuin"
 ATUIN_SENTINEL="$ATUIN_DATA/.imported-by-dotfiles"
@@ -399,10 +439,10 @@ else
     fi
 fi
 
-fi  # end Step 5
+fi  # end Step 6
 
 # ---------------------------------------------------------------------------
-# 6. VS Code / Cursor extensions (install + upgrade)
+# 7. VS Code / Cursor extensions (install + upgrade)
 # ---------------------------------------------------------------------------
 # Reads configs/vscode/extensions.txt — one extension ID per line, '#' = comment
 # (inline or full-line). Detects which CLIs are present (`code` and/or `cursor`)
@@ -415,7 +455,7 @@ fi  # end Step 5
 # outdated in a single pass.
 
 if should_run extensions; then
-log_step "Step 6: VS Code / Cursor extensions"
+log_step "Step 7: VS Code / Cursor extensions"
 
 VSCODE_EXTS_FILE="$DOTFILES/configs/vscode/extensions.txt"
 
@@ -504,10 +544,10 @@ else
     fi
 fi
 
-fi  # end Step 6
+fi  # end Step 7
 
 # ---------------------------------------------------------------------------
-# 7. VS Code / Cursor user settings (deep-merge, not symlink)
+# 8. VS Code / Cursor user settings (deep-merge, not symlink)
 # ---------------------------------------------------------------------------
 # Reads configs/vscode/settings.json — our curated preferences only — and
 # deep-merges into each detected user settings.json. Symlinking would clobber
@@ -519,7 +559,7 @@ fi  # end Step 6
 # find gets the merge applied. Pre-merge backup at *.backup.<timestamp>.
 
 if should_run settings; then
-log_step "Step 7: VS Code / Cursor user settings (deep-merge)"
+log_step "Step 8: VS Code / Cursor user settings (deep-merge)"
 
 VSCODE_SETTINGS_SRC="$DOTFILES/configs/vscode/settings.json"
 MERGE_HELPER="$DOTFILES/lib/merge_jsonc.py"
@@ -590,7 +630,7 @@ else
     done
 fi
 
-fi  # end Step 7
+fi  # end Step 8
 
 # ---------------------------------------------------------------------------
 # Done
