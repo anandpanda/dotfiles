@@ -2,6 +2,10 @@
 .credentials.json
 *.credentials*
 *.token
+# .mcp.json holds live connection strings (DATABASE_URL etc). Ship a
+# .mcp.json.example with placeholders instead.
+.mcp.json
+**/.mcp.json
 
 # OS noise
 .DS_Store

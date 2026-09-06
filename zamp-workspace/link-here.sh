@@ -1,5 +1,5 @@
 #!/bin/bash
-# Link this workspace's .claude/ and .mcp.json into a target directory via
+# Link this workspace's .claude/ into a target directory via
 # symlinks. Edits at <target>/.claude/<file> flow back to the dotfiles repo
 # automatically; commit + push from ~/dotfiles to share across machines.
 #
@@ -50,6 +50,17 @@ link_one() {
 }
 
 link_one .claude
-link_one .mcp.json
+
+# .mcp.json is NOT symlinked — it holds live connection strings and is
+# gitignored. Generate it from the checked-in example on first run, then
+# fill in secrets locally (or export them and let ${VAR} expand).
+mcp_src="$SCRIPT_DIR/.mcp.json.example"
+mcp_dst="$TARGET/.mcp.json"
+if [ ! -e "$mcp_dst" ] && [ -f "$mcp_src" ]; then
+    cp "$mcp_src" "$mcp_dst"
+    echo "    ✓ .mcp.json created from example — fill in secrets (e.g. DEV_DATABASE_URL)"
+elif [ -e "$mcp_dst" ]; then
+    echo "    - .mcp.json exists — left alone (holds your local secrets)"
+fi
 
 echo "Done."

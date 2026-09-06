@@ -32,7 +32,7 @@
         "@henkey/postgres-mcp-server"
       ],
       "env": {
-        "DATABASE_URL": "postgres://ap-agent:***REMOVED***@zamp-dev-mum-coder-db-proxy.proxy-cbgi6ga0uw5v.ap-south-1.rds.amazonaws.com:5432/pantheon?sslmode=require"
+        "DATABASE_URL": "${DEV_DATABASE_URL}"
       }
     },
     "temporal": {
