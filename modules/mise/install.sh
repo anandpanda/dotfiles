@@ -7,7 +7,9 @@ command -v mise >/dev/null 2>&1 || {
   log_warn "mise not installed yet; runtimes install on the next run"
   exit 0
 }
-missing="$(mise ls --missing 2>/dev/null | grep -v '^$' || true)"
+# --global: the current directory may be a project with its own pins.
+missing="$(mise ls --global --missing 2>&1)" || die "mise ls failed: $missing"
+missing="$(printf '%s\n' "$missing" | grep -v '^$' || true)"
 if [ -z "$missing" ]; then
   echo "skip mise tools"
   exit 0

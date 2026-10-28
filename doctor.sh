@@ -158,8 +158,15 @@ case "$managed_names" in *" zsh "*)
   if [ -z "$want" ]; then
     problem "login shell: homebrew zsh not installed"
   elif [ "$cur" != "$want" ]; then
-    problem "login shell is $cur, want $want (rerun install)"
-  else log_ok "login shell $want"; fi
+    # Without sudo the switch is impossible (chsh needs the shell in /etc/shells): warn and point at the alternative.
+    if grep -qxF "$want" /etc/shells 2>/dev/null; then
+      problem "login shell is $cur, want $want (rerun install)"
+    else
+      log_warn "login shell is $cur; $want is not in /etc/shells (no sudo here?). Set your terminal or VS Code profile to $want instead"
+    fi
+  else
+    log_ok "login shell $want"
+  fi
   ;;
 esac
 

@@ -4,3 +4,4 @@
 .direnv/
 *.local
 .vscode/*.local.json
+mise.local.toml

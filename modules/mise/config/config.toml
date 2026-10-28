@@ -10,10 +10,14 @@ pnpm = "latest"
 [settings]
 # Honour the files work repos already use.
 idiomatic_version_file_enable_tools = ["node", "python", "go"]
-# cd into a project that pins something not installed: install it instead of failing.
+# A pinned version that is not installed gets installed the first time its command runs.
 not_found_auto_install = true
 experimental = false
 
 [settings.python]
-# uv creates and activates .venv automatically in projects with a pyproject.
-uv_venv_auto = true
+# In a project with uv.lock, create .venv if missing and activate it on cd.
+uv_venv_auto = "create|source"
+
+[settings.upgrade]
+# `mise up` must not delete the old runtime: auto-created venvs point at the exact version.
+auto_prune = false
