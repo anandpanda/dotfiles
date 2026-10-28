@@ -40,7 +40,8 @@ log_info "profile: $PROFILE ($os/$(os_arch))"
 
 modules_root="${DOTFILES_MODULES:-$DOTFILES_DIR/modules}"
 module_dirs=""
-for m in $(profile_modules "$PROFILE"); do
+module_names="$(profile_modules "$PROFILE")" || die "cannot resolve profile: $PROFILE"
+for m in $module_names; do
   d="$modules_root/$m"
   [ -d "$d" ] || die "module not found: $m"
   module_enabled_for_os "$d" || {

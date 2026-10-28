@@ -19,7 +19,8 @@ log_info "profile: $profile"
 
 modules_root="${DOTFILES_MODULES:-$DOTFILES_DIR/modules}"
 dirs=""
-for m in $(profile_modules "$profile"); do
+module_names="$(profile_modules "$profile")" || die "cannot resolve profile: $profile"
+for m in $module_names; do
   d="$modules_root/$m"
   [ -d "$d" ] || {
     problem "module missing: $m"

@@ -58,3 +58,15 @@ teardown() { teardown_home; }
   [ "$status" -eq 0 ]
   [[ "$output" == *"no overlay url"* ]]
 }
+
+@test "unknown profile fails and remembers nothing" {
+  run "$DOTFILES_DIR/install.sh" persnal
+  [ "$status" -ne 0 ]
+  [ ! -f "$HOME/.config/dotfiles/profile" ]
+}
+
+@test "profile cycle fails" {
+  printf 'extends = "b"\n' > "$DOTFILES_PROFILES/a.toml"; printf 'extends = "a"\n' > "$DOTFILES_PROFILES/b.toml"
+  run "$DOTFILES_DIR/install.sh" a
+  [ "$status" -ne 0 ]
+}

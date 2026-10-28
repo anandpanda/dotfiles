@@ -43,3 +43,10 @@ teardown() { teardown_home; }
   [ "$status" -eq 1 ]
   [[ "$output" == *"overlay missing"* ]]
 }
+
+@test "unknown remembered profile is a failure, not clean" {
+  echo ghost > "$HOME/.config/dotfiles/profile"
+  run "$DOTFILES_DIR/doctor.sh"
+  [ "$status" -ne 0 ]
+  [[ "$output" != *"doctor: clean"* ]]
+}

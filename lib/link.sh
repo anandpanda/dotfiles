@@ -2,14 +2,12 @@
 # Idempotent symlinking with timestamped backups. Never deletes.
 
 : "${DRY_RUN:=0}"
-_backup_root=""
+# Fixed once per run, at source time, so every backup in a run shares one dir.
+# (A lazy $(...) call would run in a subshell and never persist.)
+: "${DOTFILES_BACKUP_ROOT:=$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)}"
+export DOTFILES_BACKUP_ROOT
 
-backup_root() {
-  if [ -z "$_backup_root" ]; then
-    _backup_root="$HOME/.dotfiles-backup/$(date +%Y%m%d-%H%M%S)"
-  fi
-  echo "$_backup_root"
-}
+backup_root() { echo "$DOTFILES_BACKUP_ROOT"; }
 
 # Move DST into the backup tree, preserving its path relative to HOME.
 _backup() {
@@ -21,6 +19,12 @@ _backup() {
     return
   fi
   mkdir -p "$(dirname "$dest")"
+  # Never overwrite an earlier backup of the same path.
+  if [ -e "$dest" ] || [ -L "$dest" ]; then
+    local n=1
+    while [ -e "$dest.$n" ] || [ -L "$dest.$n" ]; do n=$((n + 1)); done
+    dest="$dest.$n"
+  fi
   mv "$dst" "$dest"
   printf 'backup %s -> %s\n' "$dst" "$dest"
 }

@@ -59,3 +59,16 @@ teardown() { teardown_home; }
   run link_file "$SRC/nope" "$HOME/file"
   [ "$status" -ne 0 ]
 }
+
+@test "backup_root is stable across calls in one run" {
+  a="$(backup_root)"; sleep 1; b="$(backup_root)"
+  [ "$a" = "$b" ]
+}
+
+@test "two backups of the same path in one run never overwrite each other" {
+  echo PRECIOUS > "$HOME/file"
+  link_file "$SRC/file" "$HOME/file"
+  echo second > "$SRC/file2"
+  link_file "$SRC/file2" "$HOME/file"
+  [ "$(grep -rl PRECIOUS "$HOME/.dotfiles-backup")" != "" ]
+}
