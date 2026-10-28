@@ -94,6 +94,13 @@ container test (Ghostty via apt/snap, VS Code and Docker via apt, fonts via
 release download). Only a Linux desktop-defaults module (gsettings) is left,
 for Phase 6.
 
+Phase 5 review: 1 critical (cached `mise activate` froze PATH), 7 important,
+9 minor; all fixed, none deferred. Profiles now: personal, work, server
+(headless Linux / Coder workspaces: terminal and git only), server-work.
+Hooks follow one rule: present → skip; sudo usable → act; else print the
+command and continue. `just test-server` installs the server profile as a user
+with no sudo.
+
 ## Pending for Anand
 
 - Coder remote (work) returns with the work overlay; until then
@@ -107,6 +114,9 @@ for Phase 6.
 - GitHub: register ~/.ssh/id_ed25519_personal.pub as a *Signing Key* so
   commits show "Verified" (they already verify locally).
 - Old configs are in `~/.dotfiles-backup/`.
+- Leftovers doctor found (need sudo): `sudo rm /etc/paths.d/10-pmk-global`
+  (stale PATH entry) and `sudo rm -rf /usr/local/go /etc/paths.d/go` (go.dev
+  Go shadowing mise's).
 - Replace `main` with `v2` when ready.
 - After all phases: a hands-on end-to-end walkthrough of the whole setup so
   Anand can use every part of it (Anand asked for this explicitly).
