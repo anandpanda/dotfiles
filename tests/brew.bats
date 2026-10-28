@@ -46,6 +46,5 @@ teardown() { teardown_home; }
   mkdir -p "$HOME/minimal"; for c in bash sh env printf head cut grep; do p="$(command -v $c)"; [ -n "$p" ] && ln -sf "$p" "$HOME/minimal/$c"; done
   printf '#!/usr/bin/env bash\nexit 1\n' > "$HOME/minimal/sudo"; chmod +x "$HOME/minimal/sudo"
   run env PATH="$HOME/minimal" bash -c "source '$DOTFILES_DIR/lib/log.sh'; source '$DOTFILES_DIR/lib/os.sh'; source '$DOTFILES_DIR/lib/brew.sh'; brew_prefix() { echo '$HOME/nobrew'; }; os_name() { echo linux; }; brew_ensure"
-  echo "status=$status output=$output" >&3
   [ "$status" -ne 0 ]; [[ "$output" == *"sudo is not available"* ]]
 }

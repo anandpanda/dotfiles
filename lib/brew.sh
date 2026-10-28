@@ -11,7 +11,6 @@ brew_ensure() {
       log_dry "install homebrew"
       return 0
     fi
-    log_info "installing Homebrew"
     if [ "$(os_name)" = linux ]; then
       # Homebrew needs these; a Coder workspace or dev image usually has them already and
       # may have no sudo. Install only what is missing, only when sudo is usable.
@@ -25,6 +24,7 @@ brew_ensure() {
         fi
       fi
     fi
+    log_info "installing Homebrew"
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || die "homebrew install failed"
     [ -x "$(brew_prefix)/bin/brew" ] || die "homebrew install finished but $(brew_prefix)/bin/brew is missing"
     eval "$("$(brew_prefix)/bin/brew" shellenv)"
