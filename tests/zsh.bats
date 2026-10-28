@@ -88,8 +88,10 @@ print(int(min(t) * 1000))')
 
 @test "aged completion dump is refreshed, not rebuilt every shell" {
   module_apply "$DOTFILES_DIR/$Z" >/dev/null
-  # Source .zshrc in a plain zsh: CI runners have no terminal for `zsh -i`.
-  r() { env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" XDG_CACHE_HOME="$HOME/.cache" zsh -c 'source "$ZDOTDIR/.zshrc"' 2>/dev/null || true; }
+  # Plain zsh (CI has no terminal), stdin closed, and an insecure dir on fpath like CI
+  # runners have: compinit must not stop to ask about it.
+  mkdir -p "$HOME/insecure"; chmod 777 "$HOME/insecure"
+  r() { env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" XDG_CACHE_HOME="$HOME/.cache" FPATH="$HOME/insecure:${FPATH:-}" zsh -c 'source "$ZDOTDIR/.zshrc"' </dev/null 2>/dev/null || true; }
   r
   d="$HOME/.cache/zsh/compdump"; [ -f "$d" ]
   touch -t 202001010000 "$d"

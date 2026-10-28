@@ -15,12 +15,14 @@ unset _antidote
 # Completion, after plugins so zsh-completions' fpath is in place. A full compinit
 # once a day (it only rewrites the dump when the function list changed, so we
 # touch it to mark the check done); -C skips the security scan the rest of the time.
+# -i: silently ignore insecure dirs instead of prompting (which would hang or abort
+# with no terminal, and skip writing the dump).
 autoload -Uz compinit
 _dotfiles_compinit() {
   setopt localoptions extendedglob
   local dump="$ZSH_CACHE/compdump"
   if [[ -n $dump(#qN.mh+24) || ! -f $dump ]]; then
-    compinit -d "$dump" && touch "$dump"
+    compinit -i -d "$dump" && touch "$dump"
   else
     compinit -C -d "$dump"
   fi
