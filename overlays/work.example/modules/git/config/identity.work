@@ -1,0 +1,6 @@
+[user]
+    name = Your Name
+    email = you@company.com
+[url "git@github.com-work:"]
+    insteadOf = git@github.com:
+    insteadOf = https://github.com/

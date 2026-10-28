@@ -13,7 +13,14 @@ module_apply() {
   name="$(basename "$dir")"
   log_info "module: $name"
   if [ -d "$dir/config" ]; then
-    link_file "$dir/config" "$HOME/.config/$name" || return 1
+    local target="$HOME/.config/$name" owner
+    owner="$(readlink "$target" 2>/dev/null || true)"
+    if [ -n "$owner" ] && [ "$owner" != "$dir/config" ] && [ -d "$owner" ]; then
+      # Another module owns this dir: lay our files inside it as individual links.
+      link_tree "$dir/config" "$owner" || return 1
+    else
+      link_file "$dir/config" "$target" || return 1
+    fi
   fi
   if [ -d "$dir/home" ]; then
     link_tree "$dir/home" "$HOME" || return 1

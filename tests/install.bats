@@ -51,3 +51,10 @@ teardown() { teardown_home; }
   [ "$(stat -f %Lp "$HOME/.secrets" 2>/dev/null || stat -c %a "$HOME/.secrets")" = "700" ]
   [[ "$output" == *"github_token"* ]]
 }
+
+@test "non-tty skips guided steps" {
+  printf 'extends = "test"\noverlay = true\n' > "$DOTFILES_PROFILES/w.toml"
+  run "$DOTFILES_DIR/install.sh" w
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"no overlay url"* ]]
+}
