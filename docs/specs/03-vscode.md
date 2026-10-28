@@ -21,12 +21,14 @@ extensions.
 - Font: JetBrains Mono Nerd Font 14, ligatures on, same in the integrated
   terminal. Terminal profile is Homebrew zsh as a login shell.
 - AI: Claude Code extension. No Copilot (paid).
-- Extensions (about 28): see `modules/vscode/extensions.txt`. Each line is
+- Extensions (34): see `modules/vscode/extensions.txt`. Each line is
   `publisher.name  # one-line reason`. Groups: look, always-on, AI, Python
   (Ruff replaces Black and isort), Go, web (Prettier, ESLint, Tailwind),
   containers and remote, C++ (cpptools, Competitive Programming Helper, no
   CMake), GitHub (PRs, Actions), markdown and data (markdownlint, Rainbow
-  CSV). Dropped list is recorded in `docs/STATUS.md`.
+  CSV), quality of life (Code Spell Checker, Todo Tree, indent-rainbow,
+  Markdown All in One, Path Intellisense). Dropped list is recorded in
+  `docs/STATUS.md`.
 - Keybindings: VS Code defaults. `keybindings.json` ships empty with a
   comment saying so.
 - Settings: format on save (Ruff for Python, Prettier for web, clang-format
