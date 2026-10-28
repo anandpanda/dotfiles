@@ -25,7 +25,19 @@ a swap later is a folder change, not a rethink.
 | Theme | Catppuccin Mocha everywhere | Tokyo Night |
 | Font | JetBrains Mono Nerd Font | Monaspace |
 
-## One foundation addition: shell integration per module
+## Foundation addition: preflight, everything that needs Anand, up front
+
+Install asks every human question in one block before changing anything,
+then runs unattended. Each module may ship `preflight.sh`; `install.sh`
+runs them all first, in module order, with a terminal attached. A
+preflight script checks one thing, asks only if it is missing, and records
+the answer (key file, remembered url, shell changed) so a rerun asks
+nothing. Without a terminal, each prints what it would have asked and
+continues. Phase 1's ssh key and overlay url flows move into `ssh/preflight.sh`
+and the overlay step; this phase adds `zsh/preflight.sh` for the login
+shell. Password prompts (`sudo`, `chsh`) happen in this block too.
+
+## Foundation addition: shell integration per module
 
 Any module may ship `shell.zsh`. `module_apply` links it to
 `~/.config/zsh/rc.d/<module>.zsh`. The zsh module's `.zshrc` sources every
