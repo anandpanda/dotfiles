@@ -57,3 +57,9 @@ teardown() { teardown_home; }
   run profile_has_overlay work; [ "$status" -eq 0 ]
   run profile_has_overlay personal; [ "$status" -ne 0 ]
 }
+
+@test "multi-line module list parses" {
+  printf 'modules = [\n  "a", "b",\n  "c",\n]\n' > "$PROFILES/multi.toml"
+  run profile_modules multi
+  [ "$output" = $'a\nb\nc' ]
+}

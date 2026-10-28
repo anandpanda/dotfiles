@@ -19,9 +19,13 @@ _toml_string() { # FILE KEY -> value of key = "value"
 _toml_bool_true() { # FILE KEY -> 0 if key = true
   grep -Eq "^[[:space:]]*$2[[:space:]]*=[[:space:]]*true" "$1"
 }
-_toml_list() { # FILE KEY -> items one per line
-  sed -n "s/^[[:space:]]*$2[[:space:]]*=[[:space:]]*\[\(.*\)\].*/\1/p" "$1" |
-    tr ',' '\n' | sed 's/[[:space:]"]//g' | grep -v '^$' || true
+_toml_list() { # FILE KEY -> items one per line; the list may span lines until the closing ]
+  awk -v key="$2" '
+    !inlist && $0 ~ "^[[:space:]]*" key "[[:space:]]*=[[:space:]]*\\[" { sub(/^[^[]*\[/, ""); inlist = 1 }
+    inlist { line = $0; if (line ~ /\]/) { sub(/\].*/, "", line); done = 1 }
+             n = split(line, parts, ","); for (i = 1; i <= n; i++) { gsub(/[[:space:]"]/, "", parts[i]); if (parts[i] != "") print parts[i] }
+             if (done) exit }
+  ' "$1"
 }
 
 # Prints the chain root-first: base child ...
