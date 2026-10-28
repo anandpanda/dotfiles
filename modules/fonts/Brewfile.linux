@@ -1,0 +1,2 @@
+# Linux only: needed to extract the Nerd Font release zip.
+brew "unzip"

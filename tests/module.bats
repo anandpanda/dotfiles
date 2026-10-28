@@ -130,3 +130,12 @@ teardown() { teardown_home; }
   [[ "$output" == *always* ]]
   if [ "$(os_name)" = macos ]; then [[ "$output" == *mac* ]] && [[ "$output" != *lin* ]]; else [[ "$output" == *lin* ]] && [[ "$output" != *mac* ]]; fi
 }
+
+@test "os-specific Brewfile is included only on that os" {
+  mkdir -p "$M/a"; echo 'brew "x"' > "$M/a/Brewfile"; echo 'brew "mac"' > "$M/a/Brewfile.macos"; echo 'brew "lin"' > "$M/a/Brewfile.linux"
+  run module_brewfiles "$M/a"
+  [[ "$output" == *"/Brewfile"* ]]
+  if [ "$(os_name)" = macos ]; then [[ "$output" == *Brewfile.macos* ]] && [[ "$output" != *Brewfile.linux* ]]; else [[ "$output" == *Brewfile.linux* ]] && [[ "$output" != *Brewfile.macos* ]]; fi
+  run bash -c "source '$DOTFILES_DIR/lib/os.sh'; source '$DOTFILES_DIR/lib/module.sh'; echo '$M/a' | module_brewfiles_stdin"
+  [[ "$output" == *"Brewfile."* ]]
+}

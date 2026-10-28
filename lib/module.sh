@@ -92,9 +92,14 @@ module_apply() {
   fi
 }
 
+# Brewfile always; Brewfile.<os> only on that OS.
 module_brewfiles() {
-  local d
-  for d in "$@"; do [ -f "$d/Brewfile" ] && echo "$d/Brewfile"; done
+  local d os
+  os="$(os_name)"
+  for d in "$@"; do
+    [ -f "$d/Brewfile" ] && echo "$d/Brewfile"
+    [ -f "$d/Brewfile.$os" ] && echo "$d/Brewfile.$os"
+  done
   return 0
 }
 
@@ -106,8 +111,13 @@ module_checklists() {
 
 # Same, reading module dirs one per line from stdin (safe for paths with spaces).
 module_brewfiles_stdin() {
-  local d
-  while IFS= read -r d; do [ -n "$d" ] && [ -f "$d/Brewfile" ] && echo "$d/Brewfile"; done
+  local d os
+  os="$(os_name)"
+  while IFS= read -r d; do
+    [ -n "$d" ] || continue
+    [ -f "$d/Brewfile" ] && echo "$d/Brewfile"
+    [ -f "$d/Brewfile.$os" ] && echo "$d/Brewfile.$os"
+  done
   return 0
 }
 # CHECKLIST.md always; CHECKLIST.<os>.md only on that OS.

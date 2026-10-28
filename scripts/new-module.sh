@@ -13,7 +13,7 @@ cat >"$dir/README.md" <<EOT
 
 What it is, why it is here, and any keybindings worth remembering.
 
-Optional files: Brewfile, config/ (-> ~/.config/$name), home/ (-> ~),
+Optional files: Brewfile (+ Brewfile.macos / Brewfile.linux), config/ (-> ~/.config/$name), home/ (-> ~),
 install.sh (idempotent post-link hook), module.toml (os = "macos"|"linux"),
 CHECKLIST.md (manual steps printed after install).
 EOT
