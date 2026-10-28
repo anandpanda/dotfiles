@@ -6,5 +6,9 @@
 # Optional parameters:
 # @raycast.icon 🩺
 # @raycast.packageName dotfiles
-export PATH="/opt/homebrew/bin:$PATH"
-exec just --justfile "$HOME/personal/dotfiles/justfile" --working-directory "$HOME/personal/dotfiles" doctor
+# Raycast runs scripts with a bare PATH (no Homebrew); find the checkout through this script's own link.
+export PATH="$PATH:/opt/homebrew/bin:/usr/local/bin"
+self="$(readlink "$0" || echo "$0")"
+d="$(cd "$(dirname "$self")" && pwd -P)"
+DOTFILES_DIR="${d%/modules/raycast/*}"
+exec just --justfile "$DOTFILES_DIR/justfile" --working-directory "$DOTFILES_DIR" doctor

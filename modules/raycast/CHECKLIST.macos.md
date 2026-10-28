@@ -1,1 +1,3 @@
-- raycast: Cmd-Space (after Spotlight's shortcut is off), Cmd-Shift-V for Clipboard History; Raycast > Extensions > Script Commands > Add Directory: ~/.config/raycast/scripts.
+- raycast: Cmd-Space: System Settings > Keyboard > Keyboard Shortcuts > Spotlight: untick "Show Spotlight search", then Raycast > Settings > General > hotkey Cmd-Space. Cmd-Shift-V for Clipboard History.
+- raycast: Raycast > Extensions > Script Commands > Add Directory: ~/.config/raycast/scripts (then "dots doctor" is a command).
+- raycast: window snapping: Raycast > Extensions > Window Management, set Left Half / Right Half / Maximize to Cmd-Opt-Left / Right / Up.

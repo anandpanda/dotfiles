@@ -1,5 +1,10 @@
 # Desktop Apps Implementation Plan
 
+> Outcome (2026-10-28): the aerospace and karabiner modules were built, used for a
+> day, and removed at Anand's request (tiling and the Caps Lock remap were not
+> worth their complexity). Window arrangement is Raycast's snapping. The text
+> below is the plan as executed.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** macOS desktop layer as modules: apps (casks), aerospace (tiling, TOML in repo), karabiner (Caps Lock → Escape/Hyper, JSON in repo), raycast (script commands + checklist). All free, all os-gated to macOS.
@@ -18,7 +23,7 @@ All earlier. Tests never launch GUI apps; config validation uses the tools' own 
 
 ### Task 1: apps module
 `modules/apps/{Brewfile.macos,module.toml,CHECKLIST.macos.md,doctor.sh,README.md}`, `tests/apps.bats`.
-- Brewfile.macos: raycast, nikitabobko/tap/aerospace (via `tap` line), karabiner-elements, shottr, jordanbaird-ice, stats, alt-tab, brave-browser, google-chrome, todobar, keka, appcleaner, monitorcontrol; `# cask "obsidian"` commented optional. Each with a why.
+- Brewfile.macos: raycast, nikitabobko/tap/aerospace (via `tap` line), karabiner-elements, shottr, jordanbaird-ice, stats, alt-tab, todobar (browsers dropped during the build: their updaters lock the bundles), keka, appcleaner, monitorcontrol; `# cask "obsidian"` commented optional. Each with a why.
 - doctor.sh: every uncommented cask in the Brewfile is in `brew list --cask`; missing → problem.
 - Tests: Brewfile parses with brew_names; doctor with fake brew reports a missing cask and passes when all present; module gated to macos.
 - Commit.
@@ -26,7 +31,7 @@ All earlier. Tests never launch GUI apps; config validation uses the tools' own 
 ### Task 2: aerospace module
 `modules/aerospace/{home/.config/aerospace/aerospace.toml,module.toml,README.md}`, `tests/aerospace.bats`.
 - Config from the upstream default (config-version 2) with: start-at-login true, gaps inner 8 outer 8, alt-h/j/k/l focus, alt-shift-h/j/k/l move, alt-1..9 workspace, alt-shift-1..9 move-node-to-workspace, alt-f fullscreen, alt-slash layout tiles horizontal vertical, alt-comma accordion, alt-tab workspace-back-and-forth, alt-enter exec-and-forget open -na Ghostty, alt-shift-semicolon service mode (reload-config, reset layout). on-window-detected: Finder, System Settings, Raycast, Karabiner, Ice, Stats, Shottr → layout floating.
-- Tests: TOML parses (python3 tomllib); the binds above present; floating rules present; `aerospace` binary present → `aerospace --config <file> list-workspaces --all` exits 0 (skip if missing); only `~/.config/aerospace/aerospace.toml` linked.
+- Tests: TOML parses (python3 tomllib); the binds above present; floating rules present; `aerospace` running our config → `aerospace reload-config --dry-run --no-gui --warnings-as-errors` exits 0 (skip otherwise; there is no offline validator); only `~/.config/aerospace/aerospace.toml` linked.
 - Commit.
 
 ### Task 3: karabiner module

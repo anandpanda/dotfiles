@@ -6,26 +6,36 @@ teardown() { teardown_home; }
 @test "apps module is macos only and its Brewfile lists every pick" {
   grep -q 'os = "macos"' "$DOTFILES_DIR/$A/module.toml"
   run brew_names "$DOTFILES_DIR/$A/Brewfile.macos"
-  for c in raycast aerospace karabiner-elements shottr jordanbaird-ice stats alt-tab todobar keka appcleaner monitorcontrol; do
+  for c in raycast shottr jordanbaird-ice stats alt-tab todobar keka appcleaner monitorcontrol; do
     [[ "$output" == *"$c"* ]] || { echo "missing $c"; false; }
   done
-  [[ "$output" != *obsidian* ]]; [[ "$output" != *brave* ]]; [[ "$output" != *chrome* ]]; grep -q '# cask "obsidian"' "$DOTFILES_DIR/$A/Brewfile.macos"
+  [[ "$output" != *obsidian* ]]; [[ "$output" != *brave* ]]; [[ "$output" != *chrome* ]]; [[ "$output" != *aerospace* ]]; [[ "$output" != *karabiner* ]]; grep -q '# cask "obsidian"' "$DOTFILES_DIR/$A/Brewfile.macos"
   # Third-party tap casks: tap declared, cask fully qualified and trusted (Homebrew 7 tap trust).
-  grep -q '^tap "nikitabobko/tap"$' "$DOTFILES_DIR/$A/Brewfile.macos"
   grep -q '^tap "menubar-apps/menubar-apps"$' "$DOTFILES_DIR/$A/Brewfile.macos"
-  grep -q '^cask "nikitabobko/tap/aerospace", trusted: true$' "$DOTFILES_DIR/$A/Brewfile.macos"
   grep -q '^cask "menubar-apps/menubar-apps/todobar", trusted: true$' "$DOTFILES_DIR/$A/Brewfile.macos"
   if grep -E '^cask "[^"/]+"' "$DOTFILES_DIR/$A/Brewfile.macos" | grep -q trusted; then echo "trusted: on a core cask"; false; fi
+  [ ! -e "$DOTFILES_DIR/$A/doctor.sh" ] # the root doctor already checks every Brewfile cask
 }
 
-@test "doctor reports a missing cask and passes when all are present" {
-  cat > "$HOME/bin/brew" <<'FAKE'
+fake_defaults() { # CURRENT-VALUE ("" = unset)
+  cat > "$HOME/bin/defaults" <<FAKE
 #!/usr/bin/env bash
-case "$1 $2" in "list --cask") cat "$HOME/casks.txt" ;; esac
+echo "\$*" >> "\$HOME/defaults.log"
+case "\$1" in
+  read) [ -n "$1" ] && echo "$1" || exit 1 ;;
+esac
 FAKE
-  chmod +x "$HOME/bin/brew"
-  brew_names "$DOTFILES_DIR/$A/Brewfile.macos" > "$HOME/casks.txt"
-  run bash "$DOTFILES_DIR/$A/doctor.sh"; [ "$status" -eq 0 ]
-  grep -v raycast "$HOME/casks.txt" > "$HOME/c2"; mv "$HOME/c2" "$HOME/casks.txt"
-  run bash "$DOTFILES_DIR/$A/doctor.sh"; [ "$status" -ne 0 ]; [[ "$output" == *"missing cask raycast"* ]]
+  chmod +x "$HOME/bin/defaults"
+}
+
+@test "install sets AltTab's hold key to Command once, and respects dry run" {
+  fake_defaults ""
+  run bash "$DOTFILES_DIR/$A/install.sh"; [ "$status" -eq 0 ]
+  grep -q 'write com.lwouis.alt-tab-macos holdShortcut -string ⌘' "$HOME/defaults.log"
+  fake_defaults "⌘"; : > "$HOME/defaults.log"
+  run bash "$DOTFILES_DIR/$A/install.sh"; [ "$status" -eq 0 ]; [[ "$output" == *"skip alttab"* ]]
+  ! grep -q write "$HOME/defaults.log"
+  fake_defaults ""; : > "$HOME/defaults.log"
+  DRY_RUN=1 run bash "$DOTFILES_DIR/$A/install.sh"; [ "$status" -eq 0 ]
+  ! grep -q write "$HOME/defaults.log"
 }

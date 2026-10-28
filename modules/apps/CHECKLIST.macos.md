@@ -1,3 +1,3 @@
-- apps: grant permissions once when each asks. Raycast, AeroSpace, AltTab, Ice: Accessibility. Karabiner: Input Monitoring and allow its driver. Shottr: Screen Recording. Stats: none.
-- apps: Raycast on Cmd-Space: System Settings > Keyboard > Keyboard Shortcuts > Spotlight: untick "Show Spotlight search", then Raycast > Settings > General > hotkey Cmd-Space.
-- apps: browsers are not brew-managed (Google updater locks them). Fresh machine: install Brave from brave.com and set it as default; Chrome from google.com/chrome if needed as a test target.
+- apps: grant permissions once when each asks. Raycast, AltTab, Ice: Accessibility. Shottr: Screen Recording. Stats: none.
+- apps: AltTab > Settings > Controls should show "Cmd" as the hold key (install sets it; restart AltTab once). Cmd-Tab then shows window previews.
+- apps: browsers are not brew-managed (their updaters lock the bundles). Fresh machine: install Brave from brave.com and set it as default; Chrome from google.com/chrome if needed as a test target.

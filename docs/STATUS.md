@@ -91,8 +91,8 @@ Homebrew no longer owns runtimes: direnv go node poetry pyenv python@3.12
 uninstalled; python@3.13/3.14 remain as dependencies of pre-commit/awscli/gcloud.
 Linux parity: every module has a Linux path, tested on Ubuntu in CI and in the
 container test (Ghostty via apt/snap, VS Code and Docker via apt, fonts via
-release download). Only a Linux desktop-defaults module (gsettings) is left,
-for Phase 6.
+release download). A Linux desktop-defaults module (gsettings) was considered
+and ruled out: Linux use is headless (Coder workspaces over SSH).
 
 Phase 5 review: 1 critical (cached `mise activate` froze PATH), 7 important,
 9 minor; all fixed, none deferred. Profiles now: personal, work, server
@@ -100,6 +100,25 @@ Phase 5 review: 1 critical (cached `mise activate` froze PATH), 7 important,
 Hooks follow one rule: present → skip; sudo usable → act; else print the
 command and continue. `just test-server` installs the server profile as a user
 with no sudo.
+
+## Done: Phase 6, macOS desktop apps (branch `v2`)
+
+Spec `docs/specs/06-apps.md`, plan `docs/plans/06-apps.md`. Modules (both
+`os = "macos"`): apps (Brewfile: Raycast, Shottr, Ice, Stats, AltTab, todobar,
+Keka, AppCleaner, MonitorControl; Obsidian commented optional; browsers
+hand-installed because their updaters lock the bundles; the todobar tap cask
+declared `trusted: true` for Homebrew 7; install.sh moves AltTab's hold key to
+Command), raycast (script commands dir; `dots doctor` as a command; window
+snapping on Cmd-Opt-arrows). AeroSpace tiling and the Karabiner Caps Lock remap
+were built, tried for a day and removed at Anand's request: not worth their
+complexity. Removed from this Mac: Maccy, iTerm2, Cursor, CodexBar, AeroSpace,
+Karabiner, Homebrew runtimes and services, 19 GB of caches and leftovers.
+Rulings: Docker Desktop stays (free tier); todobar kept; no notes app; no tiling
+manager; services run in Docker, tools stay local.
+
+Phase 6 review: 0 critical, 5 important, 15 minor; all fixed, none deferred.
+mise 2026.10 resolves home from the user database, so tests point every mise
+dir at the temp home; unit tests now also run on macOS in CI (bash 3.2).
 
 ## Pending for Anand
 
@@ -120,15 +139,15 @@ with no sudo.
 - GitHub: register ~/.ssh/id_ed25519_personal.pub as a *Signing Key* so
   commits show "Verified" (they already verify locally).
 - Old configs are in `~/.dotfiles-backup/`.
+- `~/Documents/work/services` (5.4 GB of work checkouts with unpushed local
+  branches) stays until Anand decides; nothing else from the clutter review is left.
 - Replace `main` with `v2` when ready.
 - After all phases: a hands-on end-to-end walkthrough of the whole setup so
   Anand can use every part of it (Anand asked for this explicitly).
 
 ## Next: phases in order
 
-(Phases 1 to 5 done. Use `dots <command>` from anywhere.)
-5. Runtimes and project tooling: mise, docker, direnv, language setups.
-6. Mac and Linux apps: window manager, launcher, clipboard, browser, notes, todo.
+(Phases 1 to 6 done. Use `dots <command>` from anywhere.)
 7. Claude harness: CLAUDE.md layering, skills, agents, hooks, memory, statusline, plugins.
 8. Learning layer: the parts of the harness that make Anand explain, review, go deep.
 
