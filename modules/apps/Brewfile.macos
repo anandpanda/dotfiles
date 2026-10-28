@@ -1,0 +1,28 @@
+# Desktop apps. All free. Work-managed apps (JumpCloud, Falcon, VPN, Slack, Zoom) are IT's and not here.
+tap "nikitabobko/tap"
+
+# Launcher, clipboard history, snippets (replaces Spotlight, Maccy)
+cask "raycast"
+# Tiling window manager: alt-hjkl focus, alt-1..9 workspaces (config in modules/aerospace)
+cask "nikitabobko/tap/aerospace"
+# Caps Lock -> Escape (tap) / Hyper (hold) (config in modules/karabiner)
+cask "karabiner-elements"
+# Screenshots: annotate, OCR, measure. Cmd-Shift-2
+cask "shottr"
+# Menu bar: hide the clutter
+cask "jordanbaird-ice"
+# CPU, memory, network in the menu bar
+cask "stats"
+# Cmd-Tab with per-window previews
+cask "alt-tab"
+# Browsers: Brave default, Chrome as the test target
+cask "brave-browser"
+cask "google-chrome"
+# Quick todo list in the menu bar
+cask "todobar"
+# Archives, full uninstalls, external monitor brightness
+cask "keka"
+cask "appcleaner"
+cask "monitorcontrol"
+# Notes, if ever wanted (markdown on disk, free)
+# cask "obsidian"

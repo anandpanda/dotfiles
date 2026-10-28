@@ -1,0 +1,1 @@
+- raycast: Cmd-Space (after Spotlight's shortcut is off), Cmd-Shift-V for Clipboard History; Raycast > Extensions > Script Commands > Add Directory: ~/.config/raycast/scripts.

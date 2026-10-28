@@ -1,0 +1,2 @@
+- apps: grant permissions once when each asks. Raycast, AeroSpace, AltTab, Ice: Accessibility. Karabiner: Input Monitoring and allow its driver. Shottr: Screen Recording. Stats: none.
+- apps: Raycast on Cmd-Space: System Settings > Keyboard > Keyboard Shortcuts > Spotlight: untick "Show Spotlight search", then Raycast > Settings > General > hotkey Cmd-Space.
