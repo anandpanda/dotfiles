@@ -8,14 +8,52 @@ module_enabled_for_os() {
   [ -z "$want" ] || [ "$want" = "$(os_name)" ]
 }
 
-# If ~/.config/NAME is a symlink to some other module's config dir (…/NAME/config),
-# print that dir. Prints nothing for a correct link, a foreign link, or no link.
-module_config_owner() { # NAME OWN_CONFIG_DIR
-  local owner
+overlay_dir() { echo "${DOTFILES_OVERLAY_DIR:-$HOME/.dotfiles-work}"; }
+modules_root() { echo "${DOTFILES_MODULES:-$DOTFILES_DIR/modules}"; }
+
+# True when PATH is inside the overlay checkout.
+_in_overlay() { case "$1" in "$(overlay_dir)"/*) return 0 ;; *) return 1 ;; esac }
+
+# For an OVERLAY module NAME: if ~/.config/NAME already links to the public
+# module's config dir, print that dir so our files get laid inside it.
+# Any other situation (public module, foreign checkout, no link) prints nothing.
+module_config_owner() { # NAME MODULE_DIR
+  local owner public
+  _in_overlay "$2" || return 1
+  public="$(modules_root)/$1/config"
   owner="$(readlink "$HOME/.config/$1" 2>/dev/null || true)"
-  [ -n "$owner" ] && [ "$owner" != "$2" ] && [ -d "$owner" ] || return 1
-  [ "$(basename "$owner")" = config ] && [ "$(basename "$(dirname "$owner")")" = "$1" ] || return 1
+  [ -n "$owner" ] && [ "$owner" = "$public" ] && [ -d "$owner" ] || return 1
   echo "$owner"
+}
+
+# Lay SRC_DIR's files inside DST_DIR, adding only: an existing real file is
+# a tracked public file and is left alone.
+_link_tree_add_only() {
+  local src_dir="$1" dst_dir="$2" f rel dst
+  while IFS= read -r f; do
+    rel="${f#"$src_dir"/}"
+    dst="$dst_dir/$rel"
+    if [ -e "$dst" ] && [ ! -L "$dst" ]; then
+      log_warn "skip $dst: public file exists, overlay cannot replace it"
+      continue
+    fi
+    link_file "$f" "$dst" || return 1
+  done < <(find "$src_dir" -type f | sort)
+}
+
+# Link home/ files; a public module never touches a file the overlay already owns.
+_link_home() { # MODULE_DIR
+  local dir="$1" f rel dst cur
+  while IFS= read -r f; do
+    rel="${f#"$dir"/home/}"
+    dst="$HOME/$rel"
+    cur="$(readlink "$dst" 2>/dev/null || true)"
+    if ! _in_overlay "$dir" && [ -n "$cur" ] && _in_overlay "$cur"; then
+      printf 'skip %s (overlay owns)\n' "$dst"
+      continue
+    fi
+    link_file "$f" "$dst" || return 1
+  done < <(find "$dir/home" -type f | sort)
 }
 
 module_apply() {
@@ -24,15 +62,14 @@ module_apply() {
   log_info "module: $name"
   if [ -d "$dir/config" ]; then
     local target="$HOME/.config/$name" owner
-    if owner="$(module_config_owner "$name" "$dir/config")"; then
-      # Another module owns this dir: lay our files inside it as individual links.
-      link_tree "$dir/config" "$owner" || return 1
+    if owner="$(module_config_owner "$name" "$dir")"; then
+      _link_tree_add_only "$dir/config" "$owner" || return 1
     else
       link_file "$dir/config" "$target" || return 1
     fi
   fi
   if [ -d "$dir/home" ]; then
-    link_tree "$dir/home" "$HOME" || return 1
+    _link_home "$dir" || return 1
   fi
   if [ -x "$dir/install.sh" ]; then
     if [ "${DRY_RUN:-0}" = 1 ]; then

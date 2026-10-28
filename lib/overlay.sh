@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 # Private overlay: a second repo with modules/, applied after public modules.
 
-overlay_dir() { echo "$HOME/.dotfiles-work"; }
-
 overlay_resolve_url() {
   local url="$1"
   [ -n "$url" ] || url="$(recall overlay || true)"

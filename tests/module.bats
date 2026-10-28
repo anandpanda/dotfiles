@@ -71,9 +71,35 @@ teardown() { teardown_home; }
   [ ! -e "$HOME/foreign/t" ]
 }
 
-@test "config link owned by another module of same name gets files laid inside" {
-  mkdir -p "$M/tool/config" "$HOME/other/tool/config"; echo x > "$M/tool/config/t"
-  mkdir -p "$HOME/.config"; ln -s "$HOME/other/tool/config" "$HOME/.config/tool"
+@test "overlay module with same name adds files inside the public config dir, never replaces" {
+  export DOTFILES_MODULES="$M"
+  mkdir -p "$M/tool/config"; echo public > "$M/tool/config/shared"
+  module_apply "$M/tool" >/dev/null
+  O="$HOME/.dotfiles-work/modules/tool/config"; mkdir -p "$O"; echo overlay > "$O/extra"; echo overlay > "$O/shared"
+  run module_apply "$HOME/.dotfiles-work/modules/tool"
+  [ "$status" -eq 0 ]
+  [ "$(readlink "$HOME/.config/tool/extra")" = "$O/extra" ]
+  [ "$(cat "$M/tool/config/shared")" = "public" ]
+  [[ "$output" == *"skip"*"shared"* ]]
+}
+
+@test "a different checkout with the same shape is not treated as owner" {
+  export DOTFILES_MODULES="$M"
+  mkdir -p "$HOME/other/modules/tool/config"; touch "$HOME/other/modules/tool/config/a"
+  mkdir -p "$HOME/.config"; ln -s "$HOME/other/modules/tool/config" "$HOME/.config/tool"
+  mkdir -p "$M/tool/config"; touch "$M/tool/config/b"
   module_apply "$M/tool"
-  [ "$(readlink "$HOME/.config/tool/t")" = "$M/tool/config/t" ]
+  [ "$(readlink "$HOME/.config/tool")" = "$M/tool/config" ]
+  [ ! -e "$HOME/other/modules/tool/config/b" ]
+}
+
+@test "overlay wins home file collisions and public reapply does not flip it back" {
+  export DOTFILES_MODULES="$M"
+  mkdir -p "$M/tool/home"; echo public > "$M/tool/home/.foo"
+  O="$HOME/.dotfiles-work/modules/tool"; mkdir -p "$O/home"; echo overlay > "$O/home/.foo"
+  module_apply "$M/tool" >/dev/null
+  module_apply "$O" >/dev/null
+  run module_apply "$M/tool"
+  [ "$(readlink "$HOME/.foo")" = "$O/home/.foo" ]
+  [[ "$output" != *"backup"* ]]
 }

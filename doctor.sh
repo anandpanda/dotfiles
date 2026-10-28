@@ -54,14 +54,23 @@ for d in $dirs; do
   name="$(basename "$d")"
   if [ -d "$d/config" ]; then
     managed="$managed $name"
-    if owner="$(module_config_owner "$name" "$d/config")"; then
-      while IFS= read -r f; do check_link "$f" "$owner/${f#"$d"/config/}"; done < <(find "$d/config" -type f)
+    if owner="$(module_config_owner "$name" "$d")"; then
+      while IFS= read -r f; do
+        dst="$owner/${f#"$d"/config/}"
+        [ -e "$dst" ] && [ ! -L "$dst" ] && continue # public file wins, overlay skipped it
+        check_link "$f" "$dst"
+      done < <(find "$d/config" -type f)
     else
       check_link "$d/config" "$HOME/.config/$name"
     fi
   fi
   if [ -d "$d/home" ]; then
-    while IFS= read -r f; do check_link "$f" "$HOME/${f#"$d"/home/}"; done < <(find "$d/home" -type f)
+    while IFS= read -r f; do
+      dst="$HOME/${f#"$d"/home/}"
+      cur="$(readlink "$dst" 2>/dev/null || true)"
+      case "$cur" in "$(overlay_dir)"/*) [ "$d" = "${d#"$(overlay_dir)"}" ] && continue ;; esac # overlay owns it
+      check_link "$f" "$dst"
+    done < <(find "$d/home" -type f)
   fi
 done
 [ "$problems" = "$link_problems_before" ] && log_ok "links"

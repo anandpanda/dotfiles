@@ -3,11 +3,12 @@ setup() {
   setup_home
   for f in log os link profile module brew overlay; do source "$DOTFILES_DIR/lib/$f.sh"; done
   export DOTFILES_SKIP_BREW=1
+  export DOTFILES_MODULES="$HOME/mods"; mkdir -p "$DOTFILES_MODULES"; cp -R "$DOTFILES_DIR/modules/git" "$DOTFILES_MODULES/git"
   REMOTE="$HOME/remote"; "$DOTFILES_DIR/scripts/overlay-init.sh" "$REMOTE" >/dev/null
   mkdir -p "$REMOTE/modules/extra/config"; touch "$REMOTE/modules/extra/config/x"
   git -C "$REMOTE" add -A && git -C "$REMOTE" -c user.name=t -c user.email=t@t commit -qm extra
 }
-teardown() { rm -f "$DOTFILES_DIR/modules/git/config/identity.work"; teardown_home; }
+teardown() { teardown_home; }
 
 @test "overlay_resolve_url prefers argument, then recall, else empty without tty" {
   [ "$(overlay_resolve_url "u1")" = "u1" ]
@@ -26,9 +27,9 @@ teardown() { rm -f "$DOTFILES_DIR/modules/git/config/identity.work"; teardown_ho
 }
 
 @test "overlay git module lays identity.work inside public git config dir" {
-  module_apply "$DOTFILES_DIR/modules/git" >/dev/null
+  module_apply "$DOTFILES_MODULES/git" >/dev/null
   overlay_apply "$REMOTE"
-  [ "$(readlink "$HOME/.config/git")" = "$DOTFILES_DIR/modules/git/config" ]
+  [ "$(readlink "$HOME/.config/git")" = "$DOTFILES_MODULES/git/config" ]
   [ "$(readlink "$HOME/.config/git/identity.work")" = "$HOME/.dotfiles-work/modules/git/config/identity.work" ]
 }
 
