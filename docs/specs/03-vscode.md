@@ -12,9 +12,10 @@ extensions.
 
 ## Picks (closed with Anand)
 
-- Editor: VS Code, Homebrew cask (`adopt: true` so a hand-installed copy is
-  taken over, not duplicated). Linux: Microsoft's apt repo via `install.sh`
-  when apt exists, else a checklist line.
+- Editor: VS Code from the Homebrew cask, a fresh install. On this Mac the
+  hand-installed copy is moved to `~/.dotfiles-backup/` first so the cask
+  installs clean and `just update` owns upgrades. Linux: Microsoft's apt repo
+  via `install.sh` when apt exists, else a checklist line.
 - Theme and icons: Catppuccin Mocha, Catppuccin icons.
 - Font: JetBrains Mono Nerd Font 14, ligatures on, same in the integrated
   terminal. Terminal profile is Homebrew zsh as a login shell.
@@ -42,7 +43,7 @@ extensions.
 
 ```
 modules/vscode/
-├── Brewfile              # cask "visual-studio-code", args: { adopt: true }
+├── Brewfile              # cask "visual-studio-code"
 ├── config/               # NOT linked as a dir: VS Code's user dir differs per OS
 │   ├── settings.json
 │   ├── keybindings.json
