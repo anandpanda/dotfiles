@@ -88,7 +88,8 @@ print(int(min(t) * 1000))')
 
 @test "aged completion dump is refreshed, not rebuilt every shell" {
   module_apply "$DOTFILES_DIR/$Z" >/dev/null
-  env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" XDG_CACHE_HOME="$HOME/.cache" zsh -i -c true 2>/dev/null
+  run env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" XDG_CACHE_HOME="$HOME/.cache" zsh -i -c 'echo ZSH_CACHE=$ZSH_CACHE'
+  echo "first run: $output"; ls -la "$HOME/.cache/zsh" 2>&1 || true
   d="$HOME/.cache/zsh/compdump"; [ -f "$d" ]
   touch -t 202001010000 "$d"
   env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" XDG_CACHE_HOME="$HOME/.cache" zsh -i -c true 2>/dev/null
@@ -136,6 +137,7 @@ print(int(min(t) * 1000))')
 }
 
 @test "login shell preflight: a declined switch is remembered and a failed chsh does not abort" {
+  [ -x /opt/homebrew/bin/zsh ] || [ -x /home/linuxbrew/.linuxbrew/bin/zsh ] || skip "homebrew zsh not installed"
   mkdir -p "$HOME/bin"; printf '#!/bin/sh\nexit 1\n' > "$HOME/bin/chsh"
   printf '#!/bin/sh\necho "UserShell: /bin/zsh"\n' > "$HOME/bin/dscl"
   printf '#!/bin/sh\necho "u:x:1:1::/home/u:/bin/bash"\n' > "$HOME/bin/getent"
