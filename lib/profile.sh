@@ -22,7 +22,7 @@ _toml_bool_true() { # FILE KEY -> 0 if key = true
 _toml_list() { # FILE KEY -> items one per line; the list may span lines until the closing ]
   awk -v key="$2" '
     !inlist && $0 ~ "^[[:space:]]*" key "[[:space:]]*=[[:space:]]*\\[" { sub(/^[^[]*\[/, ""); inlist = 1 }
-    inlist { line = $0; if (line ~ /\]/) { sub(/\].*/, "", line); done = 1 }
+    inlist { line = $0; sub(/#.*/, "", line); if (line ~ /\]/) { sub(/\].*/, "", line); done = 1 }
              n = split(line, parts, ","); for (i = 1; i <= n; i++) { gsub(/[[:space:]"]/, "", parts[i]); if (parts[i] != "") print parts[i] }
              if (done) exit }
   ' "$1"

@@ -77,3 +77,10 @@ teardown() { teardown_home; }
   [[ "$output" != *"ssh key"* ]]
   [ -f "$HOME/.ssh/config" ]
 }
+
+@test "ssh_test uses the key file directly, not the host alias" {
+  mkdir -p "$HOME/bin"; printf '#!/bin/sh\necho "$@" > "$HOME/ssh-args"; echo "successfully authenticated" >&2\n' > "$HOME/bin/ssh"; chmod +x "$HOME/bin/ssh"
+  PATH="$HOME/bin:$PATH" ssh_test personal
+  grep -q "id_ed25519_personal" "$HOME/ssh-args"
+  grep -q "git@github.com " "$HOME/ssh-args" || grep -q "git@github.com$" "$HOME/ssh-args"
+}

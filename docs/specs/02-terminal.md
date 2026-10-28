@@ -80,7 +80,7 @@ two-line prompt, git status, language versions only inside projects,
 command duration over 2 s), `shell.zsh` with the init line.
 
 **atuin**: `Brewfile`, `config/config.toml` (local only, sync off until
-Anand opts in, fuzzy search, Ctrl-R and up-arrow bound), `shell.zsh`.
+Anand opts in, fuzzy search, Ctrl-R only; up-arrow stays plain zsh history), `shell.zsh`.
 
 **tmux**: `Brewfile` (tmux, tpm handled by `install.sh` cloning into
 `~/.config/tmux/plugins/tpm`), `config/tmux.conf`: prefix Ctrl-a, mouse on,

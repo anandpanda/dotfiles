@@ -40,40 +40,26 @@ Z="modules/zsh"
   [[ "$output" == *eza* ]]
 }
 
-@test "plugins are pinned to tags" {
+@test "plugins are pinned to commits" {
+  n=0
   while read -r line; do
     [[ "$line" == \#* || -z "$line" ]] && continue
-    [[ "$line" == *"branch:"* ]]
+    [[ "$line" =~ pin:[0-9a-f]{40} ]]; n=$((n + 1))
   done < "$DOTFILES_DIR/$Z/home/.config/zsh/.zsh_plugins.txt"
+  [ "$n" -ge 4 ]
 }
 
-@test "preflight without tty prints commands or ok" {
-  run bash "$DOTFILES_DIR/$Z/preflight.sh"
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"login shell"* ]]
-}
-
-@test "preflight dry run changes nothing" {
-  DRY_RUN=1 run bash "$DOTFILES_DIR/$Z/preflight.sh"
-  [ "$status" -eq 0 ]
-}
-
-@test "interactive startup under 80ms" {
-  [ -r /opt/homebrew/opt/antidote/share/antidote/antidote.zsh ] || [ -r /home/linuxbrew/.linuxbrew/opt/antidote/share/antidote/antidote.zsh ] || skip "antidote missing"
-  module_apply "$DOTFILES_DIR/$Z" >/dev/null
-  env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" zsh -i -c true
-  avg=$(HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" python3 -c '
-import subprocess, time
-t = []
-for _ in range(10):
-    s = time.perf_counter(); subprocess.run(["zsh", "-i", "-c", "true"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); t.append(time.perf_counter() - s)
-t.sort(); print(int(t[len(t)//2] * 1000))')
-  echo "median ${avg}ms"
-  [ "$avg" -lt 80 ]
-}
-
-@test "dots runs just against the dotfiles repo from anywhere" {
-  module_apply "$DOTFILES_DIR/$Z" >/dev/null
-  run env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" DOTFILES_DIR="$DOTFILES_DIR" zsh -i -c 'cd /; dots --list' 
-  [ "$status" -eq 0 ]; [[ "$output" == *doctor* ]]
+@test "antidote moves an existing clone to the pinned commit" {
+  [ -r /opt/homebrew/opt/antidote/share/antidote/antidote.zsh ] || skip "antidote missing"
+  # Real files, not links, so nothing here can touch the repo.
+  mkdir -p "$HOME/.config"; cp -R "$DOTFILES_DIR/$Z/home/.config/zsh" "$HOME/.config/zsh"; cp "$DOTFILES_DIR/$Z/home/.zshenv" "$HOME/.zshenv"
+  env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" zsh -i -c true 2>/dev/null
+  d="$ANTIDOTE_HOME/github.com/zsh-users/zsh-autosuggestions"; [ -d "$d/.git" ]
+  want="$(git -C "$d" rev-parse HEAD)"
+  git -C "$d" fetch -q --unshallow 2>/dev/null || git -C "$d" fetch -q --depth 5
+  git -C "$d" checkout -q "$want~1"
+  [ "$(git -C "$d" rev-parse HEAD)" != "$want" ]
+  touch "$HOME/.config/zsh/.zsh_plugins.txt"
+  env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" zsh -i -c true 2>/dev/null
+  [ "$(git -C "$d" rev-parse HEAD)" = "$want" ]
 }

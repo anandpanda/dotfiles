@@ -47,7 +47,7 @@ pinned plugins, resurrect+continuum), CLI stack, fonts.
 - tmux plugins: start `tmux`, press Ctrl-a then Shift-i once.
 - Create `~/.secrets/github_token` when needed (doctor reminds).
 - Work overlay: `just overlay-init ~/personal/dotfiles-work`, fill
-  `modules/git/config/identity.work` (name, work-email@example.com), push to a private
+  `modules/git/config/identity.work` (name, work email), push to a private
   repo, then `just install work <url>` in a real terminal.
 - Old configs are in `~/.dotfiles-backup/`. Old gitconfig had delta, ssh
   signing, aliases; those return in the git phase.

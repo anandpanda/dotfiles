@@ -1,7 +1,7 @@
 load helper
 setup() {
   setup_home
-  for f in log os link profile module brew overlay; do source "$DOTFILES_DIR/lib/$f.sh"; done
+  for f in log os link profile module brew preflight overlay; do source "$DOTFILES_DIR/lib/$f.sh"; done
   export DOTFILES_SKIP_BREW=1
   export DOTFILES_MODULES="$HOME/mods"; mkdir -p "$DOTFILES_MODULES"; cp -R "$DOTFILES_DIR/modules/git" "$DOTFILES_MODULES/git"
   REMOTE="$HOME/remote"; "$DOTFILES_DIR/scripts/overlay-init.sh" "$REMOTE" >/dev/null
@@ -55,4 +55,19 @@ teardown() { teardown_home; }
   [ "$(overlay_clone_url git@github.com:org/repo.git)" = "git@github.com-work:org/repo.git" ]
   [ "$(overlay_clone_url https://github.com/org/repo.git)" = "git@github.com-work:org/repo.git" ]
   [ "$(overlay_clone_url /local/path)" = "/local/path" ]
+}
+
+@test "overlay url prompt goes to stderr and reads from the terminal" {
+  is_tty() { return 0; }
+  echo "git@github.com:o/r.git" > "$HOME/tty"
+  DOTFILES_TTY="$HOME/tty" run --separate-stderr overlay_resolve_url ""
+  [ "$output" = "git@github.com:o/r.git" ]
+  [[ "$stderr" == *"overlay"* ]]
+}
+
+@test "overlay preflight scripts run" {
+  mkdir -p "$REMOTE/modules/pf"; printf '#!/usr/bin/env bash\necho OVERLAY-PREFLIGHT\n' > "$REMOTE/modules/pf/preflight.sh"
+  git -C "$REMOTE" add -A; git -C "$REMOTE" -c user.name=t -c user.email=t@t commit -qm pf
+  run overlay_apply "$REMOTE"
+  [[ "$output" == *"OVERLAY-PREFLIGHT"* ]]
 }

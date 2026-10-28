@@ -45,3 +45,13 @@ FAKE
   [[ "$output" == *"[dry]"* ]]
   [ ! -d "$HOME/.local/share/fonts" ]
 }
+
+@test "fonts linux: failed extraction leaves no font dir" {
+  [ "$(uname -s)" = Linux ] || skip "linux only"
+  BIN="$HOME/bin"; mkdir -p "$BIN"
+  printf '#!/usr/bin/env bash\nwhile [ $# -gt 0 ]; do [ "$1" = -o ] && out="$2"; shift; done; echo junk > "$out"\n' > "$BIN/curl"
+  printf '#!/usr/bin/env bash\nexit 0\n' > "$BIN/fc-cache"; chmod +x "$BIN/curl" "$BIN/fc-cache"
+  PATH="$BIN:$PATH" run bash "$DOTFILES_DIR/modules/fonts/install.sh"
+  [ "$status" -ne 0 ]
+  [ ! -d "$HOME/.local/share/fonts/JetBrainsMono" ]
+}

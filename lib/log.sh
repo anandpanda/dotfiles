@@ -18,5 +18,13 @@ die() {
   exit 1
 }
 
-# True when both stdin and stdout are terminals. Guided prompts need both.
-is_tty() { [ -t 0 ] && [ -t 1 ]; }
+# True when a terminal is available for questions. DOTFILES_TTY (a file) stands in for tests.
+is_tty() { [ -n "${DOTFILES_TTY:-}" ] || { [ -t 0 ] && [ -t 1 ]; }; }
+
+# ask PROMPT VAR: print PROMPT on stderr, read one line from the terminal into VAR.
+ask() {
+  printf '%s' "$1" >&2
+  read -r "$2" <"${DOTFILES_TTY:-/dev/tty}"
+  [ -n "${DOTFILES_TTY:-}" ] && { tail -n +2 "$DOTFILES_TTY" >"$DOTFILES_TTY.n" && mv "$DOTFILES_TTY.n" "$DOTFILES_TTY"; }
+  return 0
+}

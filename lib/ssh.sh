@@ -11,7 +11,8 @@ ssh_contexts_for_profile() {
 
 ssh_test() {
   local out
-  out="$(ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -T "git@github.com-$1" 2>&1 || true)"
+  # Use the key directly: the host alias is only linked in the configure step, after preflight.
+  out="$(ssh -i "$(ssh_key_path "$1")" -o IdentitiesOnly=yes -o BatchMode=yes -o StrictHostKeyChecking=accept-new -T git@github.com 2>&1 || true)"
   case "$out" in *"successfully authenticated"*) return 0 ;; *) return 1 ;; esac
 }
 
@@ -27,8 +28,7 @@ ssh_ensure_key() {
     log_warn "no terminal: skipping ssh key generation for $ctx"
     return 0
   else
-    printf 'Generate %s ssh key at %s? [Y/n] ' "$ctx" "$key"
-    read -r ans
+    ask "Generate $ctx ssh key at $key? [Y/n] " ans
     case "$ans" in n | N)
       log_warn "skipped $ctx key"
       return 0
@@ -41,8 +41,7 @@ ssh_ensure_key() {
     echo
     cat "$key.pub"
     echo
-    printf 'Press enter once added... '
-    read -r _
+    ask 'Press enter once added... ' _
   fi
   if [ "${DRY_RUN:-0}" != 1 ]; then
     if ssh_test "$ctx"; then log_ok "github.com-$ctx authenticates"; else log_warn "github.com-$ctx does not authenticate yet"; fi

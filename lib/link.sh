@@ -29,6 +29,9 @@ _backup() {
   printf 'backup %s -> %s\n' "$dst" "$dest"
 }
 
+# Public: move DST into the backup tree (used by module hooks).
+backup_move() { _backup "$1"; }
+
 link_file() {
   local src="$1" dst="$2"
   [ -e "$src" ] || [ -L "$src" ] || {

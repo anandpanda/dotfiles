@@ -10,8 +10,7 @@ alias rm='rm -i' cp='cp -i' mv='mv -i'
 (( $+commands[bat] )) && alias cat='bat --paging=never'
 (( $+commands[dust] )) && alias du='dust'
 (( $+commands[btop] )) && alias top='btop'
-(( $+commands[rg] )) && alias grep='rg'
-(( $+commands[fd] )) && alias find='fd'
+# rg and fd are not aliased over grep/find: their flags differ (rg -r means replace).
 
 alias ..='cd ..'
 alias ...='cd ../..'

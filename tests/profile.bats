@@ -63,3 +63,9 @@ teardown() { teardown_home; }
   run profile_modules multi
   [ "$output" = $'a\nb\nc' ]
 }
+
+@test "comments inside a multi-line list are ignored" {
+  printf 'modules = [\n  "a", # first\n  "b",\n]\n' > "$PROFILES/c.toml"
+  run profile_modules c
+  [ "$output" = $'a\nb' ]
+}

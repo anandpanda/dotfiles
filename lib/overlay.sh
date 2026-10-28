@@ -5,8 +5,7 @@ overlay_resolve_url() {
   local url="$1"
   [ -n "$url" ] || url="$(recall overlay || true)"
   if [ -z "$url" ] && is_tty; then
-    printf 'Private overlay repo url (git@github.com:org/repo.git): '
-    read -r url
+    ask 'Private overlay repo url (git@github.com:org/repo.git): ' url
   fi
   echo "$url"
 }
@@ -57,6 +56,7 @@ overlay_apply() {
     brewfiles="$(printf '%s' "$dirs" | module_brewfiles_stdin)"
     [ -z "$brewfiles" ] || brew_bundle_stdin <<<"$brewfiles"
   fi
+  preflight_run "$dirs" || die "overlay preflight failed"
   while IFS= read -r d <&3; do
     [ -n "$d" ] || continue
     module_apply "$d" || die "overlay module failed: $(basename "$d")"

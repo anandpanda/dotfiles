@@ -44,3 +44,11 @@ teardown() { teardown_home; }
   grep -E "^set -g @plugin" "$DOTFILES_DIR/modules/tmux/config/tmux.conf" | grep -v "tmux-plugins/tpm'" | while read -r l; do [[ "$l" == *"#v"* ]]; done
   zsh -n "$DOTFILES_DIR/modules/tmux/shell.zsh"
 }
+
+@test "installed tmux plugins are moved to their pinned tags" {
+  P="$HOME/plug-remote"; git init -q "$P"; echo a > "$P/f"; git -C "$P" add -A; git -C "$P" -c user.name=t -c user.email=t@t commit -qm one; git -C "$P" tag v3.0.0
+  echo b > "$P/f"; git -C "$P" add -A; git -C "$P" -c user.name=t -c user.email=t@t commit -qm two; git -C "$P" tag v3.1.0
+  git clone -q --branch v3.0.0 "$P" "$HOME/.config/tmux/plugins/tmux-continuum"
+  module_apply "$DOTFILES_DIR/modules/tmux" >/dev/null
+  [ "$(git -C "$HOME/.config/tmux/plugins/tmux-continuum" describe --tags)" = "v3.1.0" ]
+}

@@ -20,7 +20,7 @@ doctor:
 lint:
     shellcheck install.sh doctor.sh bootstrap.sh lib/*.sh scripts/*.sh modules/*/*.sh
     shfmt -i 2 -ci -d install.sh doctor.sh bootstrap.sh lib scripts $(find modules -name '*.sh')
-    for f in $(find modules -name '*.zsh'); do zsh -n "$f"; done
+    for f in $(find modules -name '*.zsh' -o -name '.zsh*' -type f); do zsh -n "$f"; done
 
 # bats unit tests
 unit:
