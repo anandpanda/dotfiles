@@ -4,7 +4,7 @@
 
 **Goal:** Seven modules (fonts, cli, zsh, starship, atuin, tmux, ghostty) on the Phase 1 foundation, plus two foundation additions: a preflight block that asks every human question up front, and per-module `shell.zsh` integration.
 
-**Architecture:** `install.sh` runs every enabled module's `preflight.sh` first (tty-aware), then installs unattended. `module_apply` links `shell.zsh` into `~/.config/zsh/rc.d/`. All zsh config lives in `~/.config/zsh` via `ZDOTDIR`. Catppuccin Mocha and JetBrains Mono Nerd Font are the only cross-cutting values. Plugins are pinned to tags.
+**Architecture:** `install.sh` installs packages, then runs every enabled module's `preflight.sh` (tty-aware), then configures unattended. `module_apply` links `shell.zsh` into `~/.config/zsh/rc.d/`. All zsh config lives in `~/.config/zsh` via `ZDOTDIR`. Catppuccin Mocha and JetBrains Mono Nerd Font are the only cross-cutting values. Plugins are pinned to tags.
 
 **Tech Stack:** zsh 5.9, antidote 2.3 (static), starship 1.27, atuin 18, tmux 3.8 + tpm, ghostty, fzf 0.73, bats.
 
@@ -118,6 +118,7 @@ Append to `tests/install.bats`:
   run "$DOTFILES_DIR/install.sh" test
   [ "$status" -eq 0 ]
   [[ "$output" == *"PREFLIGHT"*"INSTALL"* ]]
+  [[ "$output" == *"brew"*"PREFLIGHT"* ]] || [ "${DOTFILES_SKIP_BREW:-0}" = 1 ]
 }
 ```
 
@@ -171,7 +172,7 @@ and inside `module_apply`, after the `home/` block:
   fi
 ```
 
-`install.sh`: source `preflight` in the lib loop; after `module_dirs` is built and before the brew block:
+`install.sh`: source `preflight` in the lib loop; after the brew block and before module application:
 ```bash
 log_info "preflight: anything that needs you"
 printf '%s' "$module_dirs" | preflight_run || die "preflight failed"
@@ -518,7 +519,7 @@ case "$ans" in n | N) log_warn "kept $cur"; exit 0 ;; esac
 grep -qxF "$want" /etc/shells || echo "$want" | sudo tee -a /etc/shells >/dev/null
 chsh -s "$want" && log_ok "login shell is now $want (open a new terminal)"
 ```
-Ordering caveat: preflight runs before `brew bundle`, so on a blank machine the first run prints the warning and the second run switches. Document in README and CHECKLIST. (Alternative considered: run brew for zsh early. Rejected to keep preflight free of installs.)
+Preflight runs after `brew bundle`, so Homebrew zsh is present on the first run and the switch happens in that same run.
 
 `Brewfile`: `brew "zsh"`, `brew "antidote"`.
 
@@ -653,4 +654,4 @@ keybind = cmd+alt+down=goto_split:bottom
 
 - Spec coverage: preflight (T1), shell.zsh (T1), modules fonts/cli/zsh/starship/atuin/tmux/ghostty (T2-T8), login shell (T4 preflight + doctor), version policy (pinned refs in T4, T7), startup budget (T4 test), profile and install verification (T9).
 - Review Focus 1→T4 preflight test, 2→T4 `zshrc sources with empty rc.d`, 3→T1 overlay shell.zsh test, 4→T7 tpm tag test, 5→T2 fc-cache test.
-- Known trade: preflight for the login shell runs before brew installs zsh, so a blank machine needs a second `just install` to switch. Documented; CHECKLIST prints the commands.
+- Order is packages → preflight → configure, so one install does the whole job.
