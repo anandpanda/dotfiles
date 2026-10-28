@@ -68,6 +68,18 @@ linked to ~/.local/include), 7 important, 9 minor; all fixed, none deferred.
 `claudeCode.allowDangerouslySkipPermissions` is on by Anand's choice.
 Doctor now reports uncommitted repo changes (VS Code writes through the links).
 
+## Done: Phase 4, git workflow (branch `v2`)
+
+Spec `docs/specs/04-git.md`, plan `docs/plans/04-git.md`. Modules: git (grown),
+lazygit, gh. Modern defaults (Chacon tiers 1-2 minus pruneTags/fetch.all),
+delta + difftastic, SSH signing scoped to each identity with local
+verification via ~/.local/state/git/allowed_signers, Conventional Commits
+commit-msg hook via init.templateDir (install also adds it to existing repos
+under ~/work and ~/personal), lazygit (Catppuccin, delta, VS Code), gh with
+two accounts switched by a wrapper per directory, worktree helpers gwt/gwtl/gwtr,
+pushf = --force-with-lease --force-if-includes.
+Review: 0 critical, 7 important, 9 minor; all fixed, none deferred.
+
 ## Pending for Anand
 
 - Coder remote (work) returns with the work overlay; until then
@@ -76,16 +88,18 @@ Doctor now reports uncommitted repo changes (VS Code writes through the links).
 - Work overlay: `just overlay-init ~/personal/dotfiles-work`, fill
   `modules/git/config/identity.work` (name, work email), push to a private
   repo, then `just install work <url>` in a real terminal.
-- Old configs are in `~/.dotfiles-backup/`. Old gitconfig had delta, ssh
-  signing, aliases; those return in the git phase.
+- gh: `gh auth login -h github.com -p ssh` with the personal account, then
+  `dots install personal` once so the wrapper can switch accounts.
+- GitHub: register ~/.ssh/id_ed25519_personal.pub as a *Signing Key* so
+  commits show "Verified" (they already verify locally).
+- Old configs are in `~/.dotfiles-backup/`.
 - Replace `main` with `v2` when ready.
 - After all phases: a hands-on end-to-end walkthrough of the whole setup so
   Anand can use every part of it (Anand asked for this explicitly).
 
 ## Next: phases in order
 
-(Phases 1, 2 and 3 done. Use `dots <command>` from anywhere.)
-4. Git and GitHub workflow: delta, signing, aliases, lazygit or similar, worktrees, PR flow.
+(Phases 1 to 4 done. Use `dots <command>` from anywhere.)
 5. Runtimes and project tooling: mise, docker, direnv, language setups.
 6. Mac and Linux apps: window manager, launcher, clipboard, browser, notes, todo.
 7. Claude harness: CLAUDE.md layering, skills, agents, hooks, memory, statusline, plugins.
