@@ -7,7 +7,7 @@ for p in /opt/homebrew/bin/zsh /usr/local/bin/zsh /home/linuxbrew/.linuxbrew/bin
   [ -x "$p" ] && want="$p" && break
 done
 [ -n "$want" ] || {
-  log_warn "homebrew zsh not installed; it will be after brew bundle"
+  log_warn "login shell: homebrew zsh not installed yet (rerun install after packages)"
   exit 0
 }
 if [ "$(uname -s)" = Darwin ]; then

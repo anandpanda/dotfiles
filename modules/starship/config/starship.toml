@@ -4,7 +4,7 @@ palette = "catppuccin_mocha"
 add_newline = true
 
 format = """
-$directory$git_branch$git_status$git_state\
+$hostname$directory$git_branch$git_status$git_state\
 $nodejs$python$golang$rust\
 $cmd_duration
 $character"""
@@ -13,6 +13,11 @@ $character"""
 success_symbol = "[❯](bold green)"
 error_symbol = "[❯](bold red)"
 vimcmd_symbol = "[❮](bold mauve)"
+
+[hostname]
+ssh_only = true
+format = "[$hostname]($style) in "
+style = "bold peach"
 
 [directory]
 style = "bold blue"

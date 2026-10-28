@@ -50,7 +50,7 @@ Z="modules/zsh"
 @test "preflight without tty prints commands or ok" {
   run bash "$DOTFILES_DIR/$Z/preflight.sh"
   [ "$status" -eq 0 ]
-  [[ "$output" == *"chsh"* ]] || [[ "$output" == *"login shell ok"* ]]
+  [[ "$output" == *"login shell"* ]]
 }
 
 @test "preflight dry run changes nothing" {

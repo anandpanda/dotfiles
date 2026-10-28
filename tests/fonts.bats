@@ -15,7 +15,7 @@ teardown() { teardown_home; }
 @test "fonts linux installs once into ~/.local/share/fonts" {
   [ "$(uname -s)" = Linux ] || skip "linux only"
   BIN="$HOME/bin"; mkdir -p "$BIN"
-  printf '#!/usr/bin/env bash\nout="${@: -1}"; mkdir -p "$(dirname "$out")"; cd "$(mktemp -d)" && touch f.ttf && zip -q "$out" f.ttf\n' > "$BIN/curl"; chmod +x "$BIN/curl"
+  printf '#!/usr/bin/env bash\nout="${@: -1}"; mkdir -p "$(dirname "$out")"; python3 -c "import zipfile,sys; z=zipfile.ZipFile(sys.argv[1],\"w\"); z.writestr(\"f.ttf\",\"x\"); z.close()" "$out"\n' > "$BIN/curl"; chmod +x "$BIN/curl"
   printf '#!/usr/bin/env bash\nexit 0\n' > "$BIN/fc-cache"; chmod +x "$BIN/fc-cache"
   PATH="$BIN:$PATH" run bash "$DOTFILES_DIR/modules/fonts/install.sh"
   [ "$status" -eq 0 ]
@@ -27,7 +27,8 @@ teardown() { teardown_home; }
 @test "fonts linux without fc-cache warns" {
   [ "$(uname -s)" = Linux ] || skip "linux only"
   mkdir -p "$HOME/.local/share/fonts/JetBrainsMono"
-  PATH="/usr/bin:/bin" run bash "$DOTFILES_DIR/modules/fonts/install.sh"
+  E="$HOME/emptybin"; mkdir -p "$E"; ln -s "$(command -v uname)" "$E/uname"
+  PATH="$E" run /bin/bash "$DOTFILES_DIR/modules/fonts/install.sh"
   [ "$status" -eq 0 ]
   [[ "$output" == *"fc-cache"* ]]
 }

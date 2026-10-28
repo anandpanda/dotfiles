@@ -12,7 +12,9 @@ else
   fi
   tmp="$(mktemp -d)"
   curl -fsSL -o "$tmp/jb.zip" https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip
-  mkdir -p "$dir" && unzip -qo "$tmp/jb.zip" -d "$dir" && rm -rf "$tmp"
+  mkdir -p "$dir"
+  if command -v unzip >/dev/null 2>&1; then unzip -qo "$tmp/jb.zip" -d "$dir"; else python3 -m zipfile -e "$tmp/jb.zip" "$dir"; fi
+  rm -rf "$tmp"
   echo "installed $dir"
 fi
 if command -v fc-cache >/dev/null 2>&1; then

@@ -136,7 +136,7 @@ case "$managed_names" in *" zsh "*)
     cur="$(getent passwd "$(id -un)" | cut -d: -f7)"
   fi
   if [ -z "$want" ]; then
-    problem "homebrew zsh not installed"
+    problem "login shell: homebrew zsh not installed"
   elif [ "$cur" != "$want" ]; then
     problem "login shell is $cur, want $want (rerun install)"
   else log_ok "login shell $want"; fi
