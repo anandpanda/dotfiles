@@ -5,7 +5,7 @@
     {
       "label": "cpp: build and run current file",
       "type": "shell",
-      "command": "g++ -std=c++17 -O2 -Wall \"${file}\" -o \"${fileDirname}/${fileBasenameNoExtension}\" && \"${fileDirname}/${fileBasenameNoExtension}\"",
+      "command": "g++ -std=c++17 -O2 -Wall -I \"${env:HOME}/.local/include\" \"${file}\" -o \"${fileDirname}/${fileBasenameNoExtension}\" && \"${fileDirname}/${fileBasenameNoExtension}\"",
       "group": { "kind": "build", "isDefault": true },
       "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
       "problemMatcher": ["$gcc"]

@@ -19,6 +19,7 @@ check() { # SRC DST
 }
 for f in settings.json keybindings.json tasks.json; do check "$here/files/$f" "$udir/$f"; done
 for f in "$here"/files/snippets/*.json; do check "$f" "$udir/snippets/$(basename "$f")"; done
+check "$here/files/include/bits/stdc++.h" "$HOME/.local/include/bits/stdc++.h"
 
 if vscode_bin >/dev/null; then
   wanted="$(vscode_wanted)"

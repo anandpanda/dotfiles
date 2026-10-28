@@ -145,3 +145,47 @@ FAKE
   [ "$(DOTFILES_CODE=/x/code vscode_bin)" = "/x/code" ]
   DOTFILES_CODE= run vscode_bin; [ "$status" -ne 0 ]; [ -z "$output" ]
 }
+
+# ---- review fixes ----
+@test "jsonc_valid respects strings and rejects real errors" {
+  printf '{ "a": "**/node_modules/**", // c\n "b": { "x": true } }\n' > "$HOME/ok.json"; jsonc_valid "$HOME/ok.json"
+  printf '{ "a": "**/node_modules/**", "b": { "x": treu } }\n' > "$HOME/bad.json"; ! jsonc_valid "$HOME/bad.json"
+  printf '{ "s": "has // not a comment", "t": "/* nor this */" }\n' > "$HOME/str.json"; jsonc_valid "$HOME/str.json"
+  run jsonc_keys "$V/files/settings.json"
+  [[ "$output" == *"search.exclude"* ]] && [[ "$output" == *"files.watcherExclude"* ]]
+}
+
+@test "bits/stdc++.h shim compiles with the task's flags" {
+  command -v g++ >/dev/null || skip "no g++"
+  [ -f "$V/files/include/bits/stdc++.h" ]
+  printf '#include <bits/stdc++.h>\nint main(){ std::vector<int> v{1,2}; std::cout << v.size() << "\\n"; }\n' > "$HOME/t.cpp"
+  g++ -std=c++17 -O2 -Wall -I "$V/files/include" "$HOME/t.cpp" -o "$HOME/t" && [ "$("$HOME/t")" = "2" ]
+  grep -q -- '-I \\"${env:HOME}/.local/include\\"' "$V/files/tasks.json"
+  grep -q -- '.local/include' "$V/files/settings.json"
+}
+
+@test "install links the include shim into ~/.local/include" {
+  fake_code; bash "$V/install.sh" >/dev/null
+  [ -L "$HOME/.local/include/bits/stdc++.h" ]
+}
+
+@test "bundled pack members are on the list, clang-format extension is not" {
+  run vscode_ext_list "$V/extensions.txt"
+  [[ "$output" == *ms-python.vscode-python-envs* ]] && [[ "$output" == *ms-vscode.remote-explorer* ]]
+  [[ "$output" != *xaver.clang-format* ]]
+  grep -q '"editor.defaultFormatter": "ms-vscode.cpptools"' "$V/files/settings.json"
+  ! grep -q 'C_Cpp.formatting' "$V/files/settings.json"
+}
+
+@test "settings: no hard-coded shell path, terminal font 14 with ligatures, updates default" {
+  ! grep -q 'terminal.integrated.profiles' "$V/files/settings.json"
+  grep -q '"terminal.integrated.fontSize": 14' "$V/files/settings.json"
+  grep -q '"terminal.integrated.fontLigatures' "$V/files/settings.json"
+  grep -q '"update.mode": "default"' "$V/files/settings.json"
+}
+
+@test "ext list reads files separately (no trailing-newline merge)" {
+  printf 'a.b' > "$HOME/x.txt"; printf 'c.d\n' > "$HOME/y.txt"
+  run vscode_ext_list "$HOME/x.txt" "$HOME/y.txt"
+  [ "$output" = $'a.b\nc.d' ]
+}

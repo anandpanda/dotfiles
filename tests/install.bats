@@ -110,3 +110,13 @@ teardown() { teardown_home; }
   run bash -c "echo hello | '$DOTFILES_DIR/install.sh' test"
   [[ "$output" == *"GOT hello"* ]]
 }
+
+@test "overlay is fetched before public modules configure (first work install sees overlay lists)" {
+  REMOTE="$HOME/remote"; "$DOTFILES_DIR/scripts/overlay-init.sh" "$REMOTE" >/dev/null
+  mkdir -p "$REMOTE/modules/one"; echo "ovl" > "$REMOTE/modules/one/marker"
+  git -C "$REMOTE" add -A; git -C "$REMOTE" -c user.name=t -c user.email=t@t commit -qm m
+  printf '#!/usr/bin/env bash\n[ -f "$HOME/.dotfiles-work/modules/one/marker" ] && echo SAW-OVERLAY\n' > "$DOTFILES_MODULES/one/install.sh"
+  printf 'extends = "test"\noverlay = true\n' > "$DOTFILES_PROFILES/w.toml"
+  run "$DOTFILES_DIR/install.sh" w --overlay "$REMOTE"
+  [ "$status" -eq 0 ]; [[ "$output" == *"SAW-OVERLAY"* ]]
+}

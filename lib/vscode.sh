@@ -9,20 +9,51 @@ vscode_user_dir() {
 }
 
 # Ids one per line from FILE...; comments (# ...) and blanks dropped; lowercased.
+# Each file is read on its own so a missing trailing newline cannot merge two ids.
 vscode_ext_list() {
-  cat "$@" | sed 's/#.*//' | awk '{print $1}' | grep -v '^$' | tr '[:upper:]' '[:lower:]'
+  local f
+  for f in "$@"; do
+    sed 's/#.*//' "$f"
+    echo
+  done | awk '{print $1}' | grep -v '^$' | tr '[:upper:]' '[:lower:]'
 }
 
-# 0 if FILE parses as JSON with comments (// and /* */) and trailing commas.
-jsonc_valid() {
+# JSONC -> JSON on stdout: comments and trailing commas removed, strings respected.
+_jsonc_to_json() {
   python3 - "$1" <<'PY'
-import json, re, sys
+import json, sys
 s = open(sys.argv[1]).read()
-s = re.sub(r'(?m)^\s*//.*$', '', s)
-s = re.sub(r'/\*.*?\*/', '', s, flags=re.S)
-s = re.sub(r',(\s*[}\]])', r'\1', s)
-json.loads(s)
+out, i, n = [], 0, len(s)
+while i < n:
+    c = s[i]
+    if c == '"':                      # string: copy verbatim, honour escapes
+        j = i + 1
+        while j < n and s[j] != '"':
+            j += 2 if s[j] == '\\' else 1
+        out.append(s[i:j + 1]); i = j + 1
+    elif s.startswith('//', i):
+        j = s.find('\n', i); i = n if j < 0 else j
+    elif s.startswith('/*', i):
+        j = s.find('*/', i + 2); i = n if j < 0 else j + 2
+    elif c == ',':                    # trailing comma: skip if next token closes
+        j = i + 1
+        while j < n and s[j] in ' \t\r\n': j += 1
+        if j < n and s[j] in '}]': i += 1
+        else: out.append(c); i += 1
+    else:
+        out.append(c); i += 1
+sys.stdout.write(''.join(out))
 PY
+}
+
+# 0 if FILE parses as JSONC.
+jsonc_valid() {
+  _jsonc_to_json "$1" | python3 -c 'import json,sys; json.load(sys.stdin)' 2>/dev/null
+}
+
+# Top-level keys of a JSONC object, one per line.
+jsonc_keys() {
+  _jsonc_to_json "$1" | python3 -c 'import json,sys; [print(k) for k in json.load(sys.stdin)]'
 }
 
 # Wanted ids (ours + overlay), one per line, sorted.

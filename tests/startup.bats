@@ -1,5 +1,6 @@
 load helper
-# Full-stack startup budget: zsh + cli + starship + atuin + tmux shell integration.
+# Full-stack startup budget: zsh + cli + starship + atuin shell integration.
+# Minimum of 10 runs: machine load can only inflate a run, never hide a slow config.
 setup() {
   setup_home
   for f in log os link module; do source "$DOTFILES_DIR/lib/$f.sh"; done
@@ -20,7 +21,7 @@ import subprocess, time
 t = []
 for _ in range(10):
     s = time.perf_counter(); subprocess.run(["zsh", "-i", "-c", "true"], check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL); t.append(time.perf_counter() - s)
-t.sort(); print(int(t[len(t)//2] * 1000))')
-  echo "median ${med}ms"
+t.sort(); print(int(t[0] * 1000))')
+  echo "min ${med}ms"
   [ "$med" -lt 80 ]
 }

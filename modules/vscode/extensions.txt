@@ -28,6 +28,7 @@ anthropic.claude-code                  # Claude Code
 ms-python.python
 ms-python.vscode-pylance
 ms-python.debugpy
+ms-python.vscode-python-envs           # pulled in by ms-python.python
 charliermarsh.ruff
 
 # Go
@@ -43,10 +44,10 @@ ms-azuretools.vscode-containers
 ms-vscode-remote.remote-ssh
 ms-vscode-remote.remote-ssh-edit
 ms-vscode-remote.remote-containers
+ms-vscode.remote-explorer              # pulled in by remote-ssh
 
 # C++ for competitive programming (no CMake: one file, one g++ command)
-ms-vscode.cpptools
-xaver.clang-format
+ms-vscode.cpptools                     # IntelliSense, debugging, bundled clang-format
 divyanshuagrawal.competitive-programming-helper
 
 # GitHub

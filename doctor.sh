@@ -106,6 +106,18 @@ case "$managed_names" in *" ssh "*)
   ;;
 esac
 
+# Dirs a module declares it manages (module.toml: manages = ["Code"])
+while IFS= read -r d; do
+  if [ -z "$d" ] || [ ! -f "$d/module.toml" ]; then continue; fi
+  for m in $(_toml_list "$d/module.toml" manages); do managed="$managed $m"; done
+done <<<"$dirs"
+
+# Uncommitted changes in the repo (informational): VS Code and others write through the links.
+if [ -d "$DOTFILES_DIR/.git" ]; then
+  n="$(git -C "$DOTFILES_DIR" status --porcelain 2>/dev/null | grep -c . || true)"
+  [ "$n" = 0 ] || echo "uncommitted changes in $DOTFILES_DIR: $n file(s), review and commit"
+fi
+
 # Unmanaged ~/.config entries (informational)
 if [ -d "$HOME/.config" ]; then
   for e in "$HOME/.config"/*; do

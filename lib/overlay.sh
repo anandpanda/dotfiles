@@ -42,7 +42,9 @@ overlay_apply() {
     log_warn "no overlay url: skipping overlay"
     return 0
   fi
-  overlay_ensure "$url" || die "overlay fetch failed"
+  if [ "${OVERLAY_FETCHED:-0}" != 1 ]; then
+    overlay_ensure "$url" || die "overlay fetch failed"
+  fi
   [ "${DRY_RUN:-0}" = 1 ] && return 0
   dir="$(overlay_dir)"
   for d in "$dir"/modules/*/; do

@@ -109,3 +109,15 @@ teardown() { teardown_home; }
   run "$DOTFILES_DIR/doctor.sh"
   [ "$status" -eq 0 ]
 }
+
+@test "uncommitted changes in the repo are reported as info" {
+  run "$DOTFILES_DIR/doctor.sh"
+  if [ -n "$(git -C "$DOTFILES_DIR" status --porcelain)" ]; then [[ "$output" == *"uncommitted"* ]]; else [[ "$output" != *"uncommitted"* ]]; fi
+}
+
+@test "module.toml manages = [...] marks config dirs as managed" {
+  mkdir -p "$DOTFILES_MODULES/one"; printf 'manages = ["Code"]\n' > "$DOTFILES_MODULES/one/module.toml"
+  mkdir -p "$HOME/.config/Code"
+  run "$DOTFILES_DIR/doctor.sh"
+  [[ "$output" != *"unmanaged"*"/Code"* ]]
+}

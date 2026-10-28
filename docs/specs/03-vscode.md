@@ -31,14 +31,17 @@ extensions.
   `docs/STATUS.md`.
 - Keybindings: VS Code defaults. `keybindings.json` ships empty with a
   comment saying so.
-- Settings: format on save (Ruff for Python, Prettier for web, clang-format
-  for C++), autosave on focus change, minimap off, sticky scroll on, bracket
+- Settings: format on save (Ruff for Python, Prettier for web, cpptools'
+  bundled clang-format for C++), autosave on focus change, minimap off, sticky scroll on, bracket
   pair guides, trim trailing whitespace, insert final newline, git autofetch,
   no sync confirmation, no welcome page, smooth cursor, inlay hints off by
   default (noise), word wrap off, `files.exclude` for `.git`, `search.exclude`
   for `node_modules` and build dirs, window title shows project name.
 - Tasks: a user-level `tasks.json` with one task, `cpp: build and run current
-  file`, bound to Cmd-Shift-B / Ctrl-Shift-B via the default build task.
+  file`, bound to Cmd-Shift-B / Ctrl-Shift-B via the default build task. It
+  passes `-I ~/.local/include` so `bits/stdc++.h` works on Apple clang too.
+- Updates: VS Code updates itself (`update.mode` default); `just update` also
+  runs `brew upgrade` for everything Homebrew owns.
 - Snippets: `cpp.json` with a contest template (`cp` trigger).
 - Settings Sync: off. The repo is the sync. Documented in README.
 
@@ -51,7 +54,8 @@ modules/vscode/
 │   ├── settings.json
 │   ├── keybindings.json
 │   ├── tasks.json
-│   └── snippets/cpp.json
+│   ├── snippets/cpp.json
+│   └── include/bits/stdc++.h   # shim: Apple clang lacks the GCC header
 ├── extensions.txt
 ├── install.sh            # links config/* into the user dir; installs extensions
 ├── module.toml           # no os restriction
@@ -70,6 +74,7 @@ warning, not a failure (first run on Linux before the app exists).
 
 Overlay: an overlay `vscode` module may ship its own `extensions.txt`;
 `install.sh` reads `$OVERLAY/modules/vscode/extensions.txt` too when present.
+The overlay is fetched in the preflight block, before any module configures.
 Work extensions (Coder remote) live there.
 
 ## Doctor

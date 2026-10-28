@@ -13,9 +13,10 @@ if [ "$(os_name)" = linux ] && ! vscode_bin >/dev/null && command -v apt-get >/d
   if [ "${DRY_RUN:-0}" = 1 ]; then
     echo "[dry] add Microsoft apt repo and install code"
   else
+    command -v gpg >/dev/null 2>&1 || sudo apt-get install -y -qq gpg >/dev/null
     sudo install -d -m 0755 /etc/apt/keyrings
-    curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --dearmor -o /etc/apt/keyrings/packages.microsoft.gpg
-    echo "deb [arch=amd64,arm64 signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" |
+    curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | sudo gpg --batch --yes --dearmor -o /etc/apt/keyrings/packages.microsoft.gpg
+    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" |
       sudo tee /etc/apt/sources.list.d/vscode.list >/dev/null
     sudo apt-get update -qq && sudo apt-get install -y -qq code >/dev/null
   fi
@@ -29,6 +30,8 @@ else
 fi
 for f in settings.json keybindings.json tasks.json; do link_file "$here/files/$f" "$udir/$f"; done
 for f in "$here"/files/snippets/*.json; do link_file "$f" "$udir/snippets/$(basename "$f")"; done
+# GCC's bits/stdc++.h is missing on Apple clang; a shim makes contest code portable.
+link_file "$here/files/include/bits/stdc++.h" "$HOME/.local/include/bits/stdc++.h"
 
 # Extensions: ours plus the overlay's, minus what is already installed.
 code_bin="$(vscode_bin)" || {

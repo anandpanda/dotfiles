@@ -62,9 +62,16 @@ fi
 
 log_info "anything that needs you"
 preflight_run "$module_dirs" || die "preflight failed"
+OVERLAY_FETCHED=0
 if profile_has_overlay "$PROFILE"; then
   OVERLAY_URL="$(overlay_resolve_url "$OVERLAY_URL")"
+  # Fetch now so public modules (vscode extension lists, ...) can read the overlay.
+  if [ -n "$OVERLAY_URL" ] && [ "$DRY_RUN" != 1 ]; then
+    overlay_ensure "$OVERLAY_URL" || die "overlay fetch failed"
+    OVERLAY_FETCHED=1
+  fi
 fi
+export OVERLAY_FETCHED
 
 log_info "configuring"
 # fd 3 so module hooks keep the real stdin

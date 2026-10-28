@@ -45,11 +45,11 @@
     "editor.insertSpaces": false,
   },
   "[cpp]": {
-    "editor.defaultFormatter": "xaver.clang-format",
+    "editor.defaultFormatter": "ms-vscode.cpptools",
     "editor.tabSize": 4,
   },
   "[c]": {
-    "editor.defaultFormatter": "xaver.clang-format",
+    "editor.defaultFormatter": "ms-vscode.cpptools",
     "editor.tabSize": 4,
   },
   "[markdown]": { "editor.wordWrap": "on", "editor.formatOnSave": false },
@@ -90,38 +90,34 @@
   "gitlens.codeLens.enabled": false,
   "gitlens.currentLine.enabled": true,
 
-  // ---- Terminal: same shell and font as Ghostty
+  // ---- Terminal: same font as Ghostty. No shell profile on purpose: VS Code uses the
+  // login shell, which the zsh module sets to Homebrew zsh on both OSes.
   "terminal.integrated.fontFamily": "'JetBrainsMono Nerd Font'",
-  "terminal.integrated.fontSize": 13,
+  "terminal.integrated.fontSize": 14,
+  "terminal.integrated.fontLigatures.enabled": true,
   "terminal.integrated.cursorStyle": "line",
   "terminal.integrated.scrollback": 10000,
-  "terminal.integrated.defaultProfile.osx": "zsh",
-  "terminal.integrated.profiles.osx": {
-    "zsh": { "path": "/opt/homebrew/bin/zsh", "args": ["-l"] },
-  },
-  "terminal.integrated.defaultProfile.linux": "zsh",
-  "terminal.integrated.profiles.linux": {
-    "zsh": { "path": "/home/linuxbrew/.linuxbrew/bin/zsh", "args": ["-l"] },
-  },
 
   // ---- Languages
   "python.analysis.typeCheckingMode": "basic",
   "python.terminal.activateEnvironment": true,
   "go.useLanguageServer": true,
   "cph.general.defaultLanguage": "cpp",
-  "cph.language.cpp.Args": "-std=c++17 -O2",
+  // bits/stdc++.h is a GCC header; Apple clang lacks it, so install.sh links a shim into ~/.local/include.
+  "cph.language.cpp.Args": "-std=c++17 -O2 -I ${env:HOME}/.local/include",
   "C_Cpp.default.cppStandard": "c++17",
-  "C_Cpp.formatting": "disabled",
-  "clang-format.style": "{ BasedOnStyle: Google, IndentWidth: 4 }",
+  "C_Cpp.default.includePath": ["${default}", "${env:HOME}/.local/include"],
+  "C_Cpp.clang_format_fallbackStyle": "{ BasedOnStyle: Google, IndentWidth: 4 }",
 
   // ---- Quiet
   "telemetry.telemetryLevel": "off",
-  "update.mode": "manual",
+  "update.mode": "default",
   "extensions.autoUpdate": true,
   "workbench.tips.enabled": false,
   "security.workspace.trust.startupPrompt": "once",
   "cSpell.language": "en",
   "cSpell.diagnosticLevel": "Hint",
   "todo-tree.general.tags": ["TODO", "FIXME", "HACK", "NOTE"],
+  // Deliberate (Anand's choice, 2026-10-28): Claude Code acts without permission prompts.
   "claudeCode.allowDangerouslySkipPermissions": true,
 }
