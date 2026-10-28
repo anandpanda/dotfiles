@@ -122,7 +122,8 @@ teardown() { teardown_home; }
 }
 
 @test "git install reruns after the overlay so overlay identities get signers" {
-  unset DOTFILES_MODULES
+  # Copy of the modules dir: the overlay lays identity.work inside the public git config dir.
+  cp -R "$DOTFILES_DIR/modules" "$HOME/mods-copy"; export DOTFILES_MODULES="$HOME/mods-copy"
   REMOTE="$HOME/remote"; "$DOTFILES_DIR/scripts/overlay-init.sh" "$REMOTE" >/dev/null
   mkdir -p "$HOME/.ssh"; ssh-keygen -q -t ed25519 -N "" -C w -f "$HOME/.ssh/id_ed25519_work"; ssh-keygen -q -t ed25519 -N "" -C p -f "$HOME/.ssh/id_ed25519_personal"
   printf 'modules = ["git"]\n' > "$DOTFILES_PROFILES/g.toml"; printf 'extends = "g"\noverlay = true\n' > "$DOTFILES_PROFILES/gw.toml"

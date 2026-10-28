@@ -19,4 +19,11 @@ fi
   echo "missing template/hooks/commit-msg"
   rc=1
 }
+# Repos under ~/work and ~/personal without the commit-msg hook (install fixes them).
+for root in "$HOME/work" "$HOME/personal"; do
+  [ -d "$root" ] || continue
+  while IFS= read -r gitdir; do
+    [ -e "$gitdir/hooks/commit-msg" ] || echo "repo without commit-msg hook: $(dirname "$gitdir") (dots install)"
+  done < <(find "$root" -maxdepth 4 -type d -name .git -not -path '*/node_modules/*' 2>/dev/null)
+done
 exit $rc

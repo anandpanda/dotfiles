@@ -20,12 +20,26 @@ for id in "$cfg"/identity.*; do
 done
 if [ -f "$out" ] && [ "$(cat "$out")" = "${want%$'\n'}" ]; then
   echo "skip $out"
-  exit 0
-fi
-if [ "${DRY_RUN:-0}" = 1 ]; then
+elif [ "${DRY_RUN:-0}" = 1 ]; then
   echo "[dry] write $out ($(printf '%s' "$want" | grep -c .) signer(s))"
-  exit 0
+else
+  mkdir -p "$(dirname "$out")"
+  printf '%s' "$want" >"$out.tmp" && mv "$out.tmp" "$out"
+  echo "wrote $out ($(grep -c . "$out") signer(s))"
 fi
-mkdir -p "$(dirname "$out")"
-printf '%s' "$want" >"$out.tmp" && mv "$out.tmp" "$out"
-echo "wrote $out ($(grep -c . "$out") signer(s))"
+
+# Existing repos under ~/work and ~/personal predate the template: give them the hook
+# unless they already have one of their own (never overwrite a repo's hook).
+hook="$cfg/template/hooks/commit-msg"
+for root in "$HOME/work" "$HOME/personal"; do
+  [ -d "$root" ] || continue
+  while IFS= read -r gitdir; do
+    dst="$gitdir/hooks/commit-msg"
+    [ -e "$dst" ] && continue
+    if [ "${DRY_RUN:-0}" = 1 ]; then
+      echo "[dry] hook -> $dst"
+    else
+      mkdir -p "$gitdir/hooks" && cp "$hook" "$dst" && chmod +x "$dst" && echo "hook -> $dst"
+    fi
+  done < <(find "$root" -maxdepth 4 -type d -name .git -not -path '*/node_modules/*' 2>/dev/null)
+done

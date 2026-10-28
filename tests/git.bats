@@ -187,3 +187,17 @@ teardown() { teardown_home; }
   [ "$(git config --global --get fetch.pruneTags || true)" = "" ]
   [ "$(git config --global --get fetch.all || true)" = "" ]
 }
+
+@test "install puts the hook into existing repos under ~/work and ~/personal; doctor reports ones without it" {
+  mkdir -p "$HOME/work/old/.git/hooks" "$HOME/personal/old2" "$HOME/elsewhere/old3"
+  git -C "$HOME/work/old" init -q 2>/dev/null; git -C "$HOME/personal/old2" init -q; git -C "$HOME/elsewhere/old3" init -q
+  command rm -f "$HOME/work/old/.git/hooks/commit-msg" "$HOME/personal/old2/.git/hooks/commit-msg" "$HOME/elsewhere/old3/.git/hooks/commit-msg"
+  run bash "$DOTFILES_DIR/$G/doctor.sh"; [[ "$output" == *"without commit-msg hook"*"old"* ]]
+  run bash "$DOTFILES_DIR/$G/install.sh"; [ "$status" -eq 0 ]
+  [[ "$output" == *"hook -> "*"work/old"* ]]
+  [ -x "$HOME/work/old/.git/hooks/commit-msg" ]; [ -x "$HOME/personal/old2/.git/hooks/commit-msg" ]
+  [ ! -e "$HOME/elsewhere/old3/.git/hooks/commit-msg" ]
+  printf '#!/bin/sh\necho custom\n' > "$HOME/work/old/.git/hooks/commit-msg"
+  bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
+  grep -q custom "$HOME/work/old/.git/hooks/commit-msg"
+}
