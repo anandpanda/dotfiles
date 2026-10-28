@@ -25,10 +25,8 @@ Modules: workspace, secrets, git, ssh, macos. `just install|update|doctor|lint|u
 Installed on this Mac with the `personal` profile. Repos moved: work code under
 `~/work`, personal under `~/personal` (this clone is `~/personal/dotfiles`).
 
-Deferred minors from the final review (not bugs that bite today):
-- paths with spaces in module dir lists; doctor does not check overlay freshness
-  or the ssh Include line; a symlinked `~/.ssh/config` would be replaced by a
-  file; non-executable module `install.sh` is skipped silently.
+All findings from the final review were fixed, including the minors.
+Nothing is deferred.
 
 ## Pending for Anand
 
