@@ -1,0 +1,39 @@
+set shell := ["bash", "-euo", "pipefail", "-c"]
+
+default:
+    @just --list
+
+# Full install with a profile (personal | work). Extra args: --dry-run, --overlay URL
+install profile="personal" *args="":
+    ./install.sh {{profile}} {{args}}
+
+# Pull latest and reinstall with the remembered profile
+update:
+    git -C "{{justfile_directory()}}" pull --ff-only
+    ./install.sh
+
+# Read-only drift report
+doctor:
+    ./doctor.sh
+
+# shellcheck + shfmt on every script
+lint:
+    shellcheck install.sh doctor.sh bootstrap.sh lib/*.sh scripts/*.sh modules/*/install.sh
+    shfmt -i 2 -ci -d install.sh doctor.sh bootstrap.sh lib scripts modules
+
+# bats unit tests
+unit:
+    bats tests
+
+# Smoke test the installer in a clean Ubuntu container
+test:
+    docker run --rm -v "{{justfile_directory()}}:/dotfiles:ro" ubuntu:24.04 bash -c \
+      'apt-get update -qq && apt-get install -y -qq git curl sudo >/dev/null && cp -r /dotfiles /root/.dotfiles && cd /root/.dotfiles && ./install.sh personal && ./install.sh personal && ./doctor.sh'
+
+# Scaffold a new module folder
+module name:
+    ./scripts/new-module.sh {{name}}
+
+# Scaffold a new private overlay repo at path
+overlay-init path:
+    ./scripts/overlay-init.sh {{path}}
