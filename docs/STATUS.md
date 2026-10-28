@@ -62,10 +62,16 @@ gitignore, json-parse-stringify, pdf, sqlite-viewer, autodocstring,
 vscode-python-envs, cpptools-themes, cmake, cmake-tools. Kept C++ and the
 Competitive Programming Helper for Codeforces.
 
+Phase 3 review: 1 critical (bits/stdc++.h on Apple clang: shim header now
+linked to ~/.local/include), 7 important, 9 minor; all fixed, none deferred.
+`dots vscode-prune` restores listed pack members after uninstalling packs.
+`claudeCode.allowDangerouslySkipPermissions` is on by Anand's choice.
+Doctor now reports uncommitted repo changes (VS Code writes through the links).
+
 ## Pending for Anand
 
-- `dots vscode-prune` once to remove the old extensions (Coder remote returns
-  with the work overlay).
+- Coder remote (work) returns with the work overlay; until then
+  `code --install-extension coder.coder-remote` if needed.
 - Create `~/.secrets/github_token` when needed (doctor reminds).
 - Work overlay: `just overlay-init ~/personal/dotfiles-work`, fill
   `modules/git/config/identity.work` (name, work email), push to a private
