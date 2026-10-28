@@ -69,3 +69,13 @@ teardown() { teardown_home; }
   run profile_modules c
   [ "$output" = $'a\nb' ]
 }
+
+@test "server profiles resolve and carry no desktop modules" {
+  unset DOTFILES_PROFILES
+  run profile_modules server
+  [ "$status" -eq 0 ]
+  for m in zsh git mise cli; do [[ "$output" == *"$m"* ]]; done
+  for m in ghostty fonts vscode docker macos lazygit; do [[ "$output" != *"$m"* ]]; done
+  run profile_has_overlay server-work; [ "$status" -eq 0 ]
+  run profile_modules server-work; [[ "$output" == *zsh* ]]
+}

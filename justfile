@@ -37,6 +37,11 @@ test:
 vscode-prune:
     ./scripts/vscode-prune.sh
 
+# Smoke test the server profile as a non-root user with NO sudo (a Coder-like workspace)
+test-server:
+    docker run --rm -v "{{justfile_directory()}}:/dotfiles:ro" ubuntu:24.04 bash -c \
+      'apt-get update -qq && apt-get install -y -qq git curl build-essential procps file >/dev/null && useradd -m -s /bin/bash dev && mkdir -p /home/linuxbrew && chown dev /home/linuxbrew && cp -r /dotfiles /home/dev/.dotfiles && chown -R dev /home/dev && su dev -c "cd ~/.dotfiles && ./install.sh server && ./install.sh server && ./doctor.sh"'
+
 # Scaffold a new module folder
 module name:
     ./scripts/new-module.sh {{name}}

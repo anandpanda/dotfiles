@@ -20,7 +20,17 @@ case "$(uname -s)" in
     sudo -v
     ;;
   Linux)
-    sudo apt-get update -qq && sudo apt-get install -y -qq build-essential curl file git procps >/dev/null
+    # Dev images and Coder workspaces usually have the basics and may lack sudo: only apt when needed.
+    need=""
+    for c in curl git gcc make; do command -v "$c" >/dev/null 2>&1 || need="$need $c"; done
+    if [ -n "$need" ]; then
+      if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null; then
+        sudo apt-get update -qq && sudo apt-get install -y -qq build-essential curl file git procps >/dev/null
+      else
+        echo "need$need and no usable sudo; install them, then rerun" >&2
+        exit 1
+      fi
+    fi
     prefix=/home/linuxbrew/.linuxbrew
     ;;
   *)

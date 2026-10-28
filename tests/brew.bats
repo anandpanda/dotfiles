@@ -31,3 +31,15 @@ teardown() { teardown_home; }
   [ "$output" = "git" ]
 }
 
+
+@test "brew_ensure on linux without sudo dies clearly when prerequisites are missing, proceeds when present" {
+  [ "$(os_name)" = linux ] || skip "linux only"
+  mkdir -p "$HOME/bin"
+  # No brew anywhere, no sudo, basics present -> reaches the installer step (we stub curl to fail fast).
+  printf '#!/usr/bin/env bash\nexit 7\n' > "$HOME/bin/curl"; chmod +x "$HOME/bin/curl"
+  run env PATH="$HOME/bin:/usr/bin:/bin" bash -c "source '$DOTFILES_DIR/lib/log.sh'; source '$DOTFILES_DIR/lib/os.sh'; source '$DOTFILES_DIR/lib/brew.sh'; brew_prefix() { echo '$HOME/nobrew'; }; brew_ensure"
+  [[ "$output" != *"sudo is not available"* ]]
+  # Basics missing and no sudo -> clear die.
+  run env PATH="$HOME/emptybin" bash -c "source '$DOTFILES_DIR/lib/log.sh'; source '$DOTFILES_DIR/lib/os.sh'; source '$DOTFILES_DIR/lib/brew.sh'; brew_prefix() { echo '$HOME/nobrew'; }; os_name() { echo linux; }; brew_ensure"
+  [ "$status" -ne 0 ]; [[ "$output" == *"sudo is not available"* ]]
+}

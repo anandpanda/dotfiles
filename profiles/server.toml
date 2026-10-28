@@ -1,0 +1,4 @@
+# Headless Linux boxes reached over SSH (Coder workspaces, servers): the terminal and git
+# stack only. No apps, fonts, terminal emulator, containers or desktop defaults.
+# A work box: `dots install server-work` (adds the overlay).
+modules = ["workspace", "secrets", "git", "ssh", "cli", "zsh", "starship", "atuin", "tmux", "gh", "mise"]

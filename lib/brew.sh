@@ -13,7 +13,17 @@ brew_ensure() {
     fi
     log_info "installing Homebrew"
     if [ "$(os_name)" = linux ]; then
-      sudo apt-get update -qq && sudo apt-get install -y -qq build-essential curl file git procps >/dev/null
+      # Homebrew needs these; a Coder workspace or dev image usually has them already and
+      # may have no sudo. Install only what is missing, only when sudo is usable.
+      need=""
+      for c in curl git gcc make; do command -v "$c" >/dev/null 2>&1 || need="$need $c"; done
+      if [ -n "$need" ]; then
+        if command -v sudo >/dev/null 2>&1 && sudo -n true 2>/dev/null && command -v apt-get >/dev/null 2>&1; then
+          sudo apt-get update -qq && sudo apt-get install -y -qq build-essential curl file git procps >/dev/null
+        else
+          die "homebrew needs$need and sudo is not available; install them first"
+        fi
+      fi
     fi
     NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
     eval "$("$(brew_prefix)/bin/brew" shellenv)"
