@@ -35,10 +35,8 @@ if ! command -v code >/dev/null 2>&1; then
   log_warn "code is not on PATH: extensions not installed (open VS Code once, then rerun)"
   exit 0
 fi
-lists=("$here/extensions.txt")
-[ -f "$(overlay_dir)/modules/vscode/extensions.txt" ] && lists+=("$(overlay_dir)/modules/vscode/extensions.txt")
-wanted="$(vscode_ext_list "${lists[@]}" | sort -u)"
-installed="$( (code --list-extensions 2>/dev/null || true) | tr '[:upper:]' '[:lower:]' | sort -u)"
+wanted="$(vscode_wanted)"
+installed="$(vscode_installed)"
 missing="$(comm -23 <(printf '%s\n' "$wanted") <(printf '%s\n' "$installed"))"
 if [ -z "$missing" ]; then
   echo "skip extensions"

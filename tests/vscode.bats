@@ -89,3 +89,52 @@ FAKE
   [[ "$output" == *"code"*"not"* ]]
   [ -L "$(vscode_user_dir)/settings.json" ]
 }
+
+# ---- doctor.sh and prune ----
+@test "vscode doctor: clean after install" {
+  fake_code; bash "$V/install.sh" >/dev/null
+  run bash "$V/doctor.sh"
+  [ "$status" -eq 0 ]
+}
+
+@test "vscode doctor: missing link and missing extension are problems" {
+  fake_code; bash "$V/install.sh" >/dev/null
+  rm "$(vscode_user_dir)/settings.json"
+  grep -v ruff "$HOME/installed.txt" > "$HOME/i.tmp"; mv "$HOME/i.tmp" "$HOME/installed.txt"
+  run bash "$V/doctor.sh"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"missing link"*"settings.json"* ]]
+  [[ "$output" == *"missing extension charliermarsh.ruff"* ]]
+}
+
+@test "vscode doctor: extra extension is info, overlay extension is not extra" {
+  fake_code; mkdir -p "$HOME/.dotfiles-work/modules/vscode"; echo "coder.coder-remote" > "$HOME/.dotfiles-work/modules/vscode/extensions.txt"
+  bash "$V/install.sh" >/dev/null; echo "some.leftover" >> "$HOME/installed.txt"
+  run bash "$V/doctor.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"extra extension some.leftover"* ]]
+  [[ "$output" != *"extra extension coder.coder-remote"* ]]
+}
+
+@test "vscode doctor: no code on PATH skips extension checks" {
+  fake_code; bash "$V/install.sh" >/dev/null
+  PATH="/usr/bin:/bin" run bash "$V/doctor.sh"
+  [ "$status" -eq 0 ]
+}
+
+@test "vscode-prune uninstalls extras only after y" {
+  fake_code; bash "$V/install.sh" >/dev/null; echo "some.leftover" >> "$HOME/installed.txt"
+  printf 'n\n' > "$HOME/tty"
+  DOTFILES_TTY="$HOME/tty" run bash "$DOTFILES_DIR/scripts/vscode-prune.sh"
+  [ "$status" -eq 0 ]; grep -q "some.leftover" "$HOME/installed.txt"
+  printf 'y\n' > "$HOME/tty"
+  DOTFILES_TTY="$HOME/tty" run bash "$DOTFILES_DIR/scripts/vscode-prune.sh"
+  [ "$status" -eq 0 ]; ! grep -q "some.leftover" "$HOME/installed.txt"
+  grep -q "charliermarsh.ruff" "$HOME/installed.txt"
+}
+
+@test "vscode-prune with nothing extra says so" {
+  fake_code; bash "$V/install.sh" >/dev/null
+  run bash "$DOTFILES_DIR/scripts/vscode-prune.sh"
+  [ "$status" -eq 0 ]; [[ "$output" == *"nothing to prune"* ]]
+}

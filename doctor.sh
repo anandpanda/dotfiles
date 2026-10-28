@@ -124,6 +124,14 @@ if [ "${DOTFILES_SKIP_BREW:-0}" != 1 ] && command -v brew >/dev/null; then
   if [ -n "$missing" ]; then problem "brew missing: $(echo "$missing" | tr '\n' ' ')"; else log_ok "brew"; fi
 fi
 
+# Module doctor hooks: any enabled module may ship doctor.sh; non-zero exit is a problem.
+while IFS= read -r d; do
+  [ -n "$d" ] && [ -f "$d/doctor.sh" ] || continue
+  if ! DOTFILES_DIR="$DOTFILES_DIR" HOME="$HOME" bash "$d/doctor.sh"; then
+    problem "$(basename "$d") doctor"
+  fi
+done <<<"$dirs"
+
 # Login shell (only when the zsh module is enabled)
 case "$managed_names" in *" zsh "*)
   want=""

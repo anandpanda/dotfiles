@@ -95,3 +95,17 @@ teardown() { teardown_home; }
   [ "$status" -eq 0 ]
   [[ "$output" != *"unmanaged"*"/foo"* ]]
 }
+
+@test "a module doctor.sh that fails is a problem and its output is shown" {
+  printf '#!/usr/bin/env bash\necho "MODULE-DOCTOR-SAYS-NO"\nexit 1\n' > "$DOTFILES_MODULES/one/doctor.sh"
+  run "$DOTFILES_DIR/doctor.sh"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"MODULE-DOCTOR-SAYS-NO"* ]]
+  [[ "$output" == *"one doctor"* ]]
+}
+
+@test "a module doctor.sh that passes keeps doctor clean" {
+  printf '#!/usr/bin/env bash\necho fine\n' > "$DOTFILES_MODULES/one/doctor.sh"
+  run "$DOTFILES_DIR/doctor.sh"
+  [ "$status" -eq 0 ]
+}

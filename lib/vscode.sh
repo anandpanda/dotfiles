@@ -24,3 +24,16 @@ s = re.sub(r',(\s*[}\]])', r'\1', s)
 json.loads(s)
 PY
 }
+
+# Wanted ids (ours + overlay), one per line, sorted.
+vscode_wanted() {
+  local lists=("$DOTFILES_DIR/modules/vscode/extensions.txt")
+  [ -f "$(overlay_dir)/modules/vscode/extensions.txt" ] && lists+=("$(overlay_dir)/modules/vscode/extensions.txt")
+  vscode_ext_list "${lists[@]}" | sort -u
+}
+
+# Installed ids, lowercased, sorted. Empty when code is absent.
+vscode_installed() {
+  command -v code >/dev/null 2>&1 || return 0
+  (code --list-extensions 2>/dev/null || true) | tr '[:upper:]' '[:lower:]' | sort -u
+}
