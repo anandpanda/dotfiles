@@ -136,6 +136,15 @@ dir at the temp home; unit tests now also run on macOS in CI (bash 3.2).
 - Ruling (work dev setup, when Anand asks for it): servers and services
   (Postgres, Redis, queues, anything that listens on a port) run in Docker,
   per project via compose; CLIs, runtimes (mise), and the editor stay local.
+- Work setup has two halves, both wanted (Anand, 2026-10-29):
+  1. Local Mac: the `dotfiles-work` overlay above.
+  2. Coder workspaces: today they come from a team-shared template that also
+     pulls a setup repo, CLIs, Coder machine defaults, and scripts that start
+     the backend/frontend servers, much of which he does not want. Work needed:
+     read the shared template, decide whether a personal template (or a
+     personal startup script on top of the shared one) is the right cut, keep
+     only what he uses, and have the workspace run `dotfiles` with the `server`
+     / `server-work` profile so terminal, git and zsh match the Mac.
 - GitHub: register ~/.ssh/id_ed25519_personal.pub as a *Signing Key* so
   commits show "Verified" (they already verify locally).
 - Old configs are in `~/.dotfiles-backup/`.
