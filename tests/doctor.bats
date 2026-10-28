@@ -87,3 +87,11 @@ teardown() { teardown_home; }
   run "$DOTFILES_DIR/doctor.sh"
   [[ "$output" == *"login shell"* ]]
 }
+
+@test "config dirs populated file by file count as managed" {
+  mkdir -p "$DOTFILES_MODULES/one/home/.config/foo"; touch "$DOTFILES_MODULES/one/home/.config/foo/x"
+  "$DOTFILES_DIR/install.sh" test >/dev/null
+  run "$DOTFILES_DIR/doctor.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"unmanaged"*"/foo"* ]]
+}

@@ -79,6 +79,12 @@ while IFS= read -r d; do
     case "$d" in "$(overlay_dir)"/*) rc="$HOME/.config/zsh/rc.d/$name.overlay.zsh" ;; esac
     check_link "$d/shell.zsh" "$rc"
   fi
+  if [ -d "$d/home/.config" ]; then
+    for sub in "$d/home/.config"/*/; do
+      [ -d "$sub" ] && managed="$managed $(basename "$sub")"
+    done
+  fi
+  [ -f "$d/shell.zsh" ] && managed="$managed zsh"
   if [ -d "$d/home" ]; then
     while IFS= read -r f; do
       dst="$HOME/${f#"$d"/home/}"

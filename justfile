@@ -29,7 +29,7 @@ unit:
 # Smoke test the installer in a clean Ubuntu container
 test:
     docker run --rm -v "{{justfile_directory()}}:/dotfiles:ro" ubuntu:24.04 bash -c \
-      'apt-get update -qq && apt-get install -y -qq git curl sudo >/dev/null && cp -r /dotfiles /root/.dotfiles && cd /root/.dotfiles && ./install.sh personal && ./install.sh personal && ./doctor.sh'
+      'apt-get update -qq && apt-get install -y -qq git curl sudo >/dev/null && cp -r /dotfiles /root/.dotfiles && cd /root/.dotfiles && ./install.sh personal && z=/home/linuxbrew/.linuxbrew/bin/zsh && echo $z >> /etc/shells && chsh -s $z && ./install.sh personal && ./doctor.sh'
 
 # Scaffold a new module folder
 module name:
