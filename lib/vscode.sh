@@ -32,8 +32,26 @@ vscode_wanted() {
   vscode_ext_list "${lists[@]}" | sort -u
 }
 
+# Path to the `code` CLI. DOTFILES_CODE overrides (empty means "none", for tests);
+# else PATH; else the macOS app bundle (fresh Mac before the brew shim is linked).
+vscode_bin() {
+  if [ "${DOTFILES_CODE+set}" = set ]; then
+    [ -n "$DOTFILES_CODE" ] && echo "$DOTFILES_CODE"
+    [ -n "$DOTFILES_CODE" ]
+    return
+  fi
+  if command -v code >/dev/null 2>&1; then
+    command -v code
+    return 0
+  fi
+  local app="/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"
+  [ -x "$app" ] && echo "$app" && return 0
+  return 1
+}
+
 # Installed ids, lowercased, sorted. Empty when code is absent.
 vscode_installed() {
-  command -v code >/dev/null 2>&1 || return 0
-  (code --list-extensions 2>/dev/null || true) | tr '[:upper:]' '[:lower:]' | sort -u
+  local c
+  c="$(vscode_bin)" || return 0
+  ("$c" --list-extensions 2>/dev/null || true) | tr '[:upper:]' '[:lower:]' | sort -u
 }

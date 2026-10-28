@@ -7,7 +7,7 @@ for f in log os link module vscode; do
   # shellcheck disable=SC1090
   source "$DOTFILES_DIR/lib/$f.sh"
 done
-command -v code >/dev/null 2>&1 || die "code is not on PATH"
+code_bin="$(vscode_bin)" || die "code CLI not found"
 extras="$(comm -13 <(vscode_wanted) <(vscode_installed))"
 if [ -z "$extras" ]; then
   echo "nothing to prune"
@@ -25,5 +25,5 @@ case "$ans" in y | Y) ;; *)
 esac
 while IFS= read -r id; do
   [ -n "$id" ] || continue
-  if code --uninstall-extension "$id" >/dev/null 2>&1; then echo "removed $id"; else log_warn "could not remove $id"; fi
+  if "$code_bin" --uninstall-extension "$id" >/dev/null 2>&1; then echo "removed $id"; else log_warn "could not remove $id"; fi
 done <<<"$extras"

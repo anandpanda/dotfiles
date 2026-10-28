@@ -84,7 +84,7 @@ FAKE
 }
 
 @test "no code on PATH warns and exits 0" {
-  PATH="/usr/bin:/bin" run bash "$V/install.sh"
+  DOTFILES_CODE= run bash "$V/install.sh"
   [ "$status" -eq 0 ]
   [[ "$output" == *"code"*"not"* ]]
   [ -L "$(vscode_user_dir)/settings.json" ]
@@ -118,7 +118,7 @@ FAKE
 
 @test "vscode doctor: no code on PATH skips extension checks" {
   fake_code; bash "$V/install.sh" >/dev/null
-  PATH="/usr/bin:/bin" run bash "$V/doctor.sh"
+  DOTFILES_CODE= run bash "$V/doctor.sh"
   [ "$status" -eq 0 ]
 }
 
@@ -137,4 +137,11 @@ FAKE
   fake_code; bash "$V/install.sh" >/dev/null
   run bash "$DOTFILES_DIR/scripts/vscode-prune.sh"
   [ "$status" -eq 0 ]; [[ "$output" == *"nothing to prune"* ]]
+}
+
+@test "vscode_bin: override, PATH, app bundle, or nothing" {
+  fake_code
+  [ "$(vscode_bin)" = "$HOME/bin/code" ]
+  [ "$(DOTFILES_CODE=/x/code vscode_bin)" = "/x/code" ]
+  DOTFILES_CODE= run vscode_bin; [ "$status" -ne 0 ]; [ -z "$output" ]
 }
