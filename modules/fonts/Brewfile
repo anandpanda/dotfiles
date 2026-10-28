@@ -1,0 +1,2 @@
+# JetBrains Mono patched with Nerd Font glyphs. macOS cask; Linux handled by install.sh.
+cask "font-jetbrains-mono-nerd-font"
