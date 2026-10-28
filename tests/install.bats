@@ -80,6 +80,10 @@ teardown() { teardown_home; }
 @test "checkout path with spaces works" {
   SP="$HOME/with space"; mkdir -p "$SP"; cp -R "$DOTFILES_DIR"/. "$SP/"
   export DOTFILES_MODULES="$SP/modules" DOTFILES_PROFILES="$SP/profiles"
+  # mise resolves home from the user database, not $HOME (2026.10+), so the real one
+  # would see this temp home's config as a foreign, untrusted file. Stub it.
+  mkdir -p "$HOME/bin"; printf '#!/bin/sh\n' > "$HOME/bin/mise"; chmod +x "$HOME/bin/mise"
+  export PATH="$HOME/bin:$PATH"
   run "$SP/install.sh" personal
   [ "$status" -eq 0 ]
   [ "$(readlink "$HOME/.config/git")" = "$SP/modules/git/config" ]

@@ -10,7 +10,12 @@ teardown() { teardown_home; }
     [[ "$output" == *"$c"* ]] || { echo "missing $c"; false; }
   done
   [[ "$output" != *obsidian* ]]; [[ "$output" != *brave* ]]; [[ "$output" != *chrome* ]]; grep -q '# cask "obsidian"' "$DOTFILES_DIR/$A/Brewfile.macos"
-  grep -q '^tap "nikitabobko/tap"' "$DOTFILES_DIR/$A/Brewfile.macos"
+  # Third-party tap casks: tap declared, cask fully qualified and trusted (Homebrew 7 tap trust).
+  grep -q '^tap "nikitabobko/tap"$' "$DOTFILES_DIR/$A/Brewfile.macos"
+  grep -q '^tap "menubar-apps/menubar-apps"$' "$DOTFILES_DIR/$A/Brewfile.macos"
+  grep -q '^cask "nikitabobko/tap/aerospace", trusted: true$' "$DOTFILES_DIR/$A/Brewfile.macos"
+  grep -q '^cask "menubar-apps/menubar-apps/todobar", trusted: true$' "$DOTFILES_DIR/$A/Brewfile.macos"
+  if grep -E '^cask "[^"/]+"' "$DOTFILES_DIR/$A/Brewfile.macos" | grep -q trusted; then echo "trusted: on a core cask"; false; fi
 }
 
 @test "doctor reports a missing cask and passes when all are present" {

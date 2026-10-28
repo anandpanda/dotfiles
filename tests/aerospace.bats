@@ -18,8 +18,13 @@ teardown() { teardown_home; }
 }
 
 @test "aerospace accepts the config" {
+  # AeroSpace has no offline validator: only the running app (with Accessibility granted)
+  # can load a config. When it runs our linked file, a reload must succeed.
   command -v aerospace >/dev/null || skip "aerospace missing"
-  run aerospace --config-path "$DOTFILES_DIR/$C" config --get gaps.inner.horizontal 2>&1 || true
-  run aerospace config --config-path "$DOTFILES_DIR/$C" --get mode.main.binding.alt-h
+  active="$(aerospace config --config-path 2>/dev/null)" || skip "aerospace server not running"
+  [ "$active" -ef "$DOTFILES_DIR/$C" ] || skip "aerospace runs another config: $active"
+  run aerospace reload-config
   [ "$status" -eq 0 ]
+  run aerospace config --get mode.main.binding.alt-h
+  [ "$status" -eq 0 ]; [[ "$output" == *"focus left"* ]]
 }

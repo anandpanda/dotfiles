@@ -1,10 +1,12 @@
 # Desktop apps. All free. Work-managed apps (JumpCloud, Falcon, VPN, Slack, Zoom) are IT's and not here.
+# Third-party taps: Homebrew 7 loads nothing from them until trusted; trust the one item, not the tap.
 tap "nikitabobko/tap"
+tap "menubar-apps/menubar-apps"
 
 # Launcher, clipboard history, snippets (replaces Spotlight, Maccy)
 cask "raycast"
 # Tiling window manager: alt-hjkl focus, alt-1..9 workspaces (config in modules/aerospace)
-cask "nikitabobko/tap/aerospace"
+cask "nikitabobko/tap/aerospace", trusted: true
 # Caps Lock -> Escape (tap) / Hyper (hold) (config in modules/karabiner)
 cask "karabiner-elements"
 # Screenshots: annotate, OCR, measure. Cmd-Shift-2
@@ -19,7 +21,7 @@ cask "alt-tab"
 # updater, which locks their bundles so Homebrew cannot adopt or replace them. They stay
 # hand-installed; the checklist covers a fresh machine.
 # Quick todo list in the menu bar
-cask "todobar"
+cask "menubar-apps/menubar-apps/todobar", trusted: true
 # Archives, full uninstalls, external monitor brightness
 cask "keka"
 cask "appcleaner"

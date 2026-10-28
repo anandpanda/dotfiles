@@ -108,15 +108,18 @@ with no sudo.
 - Create `~/.secrets/github_token` when needed (doctor reminds).
 - Work overlay: `just overlay-init ~/personal/dotfiles-work`, fill
   `modules/git/config/identity.work` (name, work email), push to a private
-  repo, then `just install work <url>` in a real terminal.
-- gh: `gh auth login -h github.com -p ssh` with the personal account, then
-  `dots install personal` once so the wrapper can switch accounts.
+  repo, then `just install work <url>` in a real terminal. Candidates found on
+  this Mac for its Brewfile: formulae actionlint awscli bats-core docker-compose
+  helm just kubectx kubernetes-cli libomp libpq pkgconf pre-commit shfmt temporal
+  util-linux yq zizmor; casks gcloud-cli headlamp ngrok session-manager-plugin;
+  taps coder/coder (coder) and temporalio/brew (tcld), each declared with
+  `trusted: true` on the item like modules/apps does.
+- Ruling (work dev setup, when Anand asks for it): servers and services
+  (Postgres, Redis, queues, anything that listens on a port) run in Docker,
+  per project via compose; CLIs, runtimes (mise), and the editor stay local.
 - GitHub: register ~/.ssh/id_ed25519_personal.pub as a *Signing Key* so
   commits show "Verified" (they already verify locally).
 - Old configs are in `~/.dotfiles-backup/`.
-- Leftovers doctor found (need sudo): `sudo rm /etc/paths.d/10-pmk-global`
-  (stale PATH entry) and `sudo rm -rf /usr/local/go /etc/paths.d/go` (go.dev
-  Go shadowing mise's).
 - Replace `main` with `v2` when ready.
 - After all phases: a hands-on end-to-end walkthrough of the whole setup so
   Anand can use every part of it (Anand asked for this explicitly).

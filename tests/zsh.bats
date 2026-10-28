@@ -119,7 +119,7 @@ print(int(min(t) * 1000))')
 @test "HEAD^ is not globbed at the prompt" {
   module_apply "$DOTFILES_DIR/$Z" >/dev/null
   run env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" zsh -i -c 'print HEAD^'
-  [ "${lines[-1]}" = "HEAD^" ]
+  [ "${lines[${#lines[@]}-1]}" = "HEAD^" ]
 }
 
 @test "DOTFILES_DIR is derived from the .zshenv symlink" {
@@ -138,7 +138,7 @@ print(int(min(t) * 1000))')
 @test "grep and find are not aliased" {
   module_apply "$DOTFILES_DIR/$Z" >/dev/null
   run env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" zsh -i -c 'alias grep; alias find; echo end'
-  [ "${lines[-1]}" = "end" ]
+  [ "${lines[${#lines[@]}-1]}" = "end" ]
   [[ "$output" != *"grep="* ]] && [[ "$output" != *"find="* ]]
 }
 
