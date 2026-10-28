@@ -40,8 +40,12 @@ teardown() { teardown_home; }
   for c in git gcc make; do printf '#!/usr/bin/env bash\nexit 0\n' > "$HOME/bin/$c"; done
   printf '#!/usr/bin/env bash\nexit 7\n' > "$HOME/bin/curl"; chmod +x "$HOME/bin/"*
   run env PATH="$HOME/bin:/usr/bin:/bin" bash -c "source '$DOTFILES_DIR/lib/log.sh'; source '$DOTFILES_DIR/lib/os.sh'; source '$DOTFILES_DIR/lib/brew.sh'; brew_prefix() { echo '$HOME/nobrew'; }; os_name() { echo linux; }; brew_ensure"
-  [[ "$output" != *"sudo is not available"* ]]
-  # Basics missing and no sudo -> clear die.
-  run env PATH="$HOME/emptybin" bash -c "source '$DOTFILES_DIR/lib/log.sh'; source '$DOTFILES_DIR/lib/os.sh'; source '$DOTFILES_DIR/lib/brew.sh'; brew_prefix() { echo '$HOME/nobrew'; }; os_name() { echo linux; }; brew_ensure"
+  [[ "$output" != *"sudo is not available"* ]]; [ "$status" -ne 0 ]; [[ "$output" == *"homebrew install failed"* ]]
+  # Basics missing: a PATH with only bash, coreutils-free fakes and a failing sudo. `command -v`
+  # is existence, so the basics must truly be absent from PATH.
+  mkdir -p "$HOME/minimal"; for c in bash sh env printf head cut grep; do p="$(command -v $c)"; [ -n "$p" ] && ln -sf "$p" "$HOME/minimal/$c"; done
+  printf '#!/usr/bin/env bash\nexit 1\n' > "$HOME/minimal/sudo"; chmod +x "$HOME/minimal/sudo"
+  run env PATH="$HOME/minimal" bash -c "source '$DOTFILES_DIR/lib/log.sh'; source '$DOTFILES_DIR/lib/os.sh'; source '$DOTFILES_DIR/lib/brew.sh'; brew_prefix() { echo '$HOME/nobrew'; }; os_name() { echo linux; }; brew_ensure"
+  echo "status=$status output=$output" >&3
   [ "$status" -ne 0 ]; [[ "$output" == *"sudo is not available"* ]]
 }

@@ -25,10 +25,11 @@ brew_ensure() {
         fi
       fi
     fi
-    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || die "homebrew install failed"
+    [ -x "$(brew_prefix)/bin/brew" ] || die "homebrew install finished but $(brew_prefix)/bin/brew is missing"
     eval "$("$(brew_prefix)/bin/brew" shellenv)"
   fi
-  log_ok "homebrew $(brew --version | head -1)"
+  log_ok "homebrew $(brew --version 2>/dev/null | head -1)"
 }
 
 # Merge Brewfiles: drop comments and blank lines, dedupe, keep first order.
