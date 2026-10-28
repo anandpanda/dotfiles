@@ -16,6 +16,8 @@ case "$(uname -s)" in
     }
     prefix=/opt/homebrew
     [ "$(uname -m)" = x86_64 ] && prefix=/usr/local
+    # Homebrew's non-interactive installer needs cached sudo on macOS.
+    sudo -v
     ;;
   Linux)
     sudo apt-get update -qq && sudo apt-get install -y -qq build-essential curl file git procps >/dev/null
@@ -35,4 +37,12 @@ brew install -q git just
 
 if [ -d "$dest/.git" ]; then git -C "$dest" pull --ff-only -q; else git clone -q "$repo" "$dest"; fi
 cd "$dest"
-if [ -n "$overlay" ]; then ./install.sh "$profile" --overlay "$overlay"; else ./install.sh "$profile"; fi
+# When piped from curl, stdin is the pipe; reattach the terminal so the
+# guided ssh key and overlay prompts can run.
+in=/dev/stdin
+[ -t 0 ] || { [ -r /dev/tty ] && in=/dev/tty; }
+if [ -n "$overlay" ]; then
+  ./install.sh "$profile" --overlay "$overlay" <"$in"
+else
+  ./install.sh "$profile" <"$in"
+fi
