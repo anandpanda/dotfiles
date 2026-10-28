@@ -84,8 +84,12 @@ FAKE
 @test "shell.zsh does not cache a frozen PATH: PATH entries added before mise survive" {
   ! grep -q 'zcache mise' "$DOTFILES_DIR/$M/shell.zsh"
   command -v mise >/dev/null || skip "mise missing"
+  # A fresh shell: mise's activate line puts its shims dir first until the precmd hook
+  # swaps in the real install dirs. Either way an entry added before activation must
+  # still be there, ahead of the system dirs; a cached activate would have dropped it.
   got="$(zsh -c "export PATH=/first/entry:\$PATH; source '$DOTFILES_DIR/$M/shell.zsh' 2>/dev/null; print -r -- \$PATH" 2>/dev/null | tail -1)"
-  [[ "$got" == /first/entry:* ]]
+  [[ ":$got:" == *":/first/entry:"* ]] || { echo "lost: $got"; false; }
+  [[ "${got%%/first/entry*}" != *"/usr/bin"* ]] || { echo "reordered: $got"; false; }
 }
 
 @test "doctor: mise not activated is a warning, not a problem" {
