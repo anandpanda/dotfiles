@@ -51,8 +51,11 @@ the tool's own folder, and overlay modules get the same treatment for free.
 - `config/options.zsh`: history size, shared history off (atuin owns it),
   auto cd, correct, completion styling, keybinds (emacs mode, word moves).
 - `Brewfile`: zsh, antidote.
-- Login shell: Apple's `/bin/zsh` works fine. `CHECKLIST.md` notes the
-  optional `chsh` to Homebrew's newer zsh; never run by the installer.
+- Login shell: Homebrew's zsh is the login shell on both OSes. `install.sh`
+  ensures its path is in `/etc/shells` and runs `chsh` when it is not the
+  current shell. Both need a password: with a terminal attached it prompts
+  once; without one it prints the two commands and continues. `doctor`
+  reports when the login shell is not the Homebrew zsh.
 - Startup budget: under 80 ms measured with `zsh -i -c exit` timed ten
   times; antidote static mode and lazy loads keep it there. Measured in a
   test that runs only when zsh and antidote are present.
