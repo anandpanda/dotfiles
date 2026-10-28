@@ -84,16 +84,51 @@ modules = ["workspace", "secrets", "git", "ssh", "macos"]
 
 # profiles/work.toml
 extends = "personal"
-overlay = "git@github.com:anandpanda/dotfiles-work.git"
+overlay = true
 ```
 
 Resolution: load `extends` chain, union module lists, then if `overlay`
-is set, clone it to `~/.dotfiles-work` and apply every module inside its
-`modules/` directory after the public ones. Overlay modules may carry
-the same name as a public module; their files are linked on top.
+is true, clone the overlay repo to `~/.dotfiles-work` and apply every
+module inside its `modules/` directory after the public ones. Overlay
+modules may carry the same name as a public module; their files are
+linked on top.
+
+The overlay URL is never in the public repo, because a company is a
+property of a machine, not of these dotfiles. It is given once, via
+`just install work <url>` or `--overlay <url>`, or asked for
+interactively, and remembered in `~/.config/dotfiles/overlay`. A new
+employer means a new private repo and a new URL, nothing else changes.
 
 The profile used is remembered in `~/.config/dotfiles/profile` so
 `just update` and `just doctor` know which one to use without arguments.
+
+## Guided setup
+
+Only two things on a machine cannot come from a repo: SSH keys and the
+overlay URL. The installer asks for exactly these, and only when they
+are missing, so reruns on a configured machine ask nothing.
+
+Key flow, run by the `ssh` module for each identity the profile needs
+(`personal` always, `work` when the profile is work):
+
+1. Check `~/.ssh/id_ed25519_<ctx>` exists. If yes, skip to 4.
+2. Offer to generate it: `ssh-keygen -t ed25519 -C <email>`.
+3. Print the public key, say where to add it on GitHub, wait for enter.
+4. Run `ssh -T git@github.com-<ctx>` and report success or the error.
+
+Overlay flow, run after public modules when the profile has
+`overlay = true`:
+
+1. Use `--overlay` if given, else the remembered URL, else ask.
+2. Clone or pull via the `github.com-work` alias so the work key is used.
+3. Apply overlay modules.
+
+The installer detects whether it is attached to a terminal. With no
+terminal (CI), key generation and overlay are skipped with a warning
+instead of hanging. There is no flag for this.
+
+Secrets are never prompted. `~/.secrets/` is filled by hand and
+`doctor` reports what is missing.
 
 ## Installer behaviour
 
@@ -130,6 +165,7 @@ exit 0 within seconds.
 | `just lint`        | shellcheck + shfmt on all scripts |
 | `just test`        | run install in a disposable Ubuntu container via docker |
 | `just module name` | scaffold a new empty module folder |
+| `just overlay-init path` | scaffold a new private overlay repo with README, example modules |
 
 `just` itself is in the bootstrap's brew install so the command surface
 exists before anything else.
@@ -157,10 +193,12 @@ and `identity.work`. `config/identity.personal` holds name, email, and a
 from the overlay. Global ignore file. Committing outside `~/work` or
 `~/personal` fails by design.
 
-**ssh**: `home/.ssh/config` with `github.com-personal` and
-`github.com-work` host aliases, each with `IdentitiesOnly yes` and its
-own `IdentityFile`. Keys are never in a repo. `install.sh` warns if
-expected key files are missing.
+**ssh**: `home/.ssh/config` is a static file authored in this repo
+defining `github.com-personal` and `github.com-work` host aliases, each
+with `IdentitiesOnly yes` and `IdentityFile ~/.ssh/id_ed25519_<ctx>`.
+It only names key paths; the keys themselves are generated per machine
+by the guided setup and are never in any repo. Key names carry a
+context, not a company.
 
 **macos**: `module.toml` restricts to macOS. `install.sh` applies
 curated `defaults write` entries, each commented. Scope: keyboard repeat
@@ -184,6 +222,12 @@ dotfiles-work/
 Overlay modules use the exact same layout and are applied by the same
 code. The public repo contains no logic that knows what is inside the
 overlay.
+
+`just overlay-init <path>` creates this skeleton with a README that
+states the contract, so starting at a new company is: run it, fill in
+identity and work tools, push to a private repo, pass its URL to
+`just install work`. Work tools such as kubernetes, aws, docker configs
+and the work Claude setup are overlay modules built in later phases.
 
 ## Doctor
 
