@@ -30,3 +30,4 @@ teardown() { teardown_home; }
   run brew_missing "$HOME/a"
   [ "$output" = "git" ]
 }
+

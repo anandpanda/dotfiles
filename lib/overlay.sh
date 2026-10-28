@@ -11,6 +11,15 @@ overlay_resolve_url() {
   echo "$url"
 }
 
+# Route GitHub urls through the work ssh alias so the work key is used.
+overlay_clone_url() {
+  case "$1" in
+    git@github.com:*) echo "git@github.com-work:${1#git@github.com:}" ;;
+    https://github.com/*) echo "git@github.com-work:${1#https://github.com/}" ;;
+    *) echo "$1" ;;
+  esac
+}
+
 overlay_ensure() {
   local url="$1" dir
   dir="$(overlay_dir)"
@@ -23,7 +32,7 @@ overlay_ensure() {
     git -C "$dir" pull --ff-only -q
   else
     log_info "overlay clone"
-    git clone -q "$url" "$dir"
+    git clone -q "$(overlay_clone_url "$url")" "$dir"
   fi
 }
 

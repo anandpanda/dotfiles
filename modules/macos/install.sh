@@ -2,6 +2,13 @@
 # System defaults. Each line says what it does. Only writes when a value differs.
 set -euo pipefail
 [ "$(uname -s)" = Darwin ] || exit 0
+# `defaults` ignores $HOME, so a test or sandbox run with a fake HOME would
+# change the real user's settings. Refuse unless explicitly allowed.
+real_home="$(eval echo "~$(id -un)")"
+if [ "$HOME" != "$real_home" ] && [ "${DOTFILES_ALLOW_FAKE_HOME:-0}" != 1 ]; then
+  echo "skip macos defaults: HOME is not the real home ($real_home)"
+  exit 0
+fi
 
 changed=0
 set_default() { # DOMAIN KEY TYPE VALUE

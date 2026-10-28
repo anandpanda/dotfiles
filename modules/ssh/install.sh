@@ -4,7 +4,7 @@ for f in log profile ssh; do
   # shellcheck disable=SC1090
   source "$DOTFILES_DIR/lib/$f.sh"
 done
-profile="$(recall profile 2>/dev/null || echo "${DOTFILES_PROFILE:-personal}")"
+profile="${DOTFILES_PROFILE:-$(recall profile 2>/dev/null || echo personal)}"
 ssh_ensure_include
 for ctx in $(ssh_contexts_for_profile "$profile"); do
   email="${DOTFILES_EMAIL_PERSONAL:-}"

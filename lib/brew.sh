@@ -53,6 +53,6 @@ brew_missing() {
     brew list --cask -1 2>/dev/null
   )"
   for n in $(brew_names "$@"); do
-    case "$installed" in *"$n"*) ;; *) echo "$n" ;; esac
+    grep -qxF "$n" <<<"$installed" || echo "$n"
   done
 }

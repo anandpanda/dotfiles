@@ -16,6 +16,7 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --dry-run) DRY_RUN=1 ;;
     --overlay)
+      [ $# -ge 2 ] || die "--overlay needs a url"
       OVERLAY_URL="$2"
       shift
       ;;

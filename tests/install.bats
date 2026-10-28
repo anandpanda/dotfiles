@@ -70,3 +70,9 @@ teardown() { teardown_home; }
   run "$DOTFILES_DIR/install.sh" a
   [ "$status" -ne 0 ]
 }
+
+@test "--overlay without a value gives a usage error" {
+  run "$DOTFILES_DIR/install.sh" test --overlay
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"--overlay needs a url"* ]]
+}
