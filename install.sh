@@ -4,7 +4,7 @@ set -euo pipefail
 
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export DOTFILES_DIR
-for f in log os link profile module brew secrets ssh overlay; do
+for f in log os link profile module brew secrets ssh overlay preflight; do
   # shellcheck disable=SC1090
   [ -f "$DOTFILES_DIR/lib/$f.sh" ] && source "$DOTFILES_DIR/lib/$f.sh"
 done
@@ -60,12 +60,19 @@ if [ "${DOTFILES_SKIP_BREW:-0}" != 1 ]; then
   [ -z "$brewfiles" ] || brew_bundle_stdin <<<"$brewfiles"
 fi
 
+log_info "anything that needs you"
+printf '%s' "$module_dirs" | preflight_run || die "preflight failed"
+if profile_has_overlay "$PROFILE"; then
+  OVERLAY_URL="$(overlay_resolve_url "$OVERLAY_URL")"
+fi
+
+log_info "configuring"
 while IFS= read -r d; do
   [ -n "$d" ] || continue
   module_apply "$d" || die "module failed: $(basename "$d")"
 done <<<"$module_dirs"
 
-if profile_has_overlay "$PROFILE" && type overlay_apply >/dev/null 2>&1; then
+if profile_has_overlay "$PROFILE"; then
   overlay_apply "$OVERLAY_URL"
 fi
 

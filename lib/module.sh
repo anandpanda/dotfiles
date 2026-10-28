@@ -56,6 +56,8 @@ _link_home() { # MODULE_DIR
   done < <(find "$dir/home" -type f | sort)
 }
 
+rcd_dir() { echo "$HOME/.config/zsh/rc.d"; }
+
 module_apply() {
   local dir="$1" name
   name="$(basename "$dir")"
@@ -70,6 +72,12 @@ module_apply() {
   fi
   if [ -d "$dir/home" ]; then
     _link_home "$dir" || return 1
+  fi
+  if [ -f "$dir/shell.zsh" ]; then
+    local rc
+    rc="$(rcd_dir)/$name.zsh"
+    _in_overlay "$dir" && rc="$(rcd_dir)/$name.overlay.zsh"
+    link_file "$dir/shell.zsh" "$rc" || return 1
   fi
   if [ -f "$dir/install.sh" ]; then
     if [ "${DRY_RUN:-0}" = 1 ]; then

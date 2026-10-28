@@ -70,3 +70,12 @@ teardown() { teardown_home; }
   [ "$status" -eq 1 ]
   [[ "$output" == *"ssh include missing"* ]]
 }
+
+@test "missing rc.d link is reported" {
+  echo 'x' > "$DOTFILES_MODULES/one/shell.zsh"
+  "$DOTFILES_DIR/install.sh" test >/dev/null
+  rm "$HOME/.config/zsh/rc.d/one.zsh"
+  run "$DOTFILES_DIR/doctor.sh"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"missing link"*"rc.d/one.zsh"* ]]
+}

@@ -1,13 +1,8 @@
 #!/usr/bin/env bash
+# Make ~/.ssh/config include our conf.d. Keys are handled in preflight.sh.
 set -euo pipefail
-for f in log profile ssh; do
+for f in log ssh; do
   # shellcheck disable=SC1090
   source "$DOTFILES_DIR/lib/$f.sh"
 done
-profile="${DOTFILES_PROFILE:-$(recall profile 2>/dev/null || echo personal)}"
 ssh_ensure_include
-for ctx in $(ssh_contexts_for_profile "$profile"); do
-  email="${DOTFILES_EMAIL_PERSONAL:-}"
-  [ "$ctx" = work ] && email="${DOTFILES_EMAIL_WORK:-}"
-  ssh_ensure_key "$ctx" "${email:-$ctx@$(hostname -s)}"
-done

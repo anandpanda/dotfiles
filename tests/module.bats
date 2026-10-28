@@ -109,3 +109,17 @@ teardown() { teardown_home; }
   module_apply "$M/tool"
   [ -f "$HOME/ran" ]
 }
+
+@test "shell.zsh links into rc.d" {
+  mkdir -p "$M/tool"; echo 'echo hi' > "$M/tool/shell.zsh"
+  module_apply "$M/tool"
+  [ "$(readlink "$HOME/.config/zsh/rc.d/tool.zsh")" = "$M/tool/shell.zsh" ]
+}
+
+@test "overlay shell.zsh does not clobber public" {
+  mkdir -p "$M/tool" "$HOME/.dotfiles-work/modules/tool"
+  echo pub > "$M/tool/shell.zsh"; echo ovl > "$HOME/.dotfiles-work/modules/tool/shell.zsh"
+  module_apply "$M/tool"; module_apply "$HOME/.dotfiles-work/modules/tool"
+  [ "$(readlink "$HOME/.config/zsh/rc.d/tool.zsh")" = "$M/tool/shell.zsh" ]
+  [ "$(readlink "$HOME/.config/zsh/rc.d/tool.overlay.zsh")" = "$HOME/.dotfiles-work/modules/tool/shell.zsh" ]
+}

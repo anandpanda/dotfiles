@@ -74,6 +74,11 @@ while IFS= read -r d; do
       check_link "$d/config" "$HOME/.config/$name"
     fi
   fi
+  if [ -f "$d/shell.zsh" ]; then
+    rc="$HOME/.config/zsh/rc.d/$name.zsh"
+    case "$d" in "$(overlay_dir)"/*) rc="$HOME/.config/zsh/rc.d/$name.overlay.zsh" ;; esac
+    check_link "$d/shell.zsh" "$rc"
+  fi
   if [ -d "$d/home" ]; then
     while IFS= read -r f; do
       dst="$HOME/${f#"$d"/home/}"

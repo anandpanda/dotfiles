@@ -59,7 +59,7 @@ teardown() { teardown_home; }
 @test "ssh module install uses the profile being installed over the remembered one" {
   remember profile personal
   export DOTFILES_DIR DOTFILES_PROFILE=work
-  run "$DOTFILES_DIR/modules/ssh/install.sh"
+  run bash "$DOTFILES_DIR/modules/ssh/preflight.sh"
   [[ "$output" == *"skipping ssh key generation for work"* ]]
 }
 
@@ -69,4 +69,11 @@ teardown() { teardown_home; }
   ssh_ensure_include
   [ -L "$HOME/.ssh/config" ]
   [ "$(head -1 "$HOME/real/sshconf")" = "Include ~/.ssh/conf.d/*.conf" ]
+}
+
+@test "ssh install.sh only ensures include" {
+  run bash "$DOTFILES_DIR/modules/ssh/install.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"ssh key"* ]]
+  [ -f "$HOME/.ssh/config" ]
 }

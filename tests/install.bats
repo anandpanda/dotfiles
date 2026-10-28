@@ -84,3 +84,13 @@ teardown() { teardown_home; }
   [ "$status" -eq 0 ]
   [ "$(readlink "$HOME/.config/git")" = "$SP/modules/git/config" ]
 }
+
+@test "preflight runs after packages and before modules" {
+  mkdir -p "$DOTFILES_MODULES/one"
+  printf '#!/usr/bin/env bash\necho PREFLIGHT\n' > "$DOTFILES_MODULES/one/preflight.sh"
+  printf '#!/usr/bin/env bash\necho INSTALL\n' > "$DOTFILES_MODULES/one/install.sh"
+  run "$DOTFILES_DIR/install.sh" test
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"PREFLIGHT"*"INSTALL"* ]]
+  [[ "$output" == *"anything that needs you"*"PREFLIGHT"* ]]
+}
