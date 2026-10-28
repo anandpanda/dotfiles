@@ -1,0 +1,54 @@
+# VS Code extensions, one per line: publisher.name  # why. Installed by install.sh,
+# checked by doctor. Extras are shown by doctor and removed with `dots vscode-prune`.
+
+# Look: the same Catppuccin Mocha as the terminal
+catppuccin.catppuccin-vsc              # theme
+catppuccin.catppuccin-vsc-icons        # file icons
+
+# Always on
+usernamehw.errorlens                   # errors inline, next to the code
+eamodio.gitlens                        # blame, history, compare (free tier)
+editorconfig.editorconfig              # honour .editorconfig in repos
+tamasfe.even-better-toml               # TOML
+redhat.vscode-yaml                     # YAML with schemas
+dotenv.dotenv-vscode                   # .env highlighting
+aaron-bond.better-comments             # TODO/!/? comment colouring
+mechatroner.rainbow-csv                # CSV columns coloured
+davidanson.vscode-markdownlint         # markdown lint
+yzhang.markdown-all-in-one             # markdown toc, lists, preview
+streetsidesoftware.code-spell-checker  # typos in identifiers and comments
+gruntfuggly.todo-tree                  # every TODO in one panel
+oderwat.indent-rainbow                 # faint colour per indent level
+christian-kohler.path-intellisense     # path completion in strings
+
+# AI
+anthropic.claude-code                  # Claude Code
+
+# Python (Ruff replaces Black and isort)
+ms-python.python
+ms-python.vscode-pylance
+ms-python.debugpy
+charliermarsh.ruff
+
+# Go
+golang.go
+
+# Web
+esbenp.prettier-vscode
+dbaeumer.vscode-eslint
+bradlc.vscode-tailwindcss
+
+# Containers and remote
+ms-azuretools.vscode-containers
+ms-vscode-remote.remote-ssh
+ms-vscode-remote.remote-ssh-edit
+ms-vscode-remote.remote-containers
+
+# C++ for competitive programming (no CMake: one file, one g++ command)
+ms-vscode.cpptools
+xaver.clang-format
+divyanshuagrawal.competitive-programming-helper
+
+# GitHub
+github.vscode-pull-request-github
+github.vscode-github-actions

@@ -1,0 +1,14 @@
+// User-level tasks. Cmd-Shift-B / Ctrl-Shift-B runs the default build task.
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "cpp: build and run current file",
+      "type": "shell",
+      "command": "g++ -std=c++17 -O2 -Wall \"${file}\" -o \"${fileDirname}/${fileBasenameNoExtension}\" && \"${fileDirname}/${fileBasenameNoExtension}\"",
+      "group": { "kind": "build", "isDefault": true },
+      "presentation": { "reveal": "always", "panel": "dedicated", "clear": true },
+      "problemMatcher": ["$gcc"]
+    }
+  ]
+}

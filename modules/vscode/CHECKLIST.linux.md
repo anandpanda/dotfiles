@@ -1,0 +1,1 @@
+- vscode (Linux): install.sh adds Microsoft's apt repo when apt exists; otherwise see https://code.visualstudio.com/docs/setup/linux

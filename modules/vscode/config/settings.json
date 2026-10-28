@@ -1,0 +1,95 @@
+// VS Code user settings. Owned by the dotfiles repo; Settings Sync stays off.
+{
+  // ---- Look: same theme and font as the terminal
+  "workbench.colorTheme": "Catppuccin Mocha",
+  "workbench.iconTheme": "catppuccin-mocha",
+  "editor.fontFamily": "'JetBrainsMono Nerd Font', 'JetBrains Mono', monospace",
+  "editor.fontSize": 14,
+  "editor.fontLigatures": true,
+  "editor.lineHeight": 1.6,
+  "editor.cursorSmoothCaretAnimation": "on",
+  "editor.cursorBlinking": "solid",
+  "editor.minimap.enabled": false,
+  "editor.stickyScroll.enabled": true,
+  "editor.guides.bracketPairs": "active",
+  "editor.bracketPairColorization.enabled": true,
+  "editor.renderWhitespace": "boundary",
+  "editor.rulers": [],
+  "editor.linkedEditing": true,
+  "editor.inlayHints.enabled": "offUnlessPressed",
+  "editor.wordWrap": "off",
+  "editor.smoothScrolling": true,
+  "workbench.startupEditor": "none",
+  "workbench.editor.enablePreview": false,
+  "window.title": "${activeEditorShort}${separator}${rootName}",
+  "breadcrumbs.enabled": true,
+
+  // ---- Editing: format on save, one formatter per language
+  "editor.formatOnSave": true,
+  "editor.formatOnPaste": false,
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": true,
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.tabSize": 4,
+    "editor.codeActionsOnSave": { "source.organizeImports": "explicit", "source.fixAll": "explicit" }
+  },
+  "[go]": { "editor.defaultFormatter": "golang.go", "editor.tabSize": 4, "editor.insertSpaces": false },
+  "[cpp]": { "editor.defaultFormatter": "xaver.clang-format", "editor.tabSize": 4 },
+  "[c]": { "editor.defaultFormatter": "xaver.clang-format", "editor.tabSize": 4 },
+  "[markdown]": { "editor.wordWrap": "on", "editor.formatOnSave": false },
+  "[json]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[jsonc]": { "editor.defaultFormatter": "esbenp.prettier-vscode" },
+  "[yaml]": { "editor.defaultFormatter": "redhat.vscode-yaml" },
+  "[toml]": { "editor.defaultFormatter": "tamasfe.even-better-toml" },
+  "[shellscript]": { "editor.formatOnSave": false },
+
+  // ---- Files
+  "files.autoSave": "onFocusChange",
+  "files.trimTrailingWhitespace": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.exclude": { "**/.git": true, "**/.DS_Store": true, "**/__pycache__": true },
+  "files.watcherExclude": { "**/node_modules/**": true, "**/.venv/**": true, "**/dist/**": true },
+  "search.exclude": { "**/node_modules": true, "**/.venv": true, "**/dist": true, "**/build": true, "**/.git": true },
+
+  // ---- Git
+  "git.autofetch": true,
+  "git.confirmSync": false,
+  "git.enableSmartCommit": true,
+  "git.openRepositoryInParentFolders": "always",
+  "gitlens.codeLens.enabled": false,
+  "gitlens.currentLine.enabled": true,
+
+  // ---- Terminal: same shell and font as Ghostty
+  "terminal.integrated.fontFamily": "'JetBrainsMono Nerd Font'",
+  "terminal.integrated.fontSize": 13,
+  "terminal.integrated.cursorStyle": "line",
+  "terminal.integrated.scrollback": 10000,
+  "terminal.integrated.defaultProfile.osx": "zsh",
+  "terminal.integrated.profiles.osx": { "zsh": { "path": "/opt/homebrew/bin/zsh", "args": ["-l"] } },
+  "terminal.integrated.defaultProfile.linux": "zsh",
+  "terminal.integrated.profiles.linux": { "zsh": { "path": "/home/linuxbrew/.linuxbrew/bin/zsh", "args": ["-l"] } },
+
+  // ---- Languages
+  "python.analysis.typeCheckingMode": "basic",
+  "python.terminal.activateEnvironment": true,
+  "go.useLanguageServer": true,
+  "cph.general.defaultLanguage": "cpp",
+  "cph.language.cpp.Args": "-std=c++17 -O2",
+  "C_Cpp.default.cppStandard": "c++17",
+  "C_Cpp.formatting": "disabled",
+  "clang-format.style": "{ BasedOnStyle: Google, IndentWidth: 4 }",
+
+  // ---- Quiet
+  "telemetry.telemetryLevel": "off",
+  "update.mode": "manual",
+  "extensions.autoUpdate": true,
+  "workbench.tips.enabled": false,
+  "security.workspace.trust.startupPrompt": "once",
+  "cSpell.language": "en",
+  "cSpell.diagnosticLevel": "Hint",
+  "todo-tree.general.tags": ["TODO", "FIXME", "HACK", "NOTE"]
+}

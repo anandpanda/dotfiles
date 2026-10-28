@@ -1,0 +1,2 @@
+# adopt: a hand-installed copy is taken over in place; brew owns updates from then on.
+cask "visual-studio-code", args: { adopt: true }
