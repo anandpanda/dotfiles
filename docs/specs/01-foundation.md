@@ -1,167 +1,215 @@
-# Phase 1: Foundation Design
+# Phase 1: Foundation
 
 Date: 2026-10-28
 Status: draft, awaiting review
 
 ## Purpose
 
-A single repo that turns a fresh macOS or Linux machine into Anand's
-personal dev environment in one command, and that stays the source of
-truth afterwards. This phase builds only the skeleton every later phase
-hangs off: layout, install flow, personal/work overlay contract, git
-identity switching, secrets convention, and macOS system defaults.
+One repo that turns a blank macOS or Linux machine into Anand's complete
+personal dev environment with a single command, stays the source of
+truth afterwards, and is tested like software. This phase builds the
+skeleton every later phase plugs into. It ships no tool choices beyond
+what the skeleton itself needs.
 
-Guiding rules (agreed in conversation):
+Guiding rules:
 
-- Start from zero. Nothing is carried from the old repo by default.
-- Every line is something Anand can read and explain. No dotfile manager.
-- Free and open source first. Paid tools only mentioned, never defaulted.
+- Start from zero. Nothing is carried from the old repo.
+- Every line is readable and explainable. No dotfile manager.
+- Free and open source first.
 - Public repo holds nothing work-confidential and no secret values.
-- Phases are built one at a time; each ends installed and working.
+- One tool, one folder. Adding or removing a tool touches one place.
+- Both OSes are first class and tested on every push.
 
-## Non-goals for this phase
+## Architecture
 
-Tool choices for shell, terminal, editor, apps, and the Claude harness.
-Those are later phases. This phase only reserves their places.
+Four concepts:
+
+1. **Module**: a self-contained folder for one tool. Holds its
+   packages, config, shell integration, and optional install hook.
+2. **Profile**: a list of enabled modules plus settings for a machine
+   role. `personal` and `work` to start.
+3. **Installer**: walks the enabled modules and applies them. Idempotent.
+4. **Overlay**: a private repo with the same module shape, holding
+   work-confidential modules. Enabled only by the `work` profile.
 
 ## Repo layout
 
 ```
 dotfiles/
-├── install.sh              # single entry point
-├── doctor.sh               # drift check: repo vs machine
-├── lib/
-│   ├── log.sh              # info/warn/ok/fail helpers
-│   ├── os.sh               # detect macos | linux, arch
-│   ├── link.sh             # idempotent symlink with backup
-│   └── pkg.sh              # brew / linux install helpers
-├── packages/
-│   ├── Brewfile            # macOS: cli, cask, fonts
-│   └── linux/              # Linux: apt list + github-release installers
-├── shell/                  # phase 2
-├── git/
-│   ├── config              # shared gitconfig with includeIf rules
-│   ├── ignore              # global gitignore
-│   └── identity.personal   # personal name/email/signing key
-├── ssh/
-│   └── config              # host aliases: github.com-personal, github.com-work
-├── config/                 # one dir per tool, symlinked to ~/.config/<tool>
-├── vscode/                 # phase 3
-├── macos/
-│   └── defaults.sh         # system defaults, idempotent
-├── claude/                 # phase 7
+├── bootstrap.sh          # curl-able: installs git + brew, clones, runs install
+├── justfile              # command surface: install, doctor, update, lint, test
+├── lib/                  # installer internals, bash
+│   ├── log.sh            # info/ok/warn/fail, colors, dry-run prefix
+│   ├── os.sh             # OS + arch detection, brew prefix
+│   ├── brew.sh           # install brew if missing, bundle all Brewfiles
+│   ├── link.sh           # idempotent symlink with timestamped backup
+│   ├── modules.sh        # resolve profile -> module list, apply each
+│   └── overlay.sh        # clone/pull private overlay, apply its modules
+├── install.sh            # entry: ./install.sh [profile] [--dry-run]
+├── doctor.sh             # read-only drift report
+├── profiles/
+│   ├── personal.toml     # modules = [...]
+│   └── work.toml         # extends personal, adds overlay = true
+├── modules/
+│   ├── <tool>/
+│   │   ├── Brewfile      # packages for this tool only
+│   │   ├── config/       # linked to ~/.config/<tool>/
+│   │   ├── home/         # linked to ~/ (dotfiles that must live there)
+│   │   ├── shell.zsh     # sourced by the shell module if present
+│   │   ├── install.sh    # optional post-link hook, idempotent
+│   │   └── README.md     # what, why, keybinds
+│   ├── git/              # phase 1: config, identity includes, global ignore
+│   ├── ssh/              # phase 1: host aliases
+│   ├── macos/            # phase 1: defaults.sh in install.sh, mac only
+│   ├── secrets/          # phase 1: creates ~/.secrets, manifest check
+│   └── workspace/        # phase 1: creates ~/work, ~/personal
 ├── overlays/
-│   └── work.example/       # documents the overlay contract, no real data
-└── docs/specs/             # design docs per phase
+│   └── work.example/     # documents overlay shape, no real data
+├── .github/workflows/
+│   └── ci.yml            # macos-latest + ubuntu-latest: install, doctor, lint
+├── .editorconfig
+├── .shellcheckrc
+└── docs/specs/
 ```
 
-## Install flow
+Each module may omit any file. A module with only a Brewfile is valid.
+Modules declare an OS restriction with a one-line `os = macos` in an
+optional `module.toml`; the installer skips them elsewhere.
 
-`./install.sh [--work] [--dry-run]`
+## Profiles
 
-1. Detect OS and arch. Abort on anything other than macOS or Linux.
-2. Install package manager if missing (Homebrew on macOS, nothing on
-   Linux; apt and GitHub releases are used directly).
-3. Install packages from `packages/`.
-4. Link every dir under `config/<tool>/` to `~/.config/<tool>/`, and
-   the handful of home-level files (`git/config` to `~/.gitconfig`,
-   `ssh/config` to `~/.ssh/config`, shell rc files). Existing files are
-   moved to `~/.dotfiles-backup/<timestamp>/`, never deleted.
-5. Create `~/work`, `~/personal`, `~/.secrets` if missing.
-6. macOS only: run `macos/defaults.sh`.
-7. If `--work`: clone or pull the private overlay repo into
-   `~/.dotfiles-work` and run its `link.sh`.
-8. Print a checklist of manual steps: secrets to populate, SSH keys to
-   place, apps needing sign-in.
+```toml
+# profiles/personal.toml
+modules = ["workspace", "secrets", "git", "ssh", "macos"]
 
-Every step is idempotent. Running install twice is safe and fast.
-`--dry-run` prints what would change and touches nothing.
+# profiles/work.toml
+extends = "personal"
+overlay = "git@github.com:anandpanda/dotfiles-work.git"
+```
+
+Resolution: load `extends` chain, union module lists, then if `overlay`
+is set, clone it to `~/.dotfiles-work` and apply every module inside its
+`modules/` directory after the public ones. Overlay modules may carry
+the same name as a public module; their files are linked on top.
+
+The profile used is remembered in `~/.config/dotfiles/profile` so
+`just update` and `just doctor` know which one to use without arguments.
+
+## Installer behaviour
+
+`./install.sh [profile] [--dry-run]`, default profile `personal`.
+
+1. Detect OS. Abort unless macOS or Linux.
+2. Ensure Homebrew, both OSes. On Linux also ensure `build-essential`,
+   `curl`, `git` via apt first, since brew needs them.
+3. Resolve profile to an ordered module list.
+4. Concatenate all enabled modules' Brewfiles and run one `brew bundle`.
+5. For each module in order: link `config/` to `~/.config/<module>/`,
+   link `home/*` into `~/`, run `install.sh` if present.
+6. Record the profile.
+7. Print the manual checklist collected from modules (each module may
+   ship a `CHECKLIST.md`).
+
+Linking: a target that is already the correct symlink is skipped. Any
+other existing target is moved to `~/.dotfiles-backup/<timestamp>/`
+preserving its relative path. Nothing is ever deleted.
+
+`--dry-run` logs every action with a `[dry]` prefix and changes nothing,
+including no brew calls.
+
+Second run on a configured machine: no brew changes, all links skipped,
+exit 0 within seconds.
+
+## Commands (justfile)
+
+| command            | does |
+|--------------------|------|
+| `just install [p]` | full install with profile p |
+| `just update`      | git pull, then install with remembered profile |
+| `just doctor`      | drift report |
+| `just lint`        | shellcheck + shfmt on all scripts |
+| `just test`        | run install in a disposable Ubuntu container via docker |
+| `just module name` | scaffold a new empty module folder |
+
+`just` itself is in the bootstrap's brew install so the command surface
+exists before anything else.
+
+## Bootstrap
+
+`bootstrap.sh` is safe to pipe to `sh` on a blank machine. It installs
+Xcode CLT on macOS or apt basics on Linux, installs Homebrew, installs
+git and just, clones the repo to `~/.dotfiles`, and runs
+`just install personal`. It takes an optional profile argument.
+
+## Phase 1 modules
+
+**workspace**: creates `~/work` and `~/personal`.
+
+**secrets**: creates `~/.secrets` mode 700. Ships `manifest.txt` listing
+expected secret file names with one-line purposes. `install.sh` warns
+for each missing one. `doctor` repeats the check. Nothing reads secrets
+globally; projects use `direnv` later.
+
+**git**: `home/.gitconfig` with no top-level user block and two
+`includeIf gitdir:` rules pointing at `~/.config/git/identity.personal`
+and `identity.work`. `config/identity.personal` holds name, email, and a
+`url insteadOf` rewrite to the personal SSH alias. Work identity comes
+from the overlay. Global ignore file. Committing outside `~/work` or
+`~/personal` fails by design.
+
+**ssh**: `home/.ssh/config` with `github.com-personal` and
+`github.com-work` host aliases, each with `IdentitiesOnly yes` and its
+own `IdentityFile`. Keys are never in a repo. `install.sh` warns if
+expected key files are missing.
+
+**macos**: `module.toml` restricts to macOS. `install.sh` applies
+curated `defaults write` entries, each commented. Scope: keyboard repeat
+and delay, no autocorrect or smart punctuation, Finder extensions and
+path bar and list view, Dock autohide and no recents, screenshots to
+`~/Screenshots` as png, tap to click, fast Mission Control animation.
+Verified on macOS 26 before commit. Restarts Finder and Dock.
 
 ## Overlay contract
 
-An overlay is a directory with the same shape as the main repo, holding
-only the files that differ. The main repo ships `overlays/work.example/`
-as documentation. The real work overlay is a private repo
-`anandpanda/dotfiles-work` cloned to `~/.dotfiles-work`.
-
-Overlay contents and where they land:
-
-| In overlay              | Lands at                         | Purpose |
-|-------------------------|----------------------------------|---------|
-| `git/identity.work`     | `~/.config/git/identity.work`    | work name, email, key |
-| `shell/work.sh`         | sourced by shell if present      | work aliases, env |
-| `claude/CLAUDE.md`      | `~/work/CLAUDE.md`               | work AI conventions |
-| `claude/.claude/`       | `~/work/.claude/`                | work skills, agents, settings |
-| `mcp/.mcp.json`         | `~/work/.mcp.json`               | work MCP servers (refs only) |
-| `link.sh`               | run by install.sh                | does the linking above |
-
-The main repo never reads the overlay's contents. It only knows the
-overlay exists and runs its `link.sh`. That keeps the boundary clean.
-
-## Git identity switching
-
-`git/config` sets no `[user]` block at top level. It contains:
+`overlays/work.example/` in the public repo shows the shape:
 
 ```
-[includeIf "gitdir:~/personal/"]
-    path = ~/.config/git/identity.personal
-[includeIf "gitdir:~/work/"]
-    path = ~/.config/git/identity.work
+dotfiles-work/
+└── modules/
+    ├── git/config/identity.work
+    ├── claude-work/home/work/CLAUDE.md     # lands at ~/work/CLAUDE.md
+    └── ...
 ```
 
-Each identity file sets `user.name`, `user.email`, `user.signingkey`,
-and a `url "git@github.com-<ctx>:".insteadOf = git@github.com:` rewrite
-so clones inside that tree use the matching SSH alias automatically.
-
-`ssh/config` defines `github.com-personal` and `github.com-work`, each
-with its own `IdentityFile` and `IdentitiesOnly yes`. Existing keys
-`id_ed25519_personal` and `id_ed25519_work` are reused; the keys
-themselves are never in any repo.
-
-A repo cloned outside `~/work` or `~/personal` has no identity and git
-refuses to commit, which is the desired failure: it forces repos into
-the right place.
-
-## Secrets convention
-
-`~/.secrets/` is a local-only directory, mode 700, never in any repo.
-
-- One file per secret or per service, e.g. `~/.secrets/github_token`.
-- Shell exports nothing from it globally. Projects pull what they need
-  through `direnv` (`.envrc` reads from `~/.secrets/`).
-- `install.sh` creates the directory and prints which files are
-  expected, based on a `secrets.manifest` listing names and purposes.
-- Migration to a remote password manager later is a change to how the
-  files get populated, not to anything that reads them.
-
-## macOS defaults
-
-`macos/defaults.sh` applies a curated set, each line commented with what
-it does. Scope for this phase: keyboard repeat and delay, disable
-autocorrect and smart quotes, Finder (extensions, path bar, list view,
-no warning on extension change), Dock (autohide, no recents, size),
-screenshots to `~/Screenshots` as png, trackpad tap to click, fast
-Mission Control animation. Verified against macOS 26 before commit.
-Restarts Finder and Dock at the end.
+Overlay modules use the exact same layout and are applied by the same
+code. The public repo contains no logic that knows what is inside the
+overlay.
 
 ## Doctor
 
-`doctor.sh` reports: missing packages, broken or missing symlinks,
-files in `~/.config` not managed by the repo, missing secrets from the
-manifest, overlay present or not. Read-only. This replaces the drift
-detection a dotfile manager would give.
+Read-only. Reports: brew packages in Brewfiles that are not installed,
+links that are missing or point elsewhere, entries in `~/.config` not
+owned by any module, missing secrets from the manifest, overlay present
+and up to date, remembered profile. Exit code 1 if anything is off.
 
-## Testing
+## CI
 
-- `install.sh --dry-run` on this laptop shows the plan without changes.
-- Full `install.sh` on this laptop, then `doctor.sh` reports clean.
-- Running `install.sh` a second time changes nothing.
-- A throwaway Linux container (Ubuntu via Docker) runs `install.sh`
-  end to end without error.
-- `git config user.email` inside `~/work/x` and `~/personal/x` return
-  the two different identities.
+`.github/workflows/ci.yml` runs on push and PR:
 
-## Open decisions
+- `macos-latest` and `ubuntu-latest` matrix
+- `./install.sh personal`, then `./install.sh personal` again and assert
+  no changes logged, then `./doctor.sh`
+- `shellcheck` and `shfmt -d` on every `.sh` and `.zsh`
 
-None blocking. Signing method (SSH signing vs GPG) is decided in the
-git phase; the identity file shape supports either.
+## Testing on this laptop
+
+- `just install personal --dry-run` shows the plan.
+- `just install personal`, then `just doctor` clean.
+- `just install personal` again is a no-op.
+- `just test` passes in an Ubuntu container.
+- `git config user.email` differs between `~/work/x` and `~/personal/x`.
+
+## Out of scope
+
+Shell, prompt, terminal, editor, runtimes, apps, Claude harness. Each
+is a later phase that adds modules and profile entries only.
