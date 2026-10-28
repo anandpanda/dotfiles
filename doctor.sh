@@ -126,7 +126,7 @@ fi
 
 # Module doctor hooks: any enabled module may ship doctor.sh; non-zero exit is a problem.
 while IFS= read -r d; do
-  [ -n "$d" ] && [ -f "$d/doctor.sh" ] || continue
+  if [ -z "$d" ] || [ ! -f "$d/doctor.sh" ]; then continue; fi
   if ! DOTFILES_DIR="$DOTFILES_DIR" HOME="$HOME" bash "$d/doctor.sh"; then
     problem "$(basename "$d") doctor"
   fi
