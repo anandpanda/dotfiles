@@ -19,7 +19,8 @@ doctor:
 # shellcheck + shfmt on every script
 lint:
     shellcheck install.sh doctor.sh bootstrap.sh lib/*.sh scripts/*.sh modules/*/install.sh
-    shfmt -i 2 -ci -d install.sh doctor.sh bootstrap.sh lib scripts modules
+    shfmt -i 2 -ci -d install.sh doctor.sh bootstrap.sh lib scripts $(find modules -name '*.sh')
+    for f in $(find modules -name '*.zsh'); do zsh -n "$f"; done
 
 # bats unit tests
 unit:

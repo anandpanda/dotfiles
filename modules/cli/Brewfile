@@ -1,0 +1,12 @@
+brew "eza"        # ls
+brew "bat"        # cat with syntax highlighting
+brew "ripgrep"    # grep
+brew "fd"         # find
+brew "zoxide"     # cd that learns
+brew "fzf"        # fuzzy finder
+brew "git-delta"  # diff pager (git config in phase 4)
+brew "yazi"       # terminal file manager
+brew "dust"       # du
+brew "btop"       # top
+brew "jq"         # json
+brew "tealdeer"   # tldr pages
