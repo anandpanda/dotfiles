@@ -1,0 +1,6 @@
+.DS_Store
+.env
+.envrc
+.direnv/
+*.local
+.vscode/*.local.json

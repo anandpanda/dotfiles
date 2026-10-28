@@ -1,0 +1,13 @@
+# No [user] here on purpose. Identity comes from the directory:
+#   ~/personal/** -> identity.personal   ~/work/** -> identity.work
+# Committing elsewhere fails, which is the point.
+[includeIf "gitdir:~/personal/"]
+    path = ~/.config/git/identity.personal
+[includeIf "gitdir:~/work/"]
+    path = ~/.config/git/identity.work
+[core]
+    excludesfile = ~/.config/git/ignore
+[init]
+    defaultBranch = main
+[user]
+    useConfigOnly = true
