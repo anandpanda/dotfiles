@@ -10,6 +10,14 @@ command -v apt-get >/dev/null 2>&1 || {
   log_warn "docker: no apt; install the engine for your distro: https://docs.docker.com/engine/install/"
   exit 0
 }
+if command -v docker >/dev/null 2>&1 && docker info >/dev/null 2>&1; then
+  echo "skip docker (engine already reachable)"
+  exit 0
+fi
+if ! command -v sudo >/dev/null 2>&1 || ! sudo -n true 2>/dev/null; then
+  log_warn "docker: installing the engine needs sudo; on a managed workspace use the docker it provides"
+  exit 0
+fi
 list="${DOTFILES_APT_LIST:-/etc/apt/sources.list.d/docker.list}"
 if [ -f "$list" ]; then
   echo "skip docker apt repo"
