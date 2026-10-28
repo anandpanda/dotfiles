@@ -1,6 +1,7 @@
 load helper
 # Puts a fake `defaults` first on PATH that logs every call and answers reads from a file.
 setup() {
+  [ "$(uname -s)" = Darwin ] || skip "macos only"
   setup_home
   BIN="$HOME/bin"; mkdir -p "$BIN"
   cat > "$BIN/defaults" <<'FAKE'
