@@ -15,9 +15,9 @@ cask "jordanbaird-ice"
 cask "stats"
 # Cmd-Tab with per-window previews
 cask "alt-tab"
-# Browsers: Brave default, Chrome as the test target
-cask "brave-browser", args: { adopt: true } # hand-installed before: adopted, not re-downloaded
-cask "google-chrome", args: { adopt: true }
+# Browsers: Brave (default) and Chrome (test target) update themselves through Google's
+# updater, which locks their bundles so Homebrew cannot adopt or replace them. They stay
+# hand-installed; the checklist covers a fresh machine.
 # Quick todo list in the menu bar
 cask "todobar"
 # Archives, full uninstalls, external monitor brightness

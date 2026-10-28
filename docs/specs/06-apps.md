@@ -22,7 +22,7 @@ out of scope: Anand's Linux use is headless (server profiles).
 | Menu bar | Ice | hides icon clutter |
 | System stats | Stats | CPU, memory, network in the menu bar |
 | Window switcher | AltTab | Cmd-Tab with per-window previews |
-| Browser | Brave (default) + Chrome (test target) | Chrome devtools, privacy; Chrome is what users run |
+| Browser | Brave (default) + Chrome (test target), hand-installed | Google's updater locks both bundles, so Homebrew cannot manage them; checklist covers a fresh machine |
 | Quick todo | todobar | the menu-bar list Anand already uses daily |
 | Utilities | Keka, AppCleaner, MonitorControl | archives, full uninstalls, external monitor brightness |
 | Notes | none | Google Docs in the browser. Obsidian is a commented optional line |
