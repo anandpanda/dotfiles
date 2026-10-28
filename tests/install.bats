@@ -48,7 +48,7 @@ teardown() { teardown_home; }
   run "$DOTFILES_DIR/install.sh" ws
   [ "$status" -eq 0 ]
   [ -d "$HOME/work" ] && [ -d "$HOME/personal" ]
-  [ "$(stat -f %Lp "$HOME/.secrets" 2>/dev/null || stat -c %a "$HOME/.secrets")" = "700" ]
+  [ "$(stat -c %a "$HOME/.secrets" 2>/dev/null || stat -f %Lp "$HOME/.secrets")" = "700" ]
   [[ "$output" == *"github_token"* ]]
 }
 
