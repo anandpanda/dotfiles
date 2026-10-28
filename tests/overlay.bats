@@ -50,3 +50,9 @@ teardown() { teardown_home; }
   DRY_RUN=1 run overlay_apply "$REMOTE"
   [ ! -d "$HOME/.dotfiles-work" ]
 }
+
+@test "overlay_clone_url rewrites github urls to the work alias" {
+  [ "$(overlay_clone_url git@github.com:org/repo.git)" = "git@github.com-work:org/repo.git" ]
+  [ "$(overlay_clone_url https://github.com/org/repo.git)" = "git@github.com-work:org/repo.git" ]
+  [ "$(overlay_clone_url /local/path)" = "/local/path" ]
+}

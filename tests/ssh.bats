@@ -55,3 +55,10 @@ teardown() { teardown_home; }
   [[ "$output" == *"[dry]"* ]]
   [ ! -e "$HOME/.ssh/config" ]
 }
+
+@test "ssh module install uses the profile being installed over the remembered one" {
+  remember profile personal
+  export DOTFILES_DIR DOTFILES_PROFILE=work
+  run "$DOTFILES_DIR/modules/ssh/install.sh"
+  [[ "$output" == *"skipping ssh key generation for work"* ]]
+}

@@ -22,6 +22,7 @@ FAKE
   chmod +x "$BIN/killall"
   export PATH="$BIN:$PATH"
   export DRY_RUN=0
+  export DOTFILES_ALLOW_FAKE_HOME=1
 }
 teardown() { teardown_home; }
 
@@ -48,4 +49,12 @@ teardown() { teardown_home; }
   echo "com.apple.dock autohide=1" > "$HOME/defaults.db"
   run "$DOTFILES_DIR/modules/macos/install.sh"
   [[ "$output" != *"set com.apple.dock autohide ="* ]]
+}
+
+@test "refuses to run against a HOME that is not the real home unless allowed" {
+  unset DOTFILES_ALLOW_FAKE_HOME
+  run "$DOTFILES_DIR/modules/macos/install.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"not the real home"* ]]
+  [ ! -f "$HOME/defaults.log" ]
 }

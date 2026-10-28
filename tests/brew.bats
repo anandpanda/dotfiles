@@ -23,3 +23,10 @@ teardown() { teardown_home; }
   [ "$status" -eq 0 ]
   [[ "$output" == *"[dry]"* ]]
 }
+
+@test "brew_missing matches whole names only" {
+  brew() { case "$2" in --formula) printf 'git-lfs\nlibgit2\n' ;; --cask) : ;; esac; }
+  printf 'brew "git"\nbrew "git-lfs"\n' > "$HOME/a"
+  run brew_missing "$HOME/a"
+  [ "$output" = "git" ]
+}
