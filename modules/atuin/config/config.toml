@@ -1,0 +1,11 @@
+# Local only until sync is opted into: `atuin register` / `atuin login`, then set auto_sync = true.
+auto_sync = false
+update_check = false
+sync_frequency = "0"
+search_mode = "fuzzy"
+filter_mode = "global"
+filter_mode_shell_up_key_binding = "session"
+style = "compact"
+inline_height = 20
+enter_accept = true
+show_preview = true

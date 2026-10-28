@@ -1,0 +1,1 @@
+- tmux: start `tmux`, press Ctrl-a then Shift-i once to install the pinned plugins.
