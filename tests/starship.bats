@@ -10,7 +10,7 @@ teardown() { teardown_home; }
 
 @test "starship shell.zsh parses and points at the config" {
   zsh -n "$DOTFILES_DIR/modules/starship/shell.zsh"
-  run zsh -c "source '$DOTFILES_DIR/modules/starship/shell.zsh'; echo \$STARSHIP_CONFIG"
+  run zsh -c "zcache(){ :; }; source '$DOTFILES_DIR/modules/starship/shell.zsh'; echo \$STARSHIP_CONFIG"
   [ "$output" = "$HOME/.config/starship/starship.toml" ]
 }
 

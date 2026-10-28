@@ -19,7 +19,7 @@ teardown() { teardown_home; }
 }
 
 @test "shell.zsh sources cleanly in a bare zsh" {
-  run zsh -c "source '$DOTFILES_DIR/modules/cli/shell.zsh'; echo \$FZF_DEFAULT_COMMAND"
+  run zsh -c "zcache(){ :; }; source '$DOTFILES_DIR/modules/cli/shell.zsh'; echo \$FZF_DEFAULT_COMMAND"
   [ "$status" -eq 0 ]
   [[ "$output" == *"fd "* ]]
 }
