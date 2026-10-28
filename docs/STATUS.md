@@ -89,6 +89,10 @@ dropped as unsupported alongside mise), docker (Docker Desktop on macOS, free
 tier covers small companies; engine via apt on Linux; lazydocker as `ld`).
 Homebrew no longer owns runtimes: direnv go node poetry pyenv python@3.12
 uninstalled; python@3.13/3.14 remain as dependencies of pre-commit/awscli/gcloud.
+Linux parity: every module has a Linux path, tested on Ubuntu in CI and in the
+container test (Ghostty via apt/snap, VS Code and Docker via apt, fonts via
+release download). Only a Linux desktop-defaults module (gsettings) is left,
+for Phase 6.
 
 ## Pending for Anand
 

@@ -89,8 +89,8 @@ Catppuccin plugin, tmux-resurrect and continuum for persistence,
 tmux-sensible. `shell.zsh` adds a `ta` helper: attach or create a session
 named after the current directory.
 
-**ghostty**: `Brewfile` (cask on macOS, Linux via brew where available,
-else `CHECKLIST.md` points to the official package), `config/config`:
+**ghostty**: `Brewfile` (cask on macOS); on Linux `install.sh` uses the apt
+package (Ubuntu 26.04+) or the Snap, which Ghostty's own CI builds, `config/config`:
 Catppuccin Mocha, JetBrains Mono Nerd Font 14, shell integration, cursor,
 window padding, a few keybinds for splits and tabs that mirror tmux's.
 `module.toml` has no OS restriction; the Brewfile uses `cask` only on

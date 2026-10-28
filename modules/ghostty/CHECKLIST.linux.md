@@ -1,1 +1,1 @@
-- ghostty: install from https://ghostty.org/docs/install/binary for your distro.
+- ghostty: installed from apt (Ubuntu 26.04+) or the Snap; if neither applied, see https://ghostty.org/docs/install/binary
