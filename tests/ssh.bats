@@ -62,3 +62,11 @@ teardown() { teardown_home; }
   run "$DOTFILES_DIR/modules/ssh/install.sh"
   [[ "$output" == *"skipping ssh key generation for work"* ]]
 }
+
+@test "ssh_ensure_include edits a symlinked config in place" {
+  mkdir -p "$HOME/.ssh" "$HOME/real"; printf 'Host y\n' > "$HOME/real/sshconf"
+  ln -s "$HOME/real/sshconf" "$HOME/.ssh/config"
+  ssh_ensure_include
+  [ -L "$HOME/.ssh/config" ]
+  [ "$(head -1 "$HOME/real/sshconf")" = "Include ~/.ssh/conf.d/*.conf" ]
+}

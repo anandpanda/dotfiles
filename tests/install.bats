@@ -76,3 +76,11 @@ teardown() { teardown_home; }
   [ "$status" -ne 0 ]
   [[ "$output" == *"--overlay needs a url"* ]]
 }
+
+@test "checkout path with spaces works" {
+  SP="$HOME/with space"; mkdir -p "$SP"; cp -R "$DOTFILES_DIR"/. "$SP/"
+  export DOTFILES_MODULES="$SP/modules" DOTFILES_PROFILES="$SP/profiles"
+  run "$SP/install.sh" personal
+  [ "$status" -eq 0 ]
+  [ "$(readlink "$HOME/.config/git")" = "$SP/modules/git/config" ]
+}

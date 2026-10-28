@@ -103,3 +103,9 @@ teardown() { teardown_home; }
   [ "$(readlink "$HOME/.foo")" = "$O/home/.foo" ]
   [[ "$output" != *"backup"* ]]
 }
+
+@test "non-executable install.sh still runs" {
+  mkdir -p "$M/tool"; printf '#!/usr/bin/env bash\ntouch "$HOME/ran"\n' > "$M/tool/install.sh"
+  module_apply "$M/tool"
+  [ -f "$HOME/ran" ]
+}

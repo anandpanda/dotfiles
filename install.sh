@@ -40,27 +40,30 @@ log_info "profile: $PROFILE ($os/$(os_arch))"
 [ "$DRY_RUN" = 1 ] && log_warn "dry run: nothing will change"
 
 modules_root="${DOTFILES_MODULES:-$DOTFILES_DIR/modules}"
-module_dirs=""
 module_names="$(profile_modules "$PROFILE")" || die "cannot resolve profile: $PROFILE"
-for m in $module_names; do
+module_dirs=""
+while IFS= read -r m; do
+  [ -n "$m" ] || continue
   d="$modules_root/$m"
   [ -d "$d" ] || die "module not found: $m"
   module_enabled_for_os "$d" || {
     log_info "skip $m (not for $os)"
     continue
   }
-  module_dirs="$module_dirs $d"
-done
+  module_dirs="$module_dirs$d
+"
+done <<<"$module_names"
 
 if [ "${DOTFILES_SKIP_BREW:-0}" != 1 ]; then
   brew_ensure
-  # shellcheck disable=SC2086,SC2046
-  brew_bundle $(module_brewfiles $module_dirs)
+  brewfiles="$(printf '%s' "$module_dirs" | module_brewfiles_stdin)"
+  [ -z "$brewfiles" ] || brew_bundle_stdin <<<"$brewfiles"
 fi
 
-for d in $module_dirs; do
+while IFS= read -r d; do
+  [ -n "$d" ] || continue
   module_apply "$d" || die "module failed: $(basename "$d")"
-done
+done <<<"$module_dirs"
 
 if profile_has_overlay "$PROFILE" && type overlay_apply >/dev/null 2>&1; then
   overlay_apply "$OVERLAY_URL"
@@ -70,8 +73,7 @@ if [ "$DRY_RUN" != 1 ]; then
   remember profile "$PROFILE"
 fi
 
-# shellcheck disable=SC2086
-checklist="$(module_checklists $module_dirs)"
+checklist="$(printf '%s' "$module_dirs" | module_checklists_stdin)"
 if [ -n "$checklist" ]; then
   log_info "manual steps:"
   echo "$checklist"

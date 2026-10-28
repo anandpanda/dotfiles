@@ -62,11 +62,14 @@ ssh_ensure_include() {
     return 0
   fi
   mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
+  # Edit the real file: if ~/.ssh/config is a symlink, keep it a symlink.
+  local real="$cfg"
+  [ -L "$cfg" ] && real="$(readlink "$cfg")"
   tmp="$(mktemp)"
   {
     printf '%s\n\n' "$line"
-    [ -f "$cfg" ] && cat "$cfg"
+    [ -f "$real" ] && cat "$real"
   } >"$tmp"
-  mv "$tmp" "$cfg" && chmod 600 "$cfg"
+  cat "$tmp" >"$real" && rm -f "$tmp" && chmod 600 "$real"
   printf 'prepend %s include\n' "$cfg"
 }

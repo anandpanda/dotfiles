@@ -71,11 +71,11 @@ module_apply() {
   if [ -d "$dir/home" ]; then
     _link_home "$dir" || return 1
   fi
-  if [ -x "$dir/install.sh" ]; then
+  if [ -f "$dir/install.sh" ]; then
     if [ "${DRY_RUN:-0}" = 1 ]; then
       log_dry "run $dir/install.sh"
     else
-      DOTFILES_DIR="$DOTFILES_DIR" HOME="$HOME" DRY_RUN="${DRY_RUN:-0}" "$dir/install.sh" ||
+      DOTFILES_DIR="$DOTFILES_DIR" HOME="$HOME" DRY_RUN="${DRY_RUN:-0}" bash "$dir/install.sh" ||
         {
           log_fail "module $name install.sh failed"
           return 1
@@ -93,5 +93,17 @@ module_brewfiles() {
 module_checklists() {
   local d
   for d in "$@"; do [ -f "$d/CHECKLIST.md" ] && cat "$d/CHECKLIST.md"; done
+  return 0
+}
+
+# Same, reading module dirs one per line from stdin (safe for paths with spaces).
+module_brewfiles_stdin() {
+  local d
+  while IFS= read -r d; do [ -n "$d" ] && [ -f "$d/Brewfile" ] && echo "$d/Brewfile"; done
+  return 0
+}
+module_checklists_stdin() {
+  local d
+  while IFS= read -r d; do [ -n "$d" ] && [ -f "$d/CHECKLIST.md" ] && cat "$d/CHECKLIST.md"; done
   return 0
 }

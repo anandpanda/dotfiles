@@ -18,22 +18,29 @@ profile="$(recall profile || echo personal)"
 log_info "profile: $profile"
 
 modules_root="${DOTFILES_MODULES:-$DOTFILES_DIR/modules}"
-dirs=""
 module_names="$(profile_modules "$profile")" || die "cannot resolve profile: $profile"
-for m in $module_names; do
+dirs=""
+while IFS= read -r m; do
+  [ -n "$m" ] || continue
   d="$modules_root/$m"
   [ -d "$d" ] || {
     problem "module missing: $m"
     continue
   }
-  module_enabled_for_os "$d" && dirs="$dirs $d"
-done
+  module_enabled_for_os "$d" && dirs="$dirs$d
+"
+done <<<"$module_names"
 if profile_has_overlay "$profile"; then
   if [ -d "$(overlay_dir)/.git" ]; then
-    log_ok "overlay present ($(recall overlay || echo 'url unknown'))"
+    if fresh="$(overlay_is_fresh)"; then
+      log_ok "overlay present ($(recall overlay || echo 'url unknown'))"
+    else
+      problem "overlay $fresh: run install.sh $profile"
+    fi
     for d in "$(overlay_dir)"/modules/*/; do
       d="${d%/}"
-      [ -d "$d" ] && module_enabled_for_os "$d" && dirs="$dirs $d"
+      [ -d "$d" ] && module_enabled_for_os "$d" && dirs="$dirs$d
+"
     done
   else
     problem "overlay missing: run install.sh $profile"
@@ -50,8 +57,11 @@ check_link() { # SRC DST
 }
 link_problems_before=$problems
 managed=""
-for d in $dirs; do
+managed_names=" "
+while IFS= read -r d; do
+  [ -n "$d" ] || continue
   name="$(basename "$d")"
+  managed_names="$managed_names $name "
   if [ -d "$d/config" ]; then
     managed="$managed $name"
     if owner="$(module_config_owner "$name" "$d")"; then
@@ -72,8 +82,18 @@ for d in $dirs; do
       check_link "$f" "$dst"
     done < <(find "$d/home" -type f)
   fi
-done
+done <<<"$dirs"
 [ "$problems" = "$link_problems_before" ] && log_ok "links"
+
+# ssh include line (only when the ssh module is enabled)
+case "$managed_names" in *" ssh "*)
+  if [ -f "$HOME/.ssh/config" ] && grep -qxF 'Include ~/.ssh/conf.d/*.conf' "$HOME/.ssh/config"; then
+    log_ok "ssh include"
+  else
+    problem "ssh include missing in ~/.ssh/config"
+  fi
+  ;;
+esac
 
 # Unmanaged ~/.config entries (informational)
 if [ -d "$HOME/.config" ]; then
@@ -87,8 +107,9 @@ fi
 
 # Brew
 if [ "${DOTFILES_SKIP_BREW:-0}" != 1 ] && command -v brew >/dev/null; then
-  # shellcheck disable=SC2086,SC2046
-  missing="$(brew_missing $(module_brewfiles $dirs))"
+  brewfiles="$(printf '%s' "$dirs" | module_brewfiles_stdin)"
+  missing=""
+  [ -z "$brewfiles" ] || missing="$(brew_missing_stdin <<<"$brewfiles")"
   if [ -n "$missing" ]; then problem "brew missing: $(echo "$missing" | tr '\n' ' ')"; else log_ok "brew"; fi
 fi
 

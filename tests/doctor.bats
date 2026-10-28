@@ -50,3 +50,23 @@ teardown() { teardown_home; }
   [ "$status" -ne 0 ]
   [[ "$output" != *"doctor: clean"* ]]
 }
+
+@test "stale overlay is reported" {
+  REMOTE="$HOME/remote"; "$DOTFILES_DIR/scripts/overlay-init.sh" "$REMOTE" >/dev/null
+  printf 'extends = "test"\noverlay = true\n' > "$DOTFILES_PROFILES/w.toml"
+  "$DOTFILES_DIR/install.sh" w --overlay "$REMOTE" >/dev/null
+  echo x > "$REMOTE/new"; git -C "$REMOTE" add -A; git -C "$REMOTE" -c user.name=t -c user.email=t@t commit -qm new
+  run "$DOTFILES_DIR/doctor.sh"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"overlay behind"* ]]
+}
+
+@test "missing ssh include line is reported" {
+  unset DOTFILES_MODULES
+  printf 'modules = ["ssh"]\n' > "$DOTFILES_PROFILES/s.toml"
+  "$DOTFILES_DIR/install.sh" s >/dev/null
+  printf 'Host x\n' > "$HOME/.ssh/config"
+  run "$DOTFILES_DIR/doctor.sh"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"ssh include missing"* ]]
+}

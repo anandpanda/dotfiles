@@ -45,6 +45,14 @@ brew_bundle() {
   rm -f "$tmp"
 }
 
+# brew_bundle with Brewfile paths one per line on stdin.
+brew_bundle_stdin() {
+  local f files=()
+  while IFS= read -r f; do [ -n "$f" ] && files+=("$f"); done
+  [ "${#files[@]}" -gt 0 ] || return 0
+  brew_bundle "${files[@]}"
+}
+
 # Names from the Brewfiles that brew does not report as installed.
 brew_missing() {
   local installed n
@@ -55,4 +63,11 @@ brew_missing() {
   for n in $(brew_names "$@"); do
     grep -qxF "$n" <<<"$installed" || echo "$n"
   done
+}
+
+brew_missing_stdin() {
+  local f files=()
+  while IFS= read -r f; do [ -n "$f" ] && files+=("$f"); done
+  [ "${#files[@]}" -gt 0 ] || return 0
+  brew_missing "${files[@]}"
 }

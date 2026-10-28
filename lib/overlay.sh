@@ -37,7 +37,7 @@ overlay_ensure() {
 }
 
 overlay_apply() {
-  local url dir dirs="" d
+  local url dir dirs="" d brewfiles
   url="$(overlay_resolve_url "${1:-}")"
   if [ -z "$url" ]; then
     log_warn "no overlay url: skipping overlay"
@@ -50,15 +50,30 @@ overlay_apply() {
     d="${d%/}"
     [ -d "$d" ] || continue
     module_enabled_for_os "$d" || continue
-    dirs="$dirs $d"
+    dirs="$dirs$d
+"
   done
   if [ "${DOTFILES_SKIP_BREW:-0}" != 1 ]; then
-    # shellcheck disable=SC2086,SC2046
-    brew_bundle $(module_brewfiles $dirs)
+    brewfiles="$(printf '%s' "$dirs" | module_brewfiles_stdin)"
+    [ -z "$brewfiles" ] || brew_bundle_stdin <<<"$brewfiles"
   fi
-  for d in $dirs; do
+  while IFS= read -r d; do
+    [ -n "$d" ] || continue
     module_apply "$d" || die "overlay module failed: $(basename "$d")"
-  done
+  done <<<"$dirs"
   remember overlay "$url"
   log_ok "overlay applied"
+}
+
+# 0 if the overlay checkout is at its remote's head; prints "behind N" otherwise.
+overlay_is_fresh() {
+  local dir behind
+  dir="$(overlay_dir)"
+  [ -d "$dir/.git" ] || return 1
+  git -C "$dir" fetch -q 2>/dev/null || return 0 # offline: do not report stale
+  behind="$(git -C "$dir" rev-list --count "HEAD..@{u}" 2>/dev/null || echo 0)"
+  [ "$behind" = 0 ] || {
+    echo "behind $behind"
+    return 1
+  }
 }
