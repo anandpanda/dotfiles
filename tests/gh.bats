@@ -10,7 +10,7 @@ echo "$*" >> "$HOME/gh.log"
 case "$1 $2" in
   "alias list") cat "$HOME/aliases.txt" 2>/dev/null ;;
   "alias set") shift 2; [ "$1" = --clobber ] && shift; printf '%s: %s\n' "$1" "$2" >> "$HOME/aliases.txt" ;;
-  "auth status") printf '  ✓ Logged in to github.com account %s (keyring)\n  - Active account: true\n' "$(cat "$HOME/active" 2>/dev/null || echo nobody)" ;;
+  "auth status") if [ -s "$HOME/active" ]; then printf '  ✓ Logged in to github.com account %s (keyring)\n  - Active account: true\n' "$(cat "$HOME/active")"; else echo "You are not logged into any GitHub hosts." >&2; exit 1; fi ;;
   "auth switch") shift 2; while [ $# -gt 0 ]; do [ "$1" = --user ] && echo "$2" > "$HOME/active"; shift; done ;;
   "auth login") echo "$(cat "$HOME/next-login" 2>/dev/null || echo newuser)" > "$HOME/active" ;;
 esac
@@ -48,26 +48,81 @@ teardown() { teardown_home; }
   ! grep -q "auth login" "$HOME/gh.log"; [[ "$output" == *"ok"* ]]
 }
 
-@test "preflight for the work profile handles both accounts" {
-  echo "me-personal" > "$HOME/next-login"; printf 'y\ny\n' > "$HOME/tty"
+@test "preflight for the work profile logs in two different accounts" {
+  # The fake logs in as the next name in a queue, one per `auth login`.
+  printf 'me-personal\nme-work\n' > "$HOME/login-queue"
+  cat > "$HOME/bin/gh" <<'FAKE'
+#!/usr/bin/env bash
+echo "$*" >> "$HOME/gh.log"
+case "$1 $2" in
+  "auth status") if [ -s "$HOME/active" ]; then printf '  ✓ Logged in to github.com account %s (keyring)\n  - Active account: true\n' "$(cat "$HOME/active")"; else exit 1; fi ;;
+  "auth login") head -1 "$HOME/login-queue" > "$HOME/active"; tail -n +2 "$HOME/login-queue" > "$HOME/q.tmp"; mv "$HOME/q.tmp" "$HOME/login-queue" ;;
+esac
+FAKE
+  chmod +x "$HOME/bin/gh"
+  printf 'y\ny\n' > "$HOME/tty"
   DOTFILES_TTY="$HOME/tty" DOTFILES_PROFILE=work run bash "$DOTFILES_DIR/$GH/preflight.sh"
-  [ "$status" -eq 0 ]; [ -f "$HOME/.config/dotfiles/gh_personal" ]; [ -f "$HOME/.config/dotfiles/gh_work" ]
+  [ "$status" -eq 0 ]
+  [ "$(cat "$HOME/.config/dotfiles/gh_personal")" = me-personal ]
+  [ "$(cat "$HOME/.config/dotfiles/gh_work")" = me-work ]
 }
 
-@test "chpwd hook switches account by directory and is silent otherwise" {
+@test "gh wrapper parses and is harmless without account files or outside the trees" {
   zsh -n "$DOTFILES_DIR/$GH/shell.zsh"
-  mkdir -p "$HOME/.config/dotfiles" "$HOME/personal/p" "$HOME/work/w" "$HOME/other"
-  echo me-personal > "$HOME/.config/dotfiles/gh_personal"; echo me-work > "$HOME/.config/dotfiles/gh_work"
-  echo me-personal > "$HOME/active"
-  run zsh -c "source '$DOTFILES_DIR/$GH/shell.zsh'; cd '$HOME/work/w'; _dotfiles_gh_switch; cat '$HOME/active'; cd '$HOME/personal/p'; _dotfiles_gh_switch; cat '$HOME/active'; cd '$HOME/other'; _dotfiles_gh_switch; cat '$HOME/active'"
-  [ "$status" -eq 0 ]; [ "$output" = $'me-work\nme-personal\nme-personal' ]
-  n=$(grep -c "auth switch" "$HOME/gh.log"); [ "$n" = 2 ]
+  mkdir -p "$HOME/work/w" "$HOME/other"
+  run zsh -c "source '$DOTFILES_DIR/$GH/shell.zsh'; cd '$HOME/work/w'; gh pr list; cd '$HOME/other'; gh pr list; echo ok"
+  [ "$status" -eq 0 ]; [ "${lines[-1]}" = ok ]
+  ! grep -q "auth switch" "$HOME/gh.log"
 }
 
-@test "chpwd hook without gh or without account files never errors" {
-  mkdir -p "$HOME/work/w"
-  run zsh -c "source '$DOTFILES_DIR/$GH/shell.zsh'; cd '$HOME/work/w'; _dotfiles_gh_switch; echo ok"
-  [ "$status" -eq 0 ]; [ "${lines[-1]}" = ok ]
-  run env PATH=/usr/bin:/bin zsh -c "source '$DOTFILES_DIR/$GH/shell.zsh'; cd '$HOME/work/w'; _dotfiles_gh_switch; echo ok"
-  [ "$status" -eq 0 ]; [ "${lines[-1]}" = ok ]
+@test "gh wrapper switches account per directory before every command, across shells" {
+  mkdir -p "$HOME/.config/dotfiles" "$HOME/.config/gh" "$HOME/personal/p" "$HOME/work/w"
+  echo me-personal > "$HOME/.config/dotfiles/gh_personal"; echo me-work > "$HOME/.config/dotfiles/gh_work"
+  printf 'github.com:\n    user: me-personal\n' > "$HOME/.config/gh/hosts.yml"
+  cat > "$HOME/bin/gh" <<'FAKE'
+#!/usr/bin/env bash
+echo "$*" >> "$HOME/gh.log"
+case "$1 $2" in
+  "auth switch") shift 2; while [ $# -gt 0 ]; do [ "$1" = --user ] && printf 'github.com:\n    user: %s\n' "$2" > "$HOME/.config/gh/hosts.yml"; shift; done ;;
+  "pr list") grep user: "$HOME/.config/gh/hosts.yml" ;;
+esac
+FAKE
+  chmod +x "$HOME/bin/gh"
+  run zsh -c "source '$DOTFILES_DIR/$GH/shell.zsh'; cd '$HOME/work/w'; gh pr list; cd '$HOME/personal/p'; gh pr list"
+  [ "$status" -eq 0 ]; [[ "$output" == *"user: me-work"*"user: me-personal"* ]]
+  # A second shell that starts in ~/work must switch even though chpwd never fired.
+  printf 'github.com:\n    user: me-personal\n' > "$HOME/.config/gh/hosts.yml"
+  run zsh -c "cd '$HOME/work/w'; source '$DOTFILES_DIR/$GH/shell.zsh'; gh pr list"
+  [[ "$output" == *"user: me-work"* ]]
+}
+
+@test "gh wrapper does not call switch when already on the right account" {
+  mkdir -p "$HOME/.config/dotfiles" "$HOME/.config/gh" "$HOME/work/w"
+  echo me-work > "$HOME/.config/dotfiles/gh_work"; printf 'github.com:\n    user: me-work\n' > "$HOME/.config/gh/hosts.yml"
+  run zsh -c "source '$DOTFILES_DIR/$GH/shell.zsh'; cd '$HOME/work/w'; gh pr list; gh pr list"
+  ! grep -q "auth switch" "$HOME/gh.log"
+}
+
+@test "preflight records an already logged-in account without asking" {
+  echo "me-personal" > "$HOME/active"
+  DOTFILES_PROFILE=personal run bash "$DOTFILES_DIR/$GH/preflight.sh"
+  [ "$status" -eq 0 ]; [ "$(cat "$HOME/.config/dotfiles/gh_personal")" = "me-personal" ]
+  [[ "$output" != *"gh auth login"* ]]
+}
+
+@test "preflight refuses to remember the work account as the same user as personal" {
+  mkdir -p "$HOME/.config/dotfiles"; echo me-personal > "$HOME/.config/dotfiles/gh_personal"
+  echo "me-personal" > "$HOME/next-login"; printf 'y\n' > "$HOME/tty"
+  DOTFILES_TTY="$HOME/tty" DOTFILES_PROFILE=work run bash "$DOTFILES_DIR/$GH/preflight.sh"
+  [ "$status" -eq 0 ]; [ ! -f "$HOME/.config/dotfiles/gh_work" ]; [[ "$output" == *"same account"* ]]
+}
+
+@test "install reports a failed alias set" {
+  cat > "$HOME/bin/gh" <<'FAKE'
+#!/usr/bin/env bash
+case "$1 $2" in "alias list") ;; "alias set") exit 1 ;; esac
+FAKE
+  chmod +x "$HOME/bin/gh"
+  run bash "$DOTFILES_DIR/$GH/install.sh"
+  [[ "$output" == *"could not set"* ]]
 }

@@ -5,8 +5,10 @@ set -euo pipefail
 # shellcheck disable=SC1091
 source "$DOTFILES_DIR/lib/log.sh"
 cfg="$HOME/.config/git"
-# Generated, so it lives in state, never in the (linked) config dir.
-out="${XDG_STATE_HOME:-$HOME/.local/state}/git/allowed_signers"
+# The commit-msg hook ships in config/template/hooks; git's init.templateDir copies it into
+# every new or cloned repo (git ignores a template whose hooks dir is a symlink).
+# Generated signers live in state, never in the (linked) config dir.
+out="$HOME/.local/state/git/allowed_signers" # matches gpg.ssh.allowedSignersFile in .gitconfig
 want=""
 for id in "$cfg"/identity.*; do
   [ -f "$id" ] || continue

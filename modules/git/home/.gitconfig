@@ -28,15 +28,10 @@
     followTags = true
 [fetch]
     prune = true
-    pruneTags = true
-    all = true
 [help]
     autocorrect = prompt
 [commit]
     verbose = true
-    gpgsign = true
-[tag]
-    gpgsign = true
 [rerere]
     enabled = true
     autoupdate = true
@@ -52,8 +47,10 @@
 # ---- Pager: delta, Catppuccin Mocha
 [core]
     excludesfile = ~/.config/git/ignore
-    hooksPath = ~/.config/git/hooks
     pager = delta
+# New and cloned repos get the commit-msg hook from this template; repos keep their own hooks.
+[init]
+    templateDir = ~/.config/git/template
 [interactive]
     diffFilter = delta --color-only
 [include]
@@ -69,7 +66,8 @@
 [difftool "difftastic"]
     cmd = difft "$LOCAL" "$REMOTE"
 
-# ---- Signing: SSH, key per identity (signingkey lives in each identity file)
+# ---- Signing: SSH. signingkey and commit.gpgsign live in each identity file, so signing
+# is on exactly where a key exists. Tags: `git tag -s` when you want one signed.
 [gpg]
     format = ssh
 [gpg "ssh"]
@@ -83,9 +81,9 @@
     ci = commit
     amend = commit --amend --no-edit
     undo = reset --soft HEAD~1
-    wip = !git add -A && git commit -m "wip"
+    wip = "!git add -A && git commit -m 'chore: wip'"
     lg = log --graph --oneline --decorate -20
     lga = log --graph --oneline --decorate --all -40
-    pushf = push --force-with-lease
+    pushf = push --force-with-lease --force-if-includes
     dft = difftool --tool=difftastic
     rank = shortlog -sn --no-merges

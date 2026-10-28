@@ -82,6 +82,10 @@ done 3<<<"$module_dirs"
 
 if profile_has_overlay "$PROFILE"; then
   overlay_apply "$OVERLAY_URL"
+  # Overlay identities may add signers: regenerate allowed_signers.
+  if [ -f "$modules_root/git/install.sh" ] && grep -qx git <<<"$module_names"; then
+    DOTFILES_DIR="$DOTFILES_DIR" HOME="$HOME" DRY_RUN="$DRY_RUN" bash "$modules_root/git/install.sh"
+  fi
 fi
 
 if [ "$DRY_RUN" != 1 ]; then

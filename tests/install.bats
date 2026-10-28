@@ -120,3 +120,13 @@ teardown() { teardown_home; }
   run "$DOTFILES_DIR/install.sh" w --overlay "$REMOTE"
   [ "$status" -eq 0 ]; [[ "$output" == *"SAW-OVERLAY"* ]]
 }
+
+@test "git install reruns after the overlay so overlay identities get signers" {
+  unset DOTFILES_MODULES
+  REMOTE="$HOME/remote"; "$DOTFILES_DIR/scripts/overlay-init.sh" "$REMOTE" >/dev/null
+  mkdir -p "$HOME/.ssh"; ssh-keygen -q -t ed25519 -N "" -C w -f "$HOME/.ssh/id_ed25519_work"; ssh-keygen -q -t ed25519 -N "" -C p -f "$HOME/.ssh/id_ed25519_personal"
+  printf 'modules = ["git"]\n' > "$DOTFILES_PROFILES/g.toml"; printf 'extends = "g"\noverlay = true\n' > "$DOTFILES_PROFILES/gw.toml"
+  run "$DOTFILES_DIR/install.sh" gw --overlay "$REMOTE"
+  [ "$status" -eq 0 ]
+  grep -q "you@company.com" "$HOME/.local/state/git/allowed_signers"
+}

@@ -35,9 +35,9 @@ gui:
   sidePanelWidth: 0.3333
   mouseEvents: true
 git:
-  paging:
-    colorArg: always
-    pager: delta --dark --paging=never --line-numbers --hyperlinks --side-by-side=false
+  pagers:
+    - colorArg: always
+      pager: delta --dark --paging=never --line-numbers --hyperlinks --side-by-side=false
   autoFetch: true
   autoRefresh: true
   overrideGpg: true

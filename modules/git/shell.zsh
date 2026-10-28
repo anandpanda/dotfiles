@@ -8,6 +8,9 @@ gwt() {
   dest="${root:h}/${name}-${branch//\//-}"
   if git show-ref --verify --quiet "refs/heads/$branch"; then
     git worktree add "$dest" "$branch" || return 1
+  elif git show-ref --verify --quiet "refs/remotes/origin/$branch"; then
+    # Exists on the remote: check it out tracking origin, never a fresh branch from HEAD.
+    git worktree add --track -b "$branch" "$dest" "origin/$branch" || return 1
   else
     git worktree add -b "$branch" "$dest" "$base" || return 1
   fi

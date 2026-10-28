@@ -21,7 +21,7 @@ while IFS='=' read -r name cmd; do
   if [ "${DRY_RUN:-0}" = 1 ]; then
     echo "[dry] gh alias set $name '$cmd'"
   else
-    gh alias set --clobber "$name" "$cmd" >/dev/null 2>&1 && echo "alias $name = $cmd"
+    if gh alias set --clobber "$name" "$cmd" >/dev/null 2>&1; then echo "alias $name = $cmd"; else log_warn "could not set gh alias $name"; fi
   fi
   changed=1
 done <<<"$wanted"
