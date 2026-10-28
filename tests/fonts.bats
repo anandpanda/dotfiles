@@ -15,7 +15,7 @@ teardown() { teardown_home; }
 @test "fonts linux installs once into ~/.local/share/fonts" {
   [ "$(uname -s)" = Linux ] || skip "linux only"
   BIN="$HOME/bin"; mkdir -p "$BIN"
-  printf '#!/usr/bin/env bash\nout="${@: -1}"; mkdir -p "$(dirname "$out")"; python3 -c "import zipfile,sys; z=zipfile.ZipFile(sys.argv[1],\"w\"); z.writestr(\"f.ttf\",\"x\"); z.close()" "$out"\n' > "$BIN/curl"; chmod +x "$BIN/curl"
+  printf '#!/usr/bin/env bash\nwhile [ $# -gt 0 ]; do [ "$1" = -o ] && out="$2"; shift; done; mkdir -p "$(dirname "$out")"; python3 -c "import zipfile,sys; z=zipfile.ZipFile(sys.argv[1],\"w\"); z.writestr(\"f.ttf\",\"x\"); z.close()" "$out"\n' > "$BIN/curl"; chmod +x "$BIN/curl"
   printf '#!/usr/bin/env bash\nexit 0\n' > "$BIN/fc-cache"; chmod +x "$BIN/fc-cache"
   PATH="$BIN:$PATH" run bash "$DOTFILES_DIR/modules/fonts/install.sh"
   [ "$status" -eq 0 ]
