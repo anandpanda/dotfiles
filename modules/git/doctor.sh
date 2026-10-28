@@ -17,7 +17,7 @@ done
   echo "missing hooks/commit-msg"
   rc=1
 }
-if [ -f "$cfg/allowed_signers" ]; then
+if [ -f "${XDG_STATE_HOME:-$HOME/.local/state}/git/allowed_signers" ]; then
   if ! DRY_RUN=1 bash "$DOTFILES_DIR/modules/git/install.sh" 2>/dev/null | grep -q '^skip '; then
     echo "allowed_signers is stale: rerun install"
     rc=1

@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Generate ~/.config/git/allowed_signers from the identities and keys on this machine,
+# Generate ~/.local/state/git/allowed_signers from the identities and keys on this machine,
 # so `git log --show-signature` verifies locally. One line per identity whose key exists.
 set -euo pipefail
 # shellcheck disable=SC1091
 source "$DOTFILES_DIR/lib/log.sh"
 cfg="$HOME/.config/git"
-out="$cfg/allowed_signers"
+# Generated, so it lives in state, never in the (linked) config dir.
+out="${XDG_STATE_HOME:-$HOME/.local/state}/git/allowed_signers"
 want=""
 for id in "$cfg"/identity.*; do
   [ -f "$id" ] || continue
@@ -23,6 +24,6 @@ if [ "${DRY_RUN:-0}" = 1 ]; then
   echo "[dry] write $out ($(printf '%s' "$want" | grep -c .) signer(s))"
   exit 0
 fi
-mkdir -p "$cfg"
+mkdir -p "$(dirname "$out")"
 printf '%s' "$want" >"$out.tmp" && mv "$out.tmp" "$out"
 echo "wrote $out ($(grep -c . "$out") signer(s))"

@@ -73,7 +73,7 @@
 [gpg]
     format = ssh
 [gpg "ssh"]
-    allowedSignersFile = ~/.config/git/allowed_signers
+    allowedSignersFile = ~/.local/state/git/allowed_signers
 
 [alias]
     st = status -sb

@@ -6,6 +6,7 @@ setup() {
   # Copy the module config (not link) so tests never write into the repo.
   link_tree "$DOTFILES_DIR/$G/home" "$HOME" >/dev/null
   mkdir -p "$HOME/.config/git"; cp -R "$DOTFILES_DIR/$G/config/." "$HOME/.config/git/"
+  export XDG_STATE_HOME="$HOME/.local/state"
   printf '[user]\n  name = W\n  email = w@work\n  signingkey = ~/.ssh/id_ed25519_work.pub\n' > "$HOME/.config/git/identity.work"
   mkdir -p "$HOME/work/r" "$HOME/personal/r" "$HOME/elsewhere/r"
   for d in work personal elsewhere; do git -C "$HOME/$d/r" init -q; done
@@ -81,7 +82,7 @@ teardown() { teardown_home; }
   mkdir -p "$HOME/.ssh"; ssh-keygen -q -t ed25519 -N "" -C p -f "$HOME/.ssh/id_ed25519_personal"
   run bash "$DOTFILES_DIR/$G/install.sh"
   [ "$status" -eq 0 ]
-  f="$HOME/.config/git/allowed_signers"; [ -f "$f" ]
+  f="$HOME/.local/state/git/allowed_signers"; [ -f "$f" ]
   [ "$(grep -c . "$f")" = 1 ]; [ "$(wc -l < "$f" | tr -d ' ')" = 1 ]
   grep -q "^anand612p@gmail.com namespaces=\"git\" ssh-ed25519 " "$f"
   ssh-keygen -q -t ed25519 -N "" -C w -f "$HOME/.ssh/id_ed25519_work"
@@ -95,7 +96,7 @@ teardown() { teardown_home; }
 @test "install dry run writes nothing" {
   mkdir -p "$HOME/.ssh"; ssh-keygen -q -t ed25519 -N "" -C p -f "$HOME/.ssh/id_ed25519_personal"
   DRY_RUN=1 run bash "$DOTFILES_DIR/$G/install.sh"
-  [[ "$output" == *"[dry]"* ]]; [ ! -f "$HOME/.config/git/allowed_signers" ]
+  [[ "$output" == *"[dry]"* ]]; [ ! -f "$HOME/.local/state/git/allowed_signers" ]
 }
 
 @test "a personal commit is ssh-signed and verifies locally" {
@@ -113,7 +114,7 @@ teardown() { teardown_home; }
   ssh-keygen -q -t ed25519 -N "" -C w -f "$HOME/.ssh/id_ed25519_work"
   bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
   run bash "$DOTFILES_DIR/$G/doctor.sh"; [ "$status" -eq 0 ]
-  echo "x y z" >> "$HOME/.config/git/allowed_signers"
+  echo "x y z" >> "$HOME/.local/state/git/allowed_signers"
   run bash "$DOTFILES_DIR/$G/doctor.sh"; [ "$status" -ne 0 ]; [[ "$output" == *"allowed_signers"* ]]
 }
 
