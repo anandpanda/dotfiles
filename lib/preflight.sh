@@ -6,7 +6,7 @@ preflight_run() {
   local d name list
   list="$(cat)" # slurp first: scripts below must see the real stdin, not this list
   while IFS= read -r d <&3; do
-    [ -n "$d" ] && [ -f "$d/preflight.sh" ] || continue
+    if [ -z "$d" ] || [ ! -f "$d/preflight.sh" ]; then continue; fi
     name="$(basename "$d")"
     log_info "preflight: $name"
     DOTFILES_DIR="$DOTFILES_DIR" HOME="$HOME" DRY_RUN="${DRY_RUN:-0}" \

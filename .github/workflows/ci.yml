@@ -18,6 +18,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: ./install.sh personal
+      # No terminal in CI, so run the two commands the zsh preflight prints.
+      - run: |
+          z="$(dirname "$(dirname "$(command -v brew || echo /home/linuxbrew/.linuxbrew/bin/brew)")")/bin/zsh"
+          [ -x "$z" ] || z="$(ls /opt/homebrew/bin/zsh /home/linuxbrew/.linuxbrew/bin/zsh 2>/dev/null | head -1)"
+          grep -qxF "$z" /etc/shells || echo "$z" | sudo tee -a /etc/shells
+          sudo chsh -s "$z" "$USER"
       - shell: bash -euo pipefail {0}
         run: ./install.sh personal | tee second.log && ! grep -E '^(link|backup|mkdir|prepend|set) ' second.log
       - run: ./doctor.sh

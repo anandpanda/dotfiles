@@ -22,7 +22,7 @@ module_config_owner() { # NAME MODULE_DIR
   _in_overlay "$2" || return 1
   public="$(modules_root)/$1/config"
   owner="$(readlink "$HOME/.config/$1" 2>/dev/null || true)"
-  [ -n "$owner" ] && [ "$owner" = "$public" ] && [ -d "$owner" ] || return 1
+  if [ -z "$owner" ] || [ "$owner" != "$public" ] || [ ! -d "$owner" ]; then return 1; fi
   echo "$owner"
 }
 
