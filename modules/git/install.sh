@@ -13,7 +13,7 @@ for id in "$cfg"/identity.*; do
   email="$(git config --file "$id" user.email || true)"
   key="$(git config --file "$id" user.signingkey || true)"
   key="${key/#\~/$HOME}"
-  [ -n "$email" ] && [ -n "$key" ] && [ -f "$key" ] || continue
+  if [ -z "$email" ] || [ -z "$key" ] || [ ! -f "$key" ]; then continue; fi
   want="${want}${email} namespaces=\"git\" $(cut -d' ' -f1,2 "$key")"$'\n'
 done
 if [ -f "$out" ] && [ "$(cat "$out")" = "${want%$'\n'}" ]; then

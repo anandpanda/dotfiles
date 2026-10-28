@@ -107,9 +107,9 @@ teardown() { teardown_home; }
   [[ "$output" == *"Good \"git\" signature"* ]]
 }
 
-@test "doctor reports a missing signing key and a stale allowed_signers" {
+@test "doctor warns on a missing signing key and fails on a stale allowed_signers" {
   run bash "$DOTFILES_DIR/$G/doctor.sh"
-  [ "$status" -ne 0 ]; [[ "$output" == *"signing key"*"id_ed25519_personal.pub"* ]]
+  [ "$status" -eq 0 ]; [[ "$output" == *"signing key missing"*"id_ed25519_personal.pub"* ]]
   mkdir -p "$HOME/.ssh"; ssh-keygen -q -t ed25519 -N "" -C p -f "$HOME/.ssh/id_ed25519_personal"
   ssh-keygen -q -t ed25519 -N "" -C w -f "$HOME/.ssh/id_ed25519_work"
   bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
