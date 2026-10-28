@@ -2,4 +2,5 @@
 modules = [
   "workspace", "secrets", "git", "ssh", "macos",
   "fonts", "cli", "zsh", "starship", "atuin", "tmux", "ghostty",
+  "vscode",
 ]

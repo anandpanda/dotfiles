@@ -47,7 +47,7 @@ extensions.
 ```
 modules/vscode/
 ├── Brewfile              # cask "visual-studio-code", args: { adopt: true }
-├── config/               # NOT linked as a dir: VS Code's user dir differs per OS
+├── files/                # not `config/`: the installer would link that whole dir: VS Code's user dir differs per OS
 │   ├── settings.json
 │   ├── keybindings.json
 │   ├── tasks.json

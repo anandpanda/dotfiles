@@ -17,8 +17,8 @@ check() { # SRC DST
     rc=1
   fi
 }
-for f in settings.json keybindings.json tasks.json; do check "$here/config/$f" "$udir/$f"; done
-for f in "$here"/config/snippets/*.json; do check "$f" "$udir/snippets/$(basename "$f")"; done
+for f in settings.json keybindings.json tasks.json; do check "$here/files/$f" "$udir/$f"; done
+for f in "$here"/files/snippets/*.json; do check "$f" "$udir/snippets/$(basename "$f")"; done
 
 if command -v code >/dev/null 2>&1; then
   wanted="$(vscode_wanted)"

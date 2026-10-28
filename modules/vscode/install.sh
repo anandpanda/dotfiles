@@ -27,8 +27,8 @@ if [ "${DRY_RUN:-0}" = 1 ]; then
 else
   mkdir -p "$udir/snippets"
 fi
-for f in settings.json keybindings.json tasks.json; do link_file "$here/config/$f" "$udir/$f"; done
-for f in "$here"/config/snippets/*.json; do link_file "$f" "$udir/snippets/$(basename "$f")"; done
+for f in settings.json keybindings.json tasks.json; do link_file "$here/files/$f" "$udir/$f"; done
+for f in "$here"/files/snippets/*.json; do link_file "$f" "$udir/snippets/$(basename "$f")"; done
 
 # Extensions: ours plus the overlay's, minus what is already installed.
 if ! command -v code >/dev/null 2>&1; then

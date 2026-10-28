@@ -21,16 +21,16 @@ teardown() { teardown_home; }
 }
 
 @test "config files are valid jsonc" {
-  for f in settings.json keybindings.json tasks.json snippets/cpp.json; do jsonc_valid "$V/config/$f"; done
+  for f in settings.json keybindings.json tasks.json snippets/cpp.json; do jsonc_valid "$V/files/$f"; done
   echo '{ bad' > "$HOME/bad.json"; ! jsonc_valid "$HOME/bad.json"
 }
 
 @test "settings pin theme, font, format on save and ruff" {
-  grep -q '"workbench.colorTheme": "Catppuccin Mocha"' "$V/config/settings.json"
-  grep -q 'JetBrainsMono Nerd Font' "$V/config/settings.json"
-  grep -q '"editor.formatOnSave": true' "$V/config/settings.json"
-  grep -q 'charliermarsh.ruff' "$V/config/settings.json"
-  grep -q '"editor.linkedEditing": true' "$V/config/settings.json"
+  grep -q '"workbench.colorTheme": "Catppuccin Mocha"' "$V/files/settings.json"
+  grep -q 'JetBrainsMono Nerd Font' "$V/files/settings.json"
+  grep -q '"editor.formatOnSave": true' "$V/files/settings.json"
+  grep -q 'charliermarsh.ruff' "$V/files/settings.json"
+  grep -q '"editor.linkedEditing": true' "$V/files/settings.json"
 }
 
 # ---- install.sh with a fake `code` ----

@@ -43,9 +43,29 @@ emacs keys, modern aliases, XDG layout, Homebrew zsh login shell), Starship
 (two lines, ssh-only hostname), atuin (Ctrl-R only, sync off), tmux (Ctrl-a,
 pinned plugins, resurrect+continuum), CLI stack, fonts.
 
+## Done: Phase 3, VS Code (branch `v2`)
+
+Spec `docs/specs/03-vscode.md`, plan `docs/plans/03-vscode.md`. Module `vscode`:
+settings, default keybindings, a C++ build-and-run task (Cmd-Shift-B), a `cp`
+contest snippet, 34 extensions in `extensions.txt` installed idempotently
+(plus the overlay's), per-OS user dir linking, doctor reports missing and
+extra extensions, `dots vscode-prune` removes extras. Foundation gained
+module `doctor.sh` hooks. Settings Sync stays off. Cask adopts the
+hand-installed app.
+
+Dropped from the old 70: vscode-icons, material-icon-theme, material-theme,
+dark-plus-black, black-formatter, isort, gitblame, auto-import, autoimport,
+auto-rename-tag, es7 snippets, ejs, mikestead.dotenv, docker pack/explorer/
+vscode-docker, code-runner, live-server x2, jupyter x5, codespaces, remotehub,
+azure-repos, remote-repositories, remote-server, codex-audio, codesnap,
+gitignore, json-parse-stringify, pdf, sqlite-viewer, autodocstring,
+vscode-python-envs, cpptools-themes, cmake, cmake-tools. Kept C++ and the
+Competitive Programming Helper for Codeforces.
+
 ## Pending for Anand
 
-- tmux plugins: start `tmux`, press Ctrl-a then Shift-i once.
+- `dots vscode-prune` once to remove the old extensions (Coder remote returns
+  with the work overlay).
 - Create `~/.secrets/github_token` when needed (doctor reminds).
 - Work overlay: `just overlay-init ~/personal/dotfiles-work`, fill
   `modules/git/config/identity.work` (name, work email), push to a private
@@ -58,8 +78,7 @@ pinned plugins, resurrect+continuum), CLI stack, fonts.
 
 ## Next: phases in order
 
-(Phases 1 and 2 done. Use `dots <command>` from anywhere.)
-3. VS Code: settings, keybindings, extensions, snippets, theme as a module.
+(Phases 1, 2 and 3 done. Use `dots <command>` from anywhere.)
 4. Git and GitHub workflow: delta, signing, aliases, lazygit or similar, worktrees, PR flow.
 5. Runtimes and project tooling: mise, docker, direnv, language setups.
 6. Mac and Linux apps: window manager, launcher, clipboard, browser, notes, todo.
