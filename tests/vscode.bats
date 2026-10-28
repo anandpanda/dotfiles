@@ -189,3 +189,26 @@ FAKE
   run vscode_ext_list "$HOME/x.txt" "$HOME/y.txt"
   [ "$output" = $'a.b\nc.d' ]
 }
+
+@test "vscode-prune restores listed extensions that a pack uninstall took with it" {
+  fake_code; bash "$V/install.sh" >/dev/null
+  # Fake pack behaviour: uninstalling some.pack also drops ms-vscode.cpptools.
+  cat > "$HOME/bin/code" <<'FAKE'
+#!/usr/bin/env bash
+echo "$*" >> "$HOME/code.log"
+case "$1" in
+  --list-extensions) cat "$HOME/installed.txt" 2>/dev/null ;;
+  --install-extension) echo "$2" >> "$HOME/installed.txt" ;;
+  --uninstall-extension)
+    grep -vix "$2" "$HOME/installed.txt" > "$HOME/i.tmp" || true; mv "$HOME/i.tmp" "$HOME/installed.txt"
+    [ "$2" = some.pack ] && { grep -vix ms-vscode.cpptools "$HOME/installed.txt" > "$HOME/i.tmp" || true; mv "$HOME/i.tmp" "$HOME/installed.txt"; } ;;
+esac
+FAKE
+  echo "some.pack" >> "$HOME/installed.txt"
+  printf 'y\n' > "$HOME/tty"
+  DOTFILES_TTY="$HOME/tty" run bash "$DOTFILES_DIR/scripts/vscode-prune.sh"
+  [ "$status" -eq 0 ]
+  ! grep -qi "some.pack" "$HOME/installed.txt"
+  grep -qi "ms-vscode.cpptools" "$HOME/installed.txt"
+  [[ "$output" == *"restored ms-vscode.cpptools"* ]]
+}

@@ -23,7 +23,25 @@ case "$ans" in y | Y) ;; *)
   exit 0
   ;;
 esac
+uninstall_all() { # LIST
+  while IFS= read -r id; do
+    [ -n "$id" ] || continue
+    if "$code_bin" --uninstall-extension "$id" >/dev/null 2>&1; then echo "removed $id"; else log_warn "could not remove $id"; fi
+  done <<<"$1"
+}
+uninstall_all "$extras"
+# Uninstalling a pack takes its members with it, listed ones included: put those back.
+missing="$(comm -23 <(vscode_wanted) <(vscode_installed))"
 while IFS= read -r id; do
   [ -n "$id" ] || continue
-  if "$code_bin" --uninstall-extension "$id" >/dev/null 2>&1; then echo "removed $id"; else log_warn "could not remove $id"; fi
-done <<<"$extras"
+  if "$code_bin" --install-extension "$id" --force >/dev/null 2>&1; then echo "restored $id"; else log_warn "could not restore $id"; fi
+done <<<"$missing"
+# Pack members VS Code refused to remove in the first pass usually go on the second.
+extras="$(comm -13 <(vscode_wanted) <(vscode_installed))"
+[ -z "$extras" ] || uninstall_all "$extras"
+extras="$(comm -13 <(vscode_wanted) <(vscode_installed))"
+if [ -z "$extras" ]; then
+  echo "clean: installed extensions match the list"
+else
+  log_warn "still extra: $(echo "$extras" | tr '\n' ' ')"
+fi
