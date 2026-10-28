@@ -5,7 +5,7 @@ for f in log profile ssh; do
   source "$DOTFILES_DIR/lib/$f.sh"
 done
 profile="$(recall profile 2>/dev/null || echo "${DOTFILES_PROFILE:-personal}")"
-chmod 600 "$HOME/.ssh/config" 2>/dev/null || true
+ssh_ensure_include
 for ctx in $(ssh_contexts_for_profile "$profile"); do
   email="${DOTFILES_EMAIL_PERSONAL:-}"
   [ "$ctx" = work ] && email="${DOTFILES_EMAIL_WORK:-}"

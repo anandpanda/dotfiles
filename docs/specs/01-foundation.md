@@ -193,12 +193,14 @@ and `identity.work`. `config/identity.personal` holds name, email, and a
 from the overlay. Global ignore file. Committing outside `~/work` or
 `~/personal` fails by design.
 
-**ssh**: `home/.ssh/config` is a static file authored in this repo
-defining `github.com-personal` and `github.com-work` host aliases, each
-with `IdentitiesOnly yes` and `IdentityFile ~/.ssh/id_ed25519_<ctx>`.
-It only names key paths; the keys themselves are generated per machine
-by the guided setup and are never in any repo. Key names carry a
-context, not a company.
+**ssh**: `home/.ssh/conf.d/github.conf` is a static file authored in
+this repo defining `github.com-personal` and `github.com-work` host
+aliases, each with `IdentitiesOnly yes` and
+`IdentityFile ~/.ssh/id_ed25519_<ctx>`. `~/.ssh/config` itself is never
+replaced, because other tools (Coder, VS Code Remote) write into it;
+install prepends a single `Include ~/.ssh/conf.d/*.conf` line once.
+Keys are generated per machine by the guided setup and are never in any
+repo. Key names carry a context, not a company.
 
 **macos**: `module.toml` restricts to macOS. `install.sh` applies
 curated `defaults write` entries, each commented. Scope: keyboard repeat

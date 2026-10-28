@@ -48,3 +48,25 @@ ssh_ensure_key() {
     if ssh_test "$ctx"; then log_ok "github.com-$ctx authenticates"; else log_warn "github.com-$ctx does not authenticate yet"; fi
   fi
 }
+
+# Make ~/.ssh/config start with an Include of ~/.ssh/conf.d/*.conf.
+# Never replaces the file: other tools (Coder, VS Code Remote) write into it.
+ssh_ensure_include() {
+  local cfg="$HOME/.ssh/config" line='Include ~/.ssh/conf.d/*.conf' tmp
+  if [ -f "$cfg" ] && grep -qxF "$line" "$cfg"; then
+    printf 'skip %s include\n' "$cfg"
+    return 0
+  fi
+  if [ "${DRY_RUN:-0}" = 1 ]; then
+    log_dry "prepend '$line' to $cfg"
+    return 0
+  fi
+  mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
+  tmp="$(mktemp)"
+  {
+    printf '%s\n\n' "$line"
+    [ -f "$cfg" ] && cat "$cfg"
+  } >"$tmp"
+  mv "$tmp" "$cfg" && chmod 600 "$cfg"
+  printf 'prepend %s include\n' "$cfg"
+}

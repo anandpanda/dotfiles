@@ -32,3 +32,26 @@ teardown() { teardown_home; }
   DRY_RUN=1 run ssh_ensure_key personal a@b
   [[ "$output" == *"[dry]"* ]]
 }
+
+@test "ssh_ensure_include creates config with include when absent" {
+  ssh_ensure_include
+  [ "$(head -1 "$HOME/.ssh/config")" = "Include ~/.ssh/conf.d/*.conf" ]
+}
+
+@test "ssh_ensure_include prepends to existing config without losing content" {
+  mkdir -p "$HOME/.ssh"; printf 'Host coder.*\n  ProxyCommand x\n' > "$HOME/.ssh/config"
+  ssh_ensure_include
+  [ "$(head -1 "$HOME/.ssh/config")" = "Include ~/.ssh/conf.d/*.conf" ]
+  grep -q 'ProxyCommand x' "$HOME/.ssh/config"
+}
+
+@test "ssh_ensure_include is idempotent" {
+  ssh_ensure_include; ssh_ensure_include
+  [ "$(grep -c 'Include ~/.ssh/conf.d' "$HOME/.ssh/config")" = 1 ]
+}
+
+@test "ssh_ensure_include dry run touches nothing" {
+  DRY_RUN=1 run ssh_ensure_include
+  [[ "$output" == *"[dry]"* ]]
+  [ ! -e "$HOME/.ssh/config" ]
+}
