@@ -88,11 +88,12 @@ print(int(min(t) * 1000))')
 
 @test "aged completion dump is refreshed, not rebuilt every shell" {
   module_apply "$DOTFILES_DIR/$Z" >/dev/null
-  run env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" XDG_CACHE_HOME="$HOME/.cache" zsh -i -c 'echo ZSH_CACHE=$ZSH_CACHE'
-  echo "first run: $output"; ls -la "$HOME/.cache/zsh" 2>&1 || true
+  # Source .zshrc in a plain zsh: CI runners have no terminal for `zsh -i`.
+  r() { env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" XDG_CACHE_HOME="$HOME/.cache" zsh -c 'source "$ZDOTDIR/.zshrc"' 2>/dev/null || true; }
+  r
   d="$HOME/.cache/zsh/compdump"; [ -f "$d" ]
   touch -t 202001010000 "$d"
-  env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" XDG_CACHE_HOME="$HOME/.cache" zsh -i -c true 2>/dev/null
+  r
   [ "$(find "$d" -mmin -5 | wc -l | tr -d ' ')" = 1 ]
 }
 
