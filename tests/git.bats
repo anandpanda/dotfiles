@@ -2,8 +2,9 @@ load helper
 setup() {
   setup_home
   for f in log os link module; do source "$DOTFILES_DIR/lib/$f.sh"; done
-  module_apply "$DOTFILES_DIR/modules/git" >/dev/null
-  mkdir -p "$HOME/.config/git"
+  # Copy the module's config instead of linking it so the test never writes into the repo.
+  link_tree "$DOTFILES_DIR/modules/git/home" "$HOME" >/dev/null
+  mkdir -p "$HOME/.config/git"; cp "$DOTFILES_DIR"/modules/git/config/* "$HOME/.config/git/"
   printf '[user]\n  name = W\n  email = w@work\n' > "$HOME/.config/git/identity.work"
   mkdir -p "$HOME/work/r" "$HOME/personal/r" "$HOME/elsewhere/r"
   for d in work personal elsewhere; do git -C "$HOME/$d/r" init -q; done
