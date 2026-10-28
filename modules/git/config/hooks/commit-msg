@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+# Conventional Commits, enforced lightly: the first line must be
+#   type(scope)!: description   with type in the list below.
+# Merge, revert, fixup and squash messages pass untouched.
+msg="$(grep -v '^#' "$1" | sed '/./,$!d' | head -1)"
+case "$msg" in
+  "Merge "* | "Revert "* | "fixup! "* | "squash! "* | "amend! "*) exit 0 ;;
+esac
+if printf '%s' "$msg" | grep -qE '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\([^)]+\))?!?: .+'; then
+  exit 0
+fi
+cat >&2 <<MSG
+commit message must follow Conventional Commits:
+
+  type(scope): description
+
+  types: feat fix docs style refactor perf test build ci chore revert
+  e.g.   feat(auth): add TOTP login
+         fix: handle empty input
+
+got: ${msg:-<empty>}
+MSG
+exit 1

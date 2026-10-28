@@ -1,6 +1,7 @@
 [user]
     name = Your Name
     email = you@company.com
+    signingkey = ~/.ssh/id_ed25519_work.pub
 [url "git@github.com-work:"]
     insteadOf = git@github.com:
     insteadOf = https://github.com/

@@ -5,9 +5,87 @@
     path = ~/.config/git/identity.personal
 [includeIf "gitdir:~/work/"]
     path = ~/.config/git/identity.work
-[core]
-    excludesfile = ~/.config/git/ignore
-[init]
-    defaultBranch = main
 [user]
     useConfigOnly = true
+
+# ---- Defaults git keeps only for backward compatibility (Chacon, "how core devs configure git")
+[init]
+    defaultBranch = main
+[column]
+    ui = auto
+[branch]
+    sort = -committerdate
+[tag]
+    sort = version:refname
+[diff]
+    algorithm = histogram
+    colorMoved = plain
+    mnemonicPrefix = true
+    renames = true
+[push]
+    default = simple
+    autoSetupRemote = true
+    followTags = true
+[fetch]
+    prune = true
+    pruneTags = true
+    all = true
+[help]
+    autocorrect = prompt
+[commit]
+    verbose = true
+    gpgsign = true
+[tag]
+    gpgsign = true
+[rerere]
+    enabled = true
+    autoupdate = true
+[rebase]
+    autoSquash = true
+    autoStash = true
+    updateRefs = true
+[merge]
+    conflictstyle = zdiff3
+[pull]
+    rebase = true
+
+# ---- Pager: delta, Catppuccin Mocha
+[core]
+    excludesfile = ~/.config/git/ignore
+    hooksPath = ~/.config/git/hooks
+    pager = delta
+[interactive]
+    diffFilter = delta --color-only
+[include]
+    path = ~/.config/git/catppuccin.gitconfig
+[delta]
+    features = catppuccin-mocha
+    navigate = true
+    line-numbers = true
+    side-by-side = true
+    hyperlinks = true
+[difftool]
+    prompt = false
+[difftool "difftastic"]
+    cmd = difft "$LOCAL" "$REMOTE"
+
+# ---- Signing: SSH, key per identity (signingkey lives in each identity file)
+[gpg]
+    format = ssh
+[gpg "ssh"]
+    allowedSignersFile = ~/.config/git/allowed_signers
+
+[alias]
+    st = status -sb
+    co = checkout
+    sw = switch
+    br = branch
+    ci = commit
+    amend = commit --amend --no-edit
+    undo = reset --soft HEAD~1
+    wip = !git add -A && git commit -m "wip"
+    lg = log --graph --oneline --decorate -20
+    lga = log --graph --oneline --decorate --all -40
+    pushf = push --force-with-lease
+    dft = difftool --tool=difftastic
+    rank = shortlog -sn --no-merges

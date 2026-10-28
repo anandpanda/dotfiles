@@ -1,0 +1,3 @@
+brew "git"
+brew "git-delta"   # pager
+brew "difftastic"  # structural diff, `git dft`

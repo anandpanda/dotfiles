@@ -1,0 +1,1 @@
+- git signing: on GitHub, Settings > SSH and GPG keys > New SSH key, type "Signing Key", paste ~/.ssh/id_ed25519_personal.pub (and the work key on the work account). Commits then show "Verified".
