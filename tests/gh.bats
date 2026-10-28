@@ -103,13 +103,6 @@ FAKE
   ! grep -q "auth switch" "$HOME/gh.log"
 }
 
-@test "preflight records an already logged-in account without asking" {
-  echo "me-personal" > "$HOME/active"
-  DOTFILES_PROFILE=personal run bash "$DOTFILES_DIR/$GH/preflight.sh"
-  [ "$status" -eq 0 ]; [ "$(cat "$HOME/.config/dotfiles/gh_personal")" = "me-personal" ]
-  [[ "$output" != *"gh auth login"* ]]
-}
-
 @test "preflight refuses to remember the work account as the same user as personal" {
   mkdir -p "$HOME/.config/dotfiles"; echo me-personal > "$HOME/.config/dotfiles/gh_personal"
   echo "me-personal" > "$HOME/next-login"; printf 'y\n' > "$HOME/tty"
@@ -125,4 +118,34 @@ FAKE
   chmod +x "$HOME/bin/gh"
   run bash "$DOTFILES_DIR/$GH/install.sh"
   [[ "$output" == *"could not set"* ]]
+}
+
+@test "preflight never guesses: with accounts logged in it asks which is personal, and remembers the pick" {
+  cat > "$HOME/bin/gh" <<'FAKE'
+#!/usr/bin/env bash
+case "$1 $2" in
+  "auth status") printf '  ✓ Logged in to github.com account work-acct (keyring)\n  - Active account: true\n  ✓ Logged in to github.com account me-personal (keyring)\n  - Active account: false\n' ;;
+esac
+FAKE
+  chmod +x "$HOME/bin/gh"
+  # Without a terminal: nothing recorded, instructions printed.
+  DOTFILES_PROFILE=personal run bash "$DOTFILES_DIR/$GH/preflight.sh"
+  [ "$status" -eq 0 ]; [ ! -f "$HOME/.config/dotfiles/gh_personal" ]; [[ "$output" == *"which"* ]]
+  # With a terminal: pick the second one by number.
+  printf '2\n' > "$HOME/tty"
+  DOTFILES_TTY="$HOME/tty" DOTFILES_PROFILE=personal run bash "$DOTFILES_DIR/$GH/preflight.sh"
+  [ "$status" -eq 0 ]; [ "$(cat "$HOME/.config/dotfiles/gh_personal")" = me-personal ]
+  # Work profile: the remaining account is offered first; picking it records work.
+  printf '1\n' > "$HOME/tty"
+  DOTFILES_TTY="$HOME/tty" DOTFILES_PROFILE=work run bash "$DOTFILES_DIR/$GH/preflight.sh"
+  [ "$status" -eq 0 ]; [ "$(cat "$HOME/.config/dotfiles/gh_work")" = work-acct ]
+}
+
+@test "preflight with one account logged in still asks before recording it" {
+  echo "only-one" > "$HOME/active"
+  DOTFILES_PROFILE=personal run bash "$DOTFILES_DIR/$GH/preflight.sh"
+  [ ! -f "$HOME/.config/dotfiles/gh_personal" ]
+  printf '1\n' > "$HOME/tty"
+  DOTFILES_TTY="$HOME/tty" DOTFILES_PROFILE=personal run bash "$DOTFILES_DIR/$GH/preflight.sh"
+  [ "$(cat "$HOME/.config/dotfiles/gh_personal")" = only-one ]
 }

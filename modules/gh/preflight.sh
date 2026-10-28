@@ -24,17 +24,42 @@ for ctx in $ctxs; do
     log_ok "gh $ctx account: $acct"
     continue
   fi
-  # Already logged in and not claimed by the other context: just record it.
   other="personal"
   [ "$ctx" = personal ] && other="work"
   taken="$(recall "gh_$other" 2>/dev/null || true)"
+  # Accounts already logged in and not claimed by the other context. Never guess which
+  # is which (a lone work login must not become "personal"): ask, or print and move on.
+  candidates=""
   for a in $(logged_in); do
-    if [ "$a" != "$taken" ]; then
-      remember "gh_$ctx" "$a"
-      log_ok "gh $ctx account: $a (already logged in)"
-      continue 2
-    fi
+    [ "$a" != "$taken" ] && candidates="$candidates $a"
   done
+  if [ -n "$candidates" ]; then
+    if [ "${DRY_RUN:-0}" = 1 ] || ! is_tty; then
+      echo "gh: logged in:$candidates. Rerun install in a terminal to say which is your $ctx account."
+      continue
+    fi
+    i=0
+    for a in $candidates; do
+      i=$((i + 1))
+      echo "  $i) $a" >&2
+    done
+    echo "  0) none of these, log in another account" >&2
+    pick=""
+    ask "Which is your $ctx GitHub account? [1-$i, 0] " pick
+    if [ "$pick" != 0 ] && [ -n "$pick" ]; then
+      j=0
+      for a in $candidates; do
+        j=$((j + 1))
+        if [ "$j" = "$pick" ]; then
+          remember "gh_$ctx" "$a"
+          log_ok "gh $ctx account: $a"
+          continue 2
+        fi
+      done
+      log_warn "gh $ctx: no such choice; rerun install"
+      continue
+    fi
+  fi
   if [ "${DRY_RUN:-0}" = 1 ] || ! is_tty; then
     echo "gh: log in your $ctx GitHub account, then rerun install:"
     echo "  gh auth login -h github.com -p ssh"
