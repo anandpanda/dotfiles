@@ -118,6 +118,25 @@ if [ "${DOTFILES_SKIP_BREW:-0}" != 1 ] && command -v brew >/dev/null; then
   if [ -n "$missing" ]; then problem "brew missing: $(echo "$missing" | tr '\n' ' ')"; else log_ok "brew"; fi
 fi
 
+# Login shell (only when the zsh module is enabled)
+case "$managed_names" in *" zsh "*)
+  want=""
+  for p in /opt/homebrew/bin/zsh /usr/local/bin/zsh /home/linuxbrew/.linuxbrew/bin/zsh; do
+    [ -x "$p" ] && want="$p" && break
+  done
+  if [ "$(uname -s)" = Darwin ]; then
+    cur="$(dscl . -read "/Users/$(id -un)" UserShell 2>/dev/null | awk '{print $2}')"
+  else
+    cur="$(getent passwd "$(id -un)" | cut -d: -f7)"
+  fi
+  if [ -z "$want" ]; then
+    problem "homebrew zsh not installed"
+  elif [ "$cur" != "$want" ]; then
+    problem "login shell is $cur, want $want (rerun install)"
+  else log_ok "login shell $want"; fi
+  ;;
+esac
+
 # Secrets
 missing="$(secrets_missing)"
 if [ -n "$missing" ]; then

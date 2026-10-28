@@ -1,0 +1,2 @@
+brew "zsh"       # newer than the OS one; becomes the login shell
+brew "antidote"  # plugin manager, static mode

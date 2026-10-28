@@ -1,0 +1,1 @@
+- zsh: open a new terminal window so the new login shell and config take effect.
