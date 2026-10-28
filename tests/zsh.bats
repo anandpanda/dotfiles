@@ -91,14 +91,12 @@ print(int(min(t) * 1000))')
   # Plain zsh (CI has no terminal), stdin closed, and an insecure dir on fpath like CI
   # runners have: compinit must not stop to ask about it.
   mkdir -p "$HOME/insecure"; chmod 777 "$HOME/insecure"
-  r() { env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" XDG_CACHE_HOME="$HOME/.cache" FPATH="$HOME/insecure:${FPATH:-}" zsh -c 'source "$ZDOTDIR/.zshrc"' </dev/null 2>"$HOME/err" || true; }
+  # FPATH replaces zsh's whole function path when set, so keep zsh's own dirs on it.
+  zfpath="$(zsh -c 'print -r -- ${(j.:.)fpath}')"
+  r() { env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" XDG_CACHE_HOME="$HOME/.cache" FPATH="$HOME/insecure:$zfpath" zsh -c 'source "$ZDOTDIR/.zshrc"' </dev/null 2>"$HOME/err" || true; }
   r
   d="$HOME/.cache/zsh/compdump"
-  if [ ! -f "$d" ]; then
-    echo "--- stderr"; cat "$HOME/err"; echo "--- cache"; ls -la "$HOME/.cache/zsh" 2>&1
-    echo "--- trace"; env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" XDG_CACHE_HOME="$HOME/.cache" zsh -x -c 'source "$ZDOTDIR/.zshrc"' </dev/null 2>&1 | grep -iE "compinit|compdump|_dotfiles_compinit|zsh:" | tail -15
-  fi
-  [ -f "$d" ]
+  [ -f "$d" ] || { cat "$HOME/err"; false; }
   touch -t 202001010000 "$d"
   r
   [ "$(find "$d" -mmin -5 | wc -l | tr -d ' ')" = 1 ]
