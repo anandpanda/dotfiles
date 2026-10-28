@@ -16,11 +16,8 @@ if command -v brew >/dev/null 2>&1; then
   while IFS= read -r f; do
     case "$f" in
       node | go | pyenv | poetry | direnv | python@*)
-        if [ -n "$(brew uses --installed "$f" 2>/dev/null)" ]; then
-          owned="$owned $f (dependency, leave it)"
-        else
-          owned="$owned $f"
-        fi
+        # A formula another formula depends on is plumbing, not a runtime of ours: ignore it.
+        [ -n "$(brew uses --installed "$f" 2>/dev/null)" ] || owned="$owned $f"
         ;;
     esac
   done < <(brew list --formula 2>/dev/null)

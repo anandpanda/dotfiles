@@ -80,6 +80,16 @@ two accounts switched by a wrapper per directory, worktree helpers gwt/gwtl/gwtr
 pushf = --force-with-lease --force-if-includes.
 Review: 0 critical, 7 important, 9 minor; all fixed, none deferred.
 
+## Done: Phase 5, runtimes (branch `v2`)
+
+Spec `docs/specs/05-runtimes.md`, plan `docs/plans/05-runtimes.md`. Modules:
+mise (node lts, python, go, uv, pnpm; per-project pinning via mise.toml or the
+idiomatic files; env and secrets via mise [env] / mise.local.toml; direnv
+dropped as unsupported alongside mise), docker (Docker Desktop on macOS, free
+tier covers small companies; engine via apt on Linux; lazydocker as `ld`).
+Homebrew no longer owns runtimes: direnv go node poetry pyenv python@3.12
+uninstalled; python@3.13/3.14 remain as dependencies of pre-commit/awscli/gcloud.
+
 ## Pending for Anand
 
 - Coder remote (work) returns with the work overlay; until then
@@ -99,7 +109,7 @@ Review: 0 critical, 7 important, 9 minor; all fixed, none deferred.
 
 ## Next: phases in order
 
-(Phases 1 to 4 done. Use `dots <command>` from anywhere.)
+(Phases 1 to 5 done. Use `dots <command>` from anywhere.)
 5. Runtimes and project tooling: mise, docker, direnv, language setups.
 6. Mac and Linux apps: window manager, launcher, clipboard, browser, notes, todo.
 7. Claude harness: CLAUDE.md layering, skills, agents, hooks, memory, statusline, plugins.

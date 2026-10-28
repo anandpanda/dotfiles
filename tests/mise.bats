@@ -63,7 +63,7 @@ FAKE
   run bash "$DOTFILES_DIR/$M/doctor.sh"
   [ "$status" -eq 0 ]
   [[ "$output" == *"brew-owned"*"node"* ]] && [[ "$output" == *"go"* ]] && [[ "$output" == *"pyenv"* ]] && [[ "$output" == *"python@3.14"* ]]
-  [[ "$output" == *"python@3.12 (dependency"* ]]
+  [[ "$output" != *"python@3.12"* ]]
   [[ "$output" != *"jq"* ]]
 }
 
