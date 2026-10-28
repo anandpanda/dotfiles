@@ -17,12 +17,13 @@ teardown() { teardown_home; }
   [ ! -e "$DOTFILES_DIR/$A/doctor.sh" ] # the root doctor already checks every Brewfile cask
 }
 
-fake_defaults() { # CURRENT-VALUE ("" = unset)
+fake_defaults() { # CURRENT-VALUE ("" = unset); export answers with a plist like the real one
   cat > "$HOME/bin/defaults" <<FAKE
 #!/usr/bin/env bash
 echo "\$*" >> "\$HOME/defaults.log"
 case "\$1" in
-  read) [ -n "$1" ] && echo "$1" || exit 1 ;;
+  export) printf '<?xml version="1.0" encoding="UTF-8"?>\\n<plist version="1.0"><dict>%s</dict></plist>\\n' \
+    "$([ -n "$1" ] && printf '<key>holdShortcut</key><string>%s</string>' "$1")" ;;
 esac
 FAKE
   chmod +x "$HOME/bin/defaults"
