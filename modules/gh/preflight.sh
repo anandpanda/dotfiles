@@ -13,7 +13,11 @@ command -v gh >/dev/null 2>&1 || {
 profile="${DOTFILES_PROFILE:-$(recall profile 2>/dev/null || echo personal)}"
 ctxs="personal"
 profile_has_overlay "$profile" 2>/dev/null && ctxs="personal work"
-active_account() { gh auth status 2>&1 | awk '/Logged in to github.com account/ {acct=$6} /Active account: true/ {print acct; exit}'; }
+# "✓ Logged in to github.com account NAME (keyring)" then "- Active account: true"; the
+# glyph shifts columns, so take the word after "account".
+active_account() {
+  gh auth status 2>&1 | awk '/Logged in to .* account / { for (i = 1; i < NF; i++) if ($i == "account") acct = $(i + 1) } /Active account: true/ { print acct; exit }'
+}
 for ctx in $ctxs; do
   if acct="$(recall "gh_$ctx" 2>/dev/null)" && [ -n "$acct" ]; then
     log_ok "gh $ctx account: $acct"
