@@ -51,9 +51,8 @@ the tool's own folder, and overlay modules get the same treatment for free.
 - `config/options.zsh`: history size, shared history off (atuin owns it),
   auto cd, correct, completion styling, keybinds (emacs mode, word moves).
 - `Brewfile`: zsh, antidote.
-- `install.sh`: if the login shell is not the brew zsh, print the exact
-  `chsh` command in `CHECKLIST.md` output rather than running it (needs a
-  password; left to Anand).
+- Login shell: Apple's `/bin/zsh` works fine. `CHECKLIST.md` notes the
+  optional `chsh` to Homebrew's newer zsh; never run by the installer.
 - Startup budget: under 80 ms measured with `zsh -i -c exit` timed ten
   times; antidote static mode and lazy loads keep it there. Measured in a
   test that runs only when zsh and antidote are present.
@@ -104,6 +103,16 @@ Order matters: fonts before ghostty; zsh before the modules that ship
 Catppuccin Mocha and JetBrains Mono Nerd Font appear in ghostty, starship,
 tmux, bat, btop, yazi. A later VS Code phase uses the same two. Changing
 either means editing those files; a theme switcher is out of scope.
+
+## Version policy
+
+Pin where a change can break the shell; float where it only brings fixes.
+
+- Homebrew packages float. `just update` upgrades them. Nothing is ever
+  downgraded or uninstalled by the installer.
+- zsh plugins (antidote) and tmux plugins (tpm) are pinned to exact commits
+  or tags in config. Upgrading one is a deliberate edit and commit.
+- Language runtimes are pinned per project with mise in phase 5.
 
 ## Out of scope
 
