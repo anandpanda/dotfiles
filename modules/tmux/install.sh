@@ -9,7 +9,7 @@ if [ "${DRY_RUN:-0}" = 1 ]; then
   exit 0
 fi
 if [ ! -d "$dir/.git" ]; then
-  git clone -q --branch "$tag" "$repo" "$dir"
+  git -c advice.detachedHead=false clone -q --branch "$tag" "$repo" "$dir"
   echo "installed tpm $tag"
   exit 0
 fi

@@ -67,10 +67,11 @@ if profile_has_overlay "$PROFILE"; then
 fi
 
 log_info "configuring"
-while IFS= read -r d; do
+# fd 3 so module hooks keep the real stdin
+while IFS= read -r d <&3; do
   [ -n "$d" ] || continue
   module_apply "$d" || die "module failed: $(basename "$d")"
-done <<<"$module_dirs"
+done 3<<<"$module_dirs"
 
 if profile_has_overlay "$PROFILE"; then
   overlay_apply "$OVERLAY_URL"

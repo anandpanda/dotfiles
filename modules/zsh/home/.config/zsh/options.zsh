@@ -1,7 +1,7 @@
 # Generated files never live in the repo: cache for rebuildable, state for history.
 export ZSH_CACHE="${XDG_CACHE_HOME:-$HOME/.cache}/zsh"
 export ZSH_STATE="${XDG_STATE_HOME:-$HOME/.local/state}/zsh"
-mkdir -p "$ZSH_CACHE" "$ZSH_STATE"
+[[ -d $ZSH_CACHE && -d $ZSH_STATE ]] || mkdir -p "$ZSH_CACHE" "$ZSH_STATE"
 
 # History: large, deduped, written as you go. atuin owns Ctrl-R search.
 HISTFILE="$ZSH_STATE/history"
@@ -32,3 +32,17 @@ bindkey '^[[3~' delete-char
 export EDITOR="code --wait"
 export VISUAL="$EDITOR"
 export LANG="${LANG:-en_US.UTF-8}"
+
+# zcache NAME CMD...: eval the output of CMD, cached in $ZSH_CACHE until the
+# binary behind it changes. Saves a process spawn per tool per shell.
+# Set ZCACHE_FILTER to a sed expression to post-process the output once at generation.
+zcache() {
+  local name="$1" bin="$2" out="$ZSH_CACHE/init-$1.zsh"
+  shift
+  local binpath="${commands[$bin]:-}"
+  if [[ -z $binpath ]]; then return 0; fi
+  if [[ ! -s $out || $binpath -nt $out ]]; then
+    "$@" 2>/dev/null | sed -e "${ZCACHE_FILTER:-}" >|"$out" || { command rm -f "$out"; return 1; }
+  fi
+  source "$out"
+}

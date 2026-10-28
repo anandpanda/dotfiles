@@ -10,5 +10,5 @@ export FZF_CTRL_T_OPTS="--preview 'bat -n --color=always {}'"
 export FZF_ALT_C_OPTS="--preview 'eza --tree --color=always {} | head -200'"
 export BAT_THEME="Catppuccin Mocha"
 export EZA_ICONS_AUTO=1
-(( $+commands[fzf] )) && source <(fzf --zsh)
-(( $+commands[zoxide] )) && eval "$(zoxide init zsh)"
+zcache fzf fzf --zsh
+zcache zoxide zoxide init zsh

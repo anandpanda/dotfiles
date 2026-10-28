@@ -57,10 +57,10 @@ overlay_apply() {
     brewfiles="$(printf '%s' "$dirs" | module_brewfiles_stdin)"
     [ -z "$brewfiles" ] || brew_bundle_stdin <<<"$brewfiles"
   fi
-  while IFS= read -r d; do
+  while IFS= read -r d <&3; do
     [ -n "$d" ] || continue
     module_apply "$d" || die "overlay module failed: $(basename "$d")"
-  done <<<"$dirs"
+  done 3<<<"$dirs"
   remember overlay "$url"
   log_ok "overlay applied"
 }

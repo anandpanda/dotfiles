@@ -6,7 +6,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: sudo apt-get update -qq && sudo apt-get install -y -qq shellcheck bats shfmt
-      - run: shellcheck install.sh doctor.sh bootstrap.sh lib/*.sh scripts/*.sh modules/*/install.sh
+      - run: shellcheck install.sh doctor.sh bootstrap.sh lib/*.sh scripts/*.sh modules/*/*.sh
       - run: shfmt -i 2 -ci -d install.sh doctor.sh bootstrap.sh lib scripts $(find modules -name '*.sh')
       - run: sudo apt-get install -y -qq zsh && for f in $(find modules -name '*.zsh'); do zsh -n "$f"; done
       - run: bats tests

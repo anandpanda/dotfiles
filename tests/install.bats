@@ -94,3 +94,12 @@ teardown() { teardown_home; }
   [[ "$output" == *"PREFLIGHT"*"INSTALL"* ]]
   [[ "$output" == *"anything that needs you"*"PREFLIGHT"* ]]
 }
+
+@test "a module install.sh that reads stdin does not swallow later modules" {
+  mkdir -p "$DOTFILES_MODULES/one" "$DOTFILES_MODULES/two"
+  printf 'modules = ["one", "two"]\n' > "$DOTFILES_PROFILES/t2.toml"
+  printf '#!/usr/bin/env bash\ncat >/dev/null; echo ONE\n' > "$DOTFILES_MODULES/one/install.sh"
+  printf '#!/usr/bin/env bash\necho TWO\n' > "$DOTFILES_MODULES/two/install.sh"
+  run "$DOTFILES_DIR/install.sh" t2
+  [[ "$output" == *"ONE"*"TWO"* ]]
+}

@@ -25,3 +25,9 @@ teardown() { teardown_home; }
   run bash -c "source '$DOTFILES_DIR/lib/log.sh'; source '$DOTFILES_DIR/lib/preflight.sh'; printf '%s\n' '$M/a' | preflight_run"
   [ "$status" -ne 0 ]
 }
+
+@test "a preflight that reads stdin does not swallow later modules" {
+  printf '#!/usr/bin/env bash\ncat >/dev/null; echo a >> "$HOME/log"\n' > "$M/a/preflight.sh"
+  printf '%s\n%s\n' "$M/a" "$M/b" | preflight_run
+  [ "$(cat "$HOME/log")" = $'a\nb' ]
+}
