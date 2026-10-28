@@ -62,3 +62,18 @@ teardown() { teardown_home; }
   run module_checklists "$M/a" "$M/b"
   [ "$output" = $'one\ntwo' ]
 }
+
+@test "config link to a foreign dir is replaced, not populated" {
+  mkdir -p "$M/tool/config" "$HOME/foreign"; echo x > "$M/tool/config/t"
+  mkdir -p "$HOME/.config"; ln -s "$HOME/foreign" "$HOME/.config/tool"
+  module_apply "$M/tool"
+  [ "$(readlink "$HOME/.config/tool")" = "$M/tool/config" ]
+  [ ! -e "$HOME/foreign/t" ]
+}
+
+@test "config link owned by another module of same name gets files laid inside" {
+  mkdir -p "$M/tool/config" "$HOME/other/tool/config"; echo x > "$M/tool/config/t"
+  mkdir -p "$HOME/.config"; ln -s "$HOME/other/tool/config" "$HOME/.config/tool"
+  module_apply "$M/tool"
+  [ "$(readlink "$HOME/.config/tool/t")" = "$M/tool/config/t" ]
+}

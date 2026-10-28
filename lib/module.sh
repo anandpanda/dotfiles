@@ -8,14 +8,23 @@ module_enabled_for_os() {
   [ -z "$want" ] || [ "$want" = "$(os_name)" ]
 }
 
+# If ~/.config/NAME is a symlink to some other module's config dir (…/NAME/config),
+# print that dir. Prints nothing for a correct link, a foreign link, or no link.
+module_config_owner() { # NAME OWN_CONFIG_DIR
+  local owner
+  owner="$(readlink "$HOME/.config/$1" 2>/dev/null || true)"
+  [ -n "$owner" ] && [ "$owner" != "$2" ] && [ -d "$owner" ] || return 1
+  [ "$(basename "$owner")" = config ] && [ "$(basename "$(dirname "$owner")")" = "$1" ] || return 1
+  echo "$owner"
+}
+
 module_apply() {
   local dir="$1" name
   name="$(basename "$dir")"
   log_info "module: $name"
   if [ -d "$dir/config" ]; then
     local target="$HOME/.config/$name" owner
-    owner="$(readlink "$target" 2>/dev/null || true)"
-    if [ -n "$owner" ] && [ "$owner" != "$dir/config" ] && [ -d "$owner" ]; then
+    if owner="$(module_config_owner "$name" "$dir/config")"; then
       # Another module owns this dir: lay our files inside it as individual links.
       link_tree "$dir/config" "$owner" || return 1
     else
