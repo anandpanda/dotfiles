@@ -151,7 +151,7 @@ FAKE
 
 @test "doctor lists /etc/paths.d entries whose directories do not exist" {
   printf '#!/usr/bin/env bash\ncase "$1" in doctor) echo "{\\"activated\\": true, \\"problems\\": []}";; esac\n' > "$HOME/bin/mise"; printf '#!/usr/bin/env bash\nexit 0\n' > "$HOME/bin/brew"; chmod +x "$HOME/bin/mise" "$HOME/bin/brew"
-  mkdir -p "$HOME/paths.d" "$HOME/exists"; echo "/does/not/exist/bin" > "$HOME/paths.d/10-stale"; echo "$HOME/exists" > "$HOME/paths.d/20-ok"
+  mkdir -p "$HOME/paths.d" "$HOME/exists"; echo "/does/not/exist/bin" > "$HOME/paths.d/10-stale"; echo "$HOME/exists" > "$HOME/paths.d/20-ok"; echo "/var/run/nope" > "$HOME/paths.d/10-cryptex"
   DOTFILES_PATHS_D="$HOME/paths.d" run bash "$DOTFILES_DIR/$M/doctor.sh"
-  [ "$status" -eq 0 ]; [[ "$output" == *"10-stale"*"/does/not/exist/bin"* ]]; [[ "$output" != *"20-ok"* ]]
+  [ "$status" -eq 0 ]; [[ "$output" == *"10-stale"*"/does/not/exist/bin"* ]]; [[ "$output" != *"20-ok"* ]]; [[ "$output" != *cryptex* ]]
 }

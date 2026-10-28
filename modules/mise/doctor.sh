@@ -35,6 +35,8 @@ pd="${DOTFILES_PATHS_D:-/etc/paths.d}"
 if [ -d "$pd" ]; then
   for f in "$pd"/*; do
     [ -f "$f" ] || continue
+    # Apple's own entries (cryptex) point at dirs that exist only while its tooling runs.
+    case "$(basename "$f")" in *cryptex*) continue ;; esac
     while IFS= read -r dir; do
       [ -n "$dir" ] && [ ! -d "$dir" ] && echo "warn: stale PATH entry $dir from $f (sudo rm $f)"
     done <"$f"
