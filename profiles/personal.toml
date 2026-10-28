@@ -1,0 +1,2 @@
+# Modules applied on every machine. Order matters: earlier first.
+modules = ["workspace", "secrets", "git", "ssh", "macos"]

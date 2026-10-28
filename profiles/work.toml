@@ -1,0 +1,3 @@
+# Everything in personal, plus the private overlay repo.
+extends = "personal"
+overlay = true
