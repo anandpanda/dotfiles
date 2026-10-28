@@ -32,3 +32,60 @@ teardown() { teardown_home; }
   grep -q 'charliermarsh.ruff' "$V/config/settings.json"
   grep -q '"editor.linkedEditing": true' "$V/config/settings.json"
 }
+
+# ---- install.sh with a fake `code` ----
+fake_code() {
+  mkdir -p "$HOME/bin"
+  cat > "$HOME/bin/code" <<'FAKE'
+#!/usr/bin/env bash
+echo "$*" >> "$HOME/code.log"
+case "$1" in
+  --list-extensions) cat "$HOME/installed.txt" 2>/dev/null ;;
+  --install-extension) echo "$2" >> "$HOME/installed.txt" ;;
+  --uninstall-extension) grep -vix "$2" "$HOME/installed.txt" > "$HOME/i.tmp" || true; mv "$HOME/i.tmp" "$HOME/installed.txt" ;;
+esac
+FAKE
+  chmod +x "$HOME/bin/code"; export PATH="$HOME/bin:$PATH"
+}
+
+@test "install creates the user dir and links config" {
+  fake_code
+  bash "$V/install.sh" >/dev/null
+  u="$(vscode_user_dir)"
+  [ -L "$u/settings.json" ] && [ -L "$u/keybindings.json" ] && [ -L "$u/tasks.json" ] && [ -L "$u/snippets/cpp.json" ]
+  [ ! -L "$u" ]
+}
+
+@test "install installs only missing extensions and is a no-op on rerun" {
+  fake_code; printf 'Catppuccin.catppuccin-vsc\neamodio.gitlens\n' > "$HOME/installed.txt"
+  run bash "$V/install.sh"
+  [[ "$output" == *"installed charliermarsh.ruff"* ]]
+  ! grep -qx "installed catppuccin.catppuccin-vsc" <<<"$output"
+  grep -qx "installed catppuccin.catppuccin-vsc-icons" <<<"$output"
+  n=$(grep -c "install-extension" "$HOME/code.log"); [ "$n" -ge 30 ]
+  : > "$HOME/code.log"
+  run bash "$V/install.sh"
+  [[ "$output" == *"skip extensions"* ]]
+  ! grep -q "install-extension" "$HOME/code.log"
+}
+
+@test "overlay extensions are installed too" {
+  fake_code; mkdir -p "$HOME/.dotfiles-work/modules/vscode"; echo "coder.coder-remote" > "$HOME/.dotfiles-work/modules/vscode/extensions.txt"
+  run bash "$V/install.sh"
+  [[ "$output" == *"installed coder.coder-remote"* ]]
+}
+
+@test "dry run links and installs nothing" {
+  fake_code
+  DRY_RUN=1 run bash "$V/install.sh"
+  [[ "$output" == *"[dry] link"* ]] && [[ "$output" == *"[dry] install extension"* ]]
+  [ ! -e "$(vscode_user_dir)/settings.json" ]
+  ! grep -q "install-extension" "$HOME/code.log"
+}
+
+@test "no code on PATH warns and exits 0" {
+  PATH="/usr/bin:/bin" run bash "$V/install.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"code"*"not"* ]]
+  [ -L "$(vscode_user_dir)/settings.json" ]
+}
