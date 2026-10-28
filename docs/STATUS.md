@@ -34,6 +34,9 @@ Spec `docs/specs/02-terminal.md`, plan `docs/plans/02-terminal.md`.
 Modules: fonts, cli, zsh, starship, atuin, tmux, ghostty. Foundation gained
 a preflight block (packages → questions → configure) and per-module
 `shell.zsh` hooks. Shell starts in ~65 ms, budget 80, tested.
+A fresh review found 21 items; all fixed, none deferred. Notable: grep/find
+are not aliased (rg -r means replace), plugin pins are enforced on existing
+clones, prompts read the terminal directly, generated files never touch the repo.
 Every config choice was walked through with Anand and closed:
 Ghostty (Mocha, JetBrains Mono NF 14, cmd-d splits), zsh (4 pinned plugins,
 emacs keys, modern aliases, XDG layout, Homebrew zsh login shell), Starship
@@ -42,8 +45,6 @@ pinned plugins, resurrect+continuum), CLI stack, fonts.
 
 ## Pending for Anand
 
-- Login shell switch needs a password: run `just install personal` in Ghostty
-  once and answer yes.
 - tmux plugins: start `tmux`, press Ctrl-a then Shift-i once.
 - Create `~/.secrets/github_token` when needed (doctor reminds).
 - Work overlay: `just overlay-init ~/personal/dotfiles-work`, fill
@@ -57,7 +58,7 @@ pinned plugins, resurrect+continuum), CLI stack, fonts.
 
 ## Next: phases in order
 
-(Phases 1 and 2 done.)
+(Phases 1 and 2 done. Use `dots <command>` from anywhere.)
 3. VS Code: settings, keybindings, extensions, snippets, theme as a module.
 4. Git and GitHub workflow: delta, signing, aliases, lazygit or similar, worktrees, PR flow.
 5. Runtimes and project tooling: mise, docker, direnv, language setups.
