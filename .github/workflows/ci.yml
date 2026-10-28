@@ -1,0 +1,22 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  lint-unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: sudo apt-get install -y -qq shellcheck bats
+      - run: curl -sS https://webi.sh/shfmt | sh && echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      - run: shellcheck install.sh doctor.sh bootstrap.sh lib/*.sh scripts/*.sh modules/*/install.sh
+      - run: shfmt -i 2 -ci -d install.sh doctor.sh bootstrap.sh lib scripts modules
+      - run: bats tests
+  install:
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./install.sh personal
+      - run: ./install.sh personal | tee second.log && ! grep -E '^(link|backup) ' second.log
+      - run: ./doctor.sh
