@@ -27,6 +27,8 @@ teardown() { teardown_home; }
   printf '#!/usr/bin/env bash\necho "apt-cache $*" >> "$HOME/cmd.log"; [ -n "${APT_HAS:-}" ] && echo "ghostty:" ; exit 0\n' > "$HOME/bin/apt-cache"
   printf '#!/usr/bin/env bash\necho "snap $*" >> "$HOME/cmd.log"\n' > "$HOME/bin/snap"
   chmod +x "$HOME/bin/"*
+  # The runner may have a real ghostty-less PATH but a real snap/apt: run the hook with only our fakes first on PATH.
+  export PATH="$HOME/bin:/usr/bin:/bin"
   APT_HAS=1 run bash "$DOTFILES_DIR/modules/ghostty/install.sh"; [ "$status" -eq 0 ]
   grep -q "apt-get install.*ghostty" "$HOME/cmd.log"; ! grep -q "^snap" "$HOME/cmd.log"
   : > "$HOME/cmd.log"

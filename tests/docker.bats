@@ -28,6 +28,8 @@ teardown() { teardown_home; }
 
 @test "install on linux sets up docker's apt repo once and adds the user to the group" {
   [ "$(os_name)" = linux ] || skip "linux only"
+  # Shadow everything the hook probes: the CI runner ships a real docker and sudo.
+  printf '#!/usr/bin/env bash\n[ "$1" = -nG ] && { echo users; exit 0; }\nexec /usr/bin/id "$@"\n' > "$HOME/bin/id"; chmod +x "$HOME/bin/id"
   printf '#!/usr/bin/env bash\nexit 1\n' > "$HOME/bin/docker"; chmod +x "$HOME/bin/docker"
   for c in sudo apt-get gpg curl usermod install tee; do printf '#!/usr/bin/env bash\necho "%s $*" >> "$HOME/cmd.log"\n[ "%s" = sudo ] && exec "$@"\nexit 0\n' "$c" "$c" > "$HOME/bin/$c"; chmod +x "$HOME/bin/$c"; done
   printf '#!/usr/bin/env bash\necho amd64\n' > "$HOME/bin/dpkg"; chmod +x "$HOME/bin/dpkg"
