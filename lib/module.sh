@@ -110,8 +110,14 @@ module_brewfiles_stdin() {
   while IFS= read -r d; do [ -n "$d" ] && [ -f "$d/Brewfile" ] && echo "$d/Brewfile"; done
   return 0
 }
+# CHECKLIST.md always; CHECKLIST.<os>.md only on that OS.
 module_checklists_stdin() {
-  local d
-  while IFS= read -r d; do [ -n "$d" ] && [ -f "$d/CHECKLIST.md" ] && cat "$d/CHECKLIST.md"; done
+  local d os
+  os="$(os_name)"
+  while IFS= read -r d; do
+    [ -n "$d" ] || continue
+    [ -f "$d/CHECKLIST.md" ] && cat "$d/CHECKLIST.md"
+    [ -f "$d/CHECKLIST.$os.md" ] && cat "$d/CHECKLIST.$os.md"
+  done
   return 0
 }

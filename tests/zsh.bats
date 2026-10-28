@@ -71,3 +71,9 @@ t.sort(); print(int(t[len(t)//2] * 1000))')
   echo "median ${avg}ms"
   [ "$avg" -lt 80 ]
 }
+
+@test "dots runs just against the dotfiles repo from anywhere" {
+  module_apply "$DOTFILES_DIR/$Z" >/dev/null
+  run env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" DOTFILES_DIR="$DOTFILES_DIR" zsh -i -c 'cd /; dots --list' 
+  [ "$status" -eq 0 ]; [[ "$output" == *doctor* ]]
+}

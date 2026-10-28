@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 # Everything that needs a human runs here, after packages and before any config changes.
-# Reads module dirs one per line on stdin; runs each preflight.sh in order.
+# Takes module dirs one per line as $1 (never stdin: the scripts must see the real terminal).
 
 preflight_run() {
-  local d name list
-  list="$(cat)" # slurp first: scripts below must see the real stdin, not this list
+  local list="$1" d name
   while IFS= read -r d <&3; do
     if [ -z "$d" ] || [ ! -f "$d/preflight.sh" ]; then continue; fi
     name="$(basename "$d")"

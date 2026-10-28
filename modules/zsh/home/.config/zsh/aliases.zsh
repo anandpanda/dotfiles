@@ -17,3 +17,6 @@ alias ..='cd ..'
 alias ...='cd ../..'
 alias reload='exec zsh'
 alias dot='cd "$DOTFILES_DIR"'
+
+# dots: run the dotfiles commands from anywhere (dots install, dots doctor, dots update ...)
+dots() { just --justfile "$DOTFILES_DIR/justfile" --working-directory "$DOTFILES_DIR" "$@"; }

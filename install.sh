@@ -61,7 +61,7 @@ if [ "${DOTFILES_SKIP_BREW:-0}" != 1 ]; then
 fi
 
 log_info "anything that needs you"
-printf '%s' "$module_dirs" | preflight_run || die "preflight failed"
+preflight_run "$module_dirs" || die "preflight failed"
 if profile_has_overlay "$PROFILE"; then
   OVERLAY_URL="$(overlay_resolve_url "$OVERLAY_URL")"
 fi

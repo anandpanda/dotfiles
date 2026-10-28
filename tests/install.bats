@@ -103,3 +103,10 @@ teardown() { teardown_home; }
   run "$DOTFILES_DIR/install.sh" t2
   [[ "$output" == *"ONE"*"TWO"* ]]
 }
+
+@test "preflight scripts see the caller's stdin, not the module list" {
+  mkdir -p "$DOTFILES_MODULES/one"
+  printf '#!/usr/bin/env bash\nread -r x; echo "GOT $x"\n' > "$DOTFILES_MODULES/one/preflight.sh"
+  run bash -c "echo hello | '$DOTFILES_DIR/install.sh' test"
+  [[ "$output" == *"GOT hello"* ]]
+}

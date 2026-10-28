@@ -123,3 +123,10 @@ teardown() { teardown_home; }
   [ "$(readlink "$HOME/.config/zsh/rc.d/tool.zsh")" = "$M/tool/shell.zsh" ]
   [ "$(readlink "$HOME/.config/zsh/rc.d/tool.overlay.zsh")" = "$HOME/.dotfiles-work/modules/tool/shell.zsh" ]
 }
+
+@test "os-specific checklist only prints on that os" {
+  mkdir -p "$M/a"; echo always > "$M/a/CHECKLIST.md"; echo mac > "$M/a/CHECKLIST.macos.md"; echo lin > "$M/a/CHECKLIST.linux.md"
+  run bash -c "source '$DOTFILES_DIR/lib/os.sh'; source '$DOTFILES_DIR/lib/module.sh'; echo '$M/a' | module_checklists_stdin"
+  [[ "$output" == *always* ]]
+  if [ "$(os_name)" = macos ]; then [[ "$output" == *mac* ]] && [[ "$output" != *lin* ]]; else [[ "$output" == *lin* ]] && [[ "$output" != *mac* ]]; fi
+}

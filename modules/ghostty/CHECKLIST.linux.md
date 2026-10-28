@@ -1,0 +1,1 @@
+- ghostty: install from https://ghostty.org/docs/install/binary for your distro.
