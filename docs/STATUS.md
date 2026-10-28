@@ -145,6 +145,10 @@ dir at the temp home; unit tests now also run on macOS in CI (bash 3.2).
      personal startup script on top of the shared one) is the right cut, keep
      only what he uses, and have the workspace run `dotfiles` with the `server`
      / `server-work` profile so terminal, git and zsh match the Mac.
+     Principle: a Coder workspace is only a bigger machine. The dev setup on it
+     is the same plain one a person uses locally (clone, mise runtimes, compose
+     for services, run and test the standard way), not the template's own
+     launch scripts.
 - GitHub: register ~/.ssh/id_ed25519_personal.pub as a *Signing Key* so
   commits show "Verified" (they already verify locally).
 - Old configs are in `~/.dotfiles-backup/`.
