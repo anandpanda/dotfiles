@@ -1,0 +1,3 @@
+# Client and compose from brew; the engine comes from Docker's apt repo (install.sh).
+brew "docker"
+brew "docker-compose"

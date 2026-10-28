@@ -11,6 +11,7 @@ install profile="personal" *args="":
 update:
     git -C "{{justfile_directory()}}" pull --ff-only
     brew update --quiet && brew upgrade --quiet
+    command -v mise >/dev/null && mise up --quiet || true
     ./install.sh
 
 # Read-only drift report

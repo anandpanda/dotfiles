@@ -1,0 +1,19 @@
+# Global mise config. Projects pin their own in mise.toml, .nvmrc, .python-version, go.mod.
+# Per-project env and secrets: mise.toml [env] / .env / mise.local.toml (see README).
+[tools]
+node = "lts"
+python = "latest"
+go = "latest"
+uv = "latest"
+pnpm = "latest"
+
+[settings]
+# Honour the files work repos already use.
+idiomatic_version_file_enable_tools = ["node", "python", "go"]
+# cd into a project that pins something not installed: install it instead of failing.
+not_found_auto_install = true
+experimental = false
+
+[settings.python]
+# uv creates and activates .venv automatically in projects with a pyproject.
+uv_venv_auto = true

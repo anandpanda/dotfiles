@@ -1,0 +1,1 @@
+- mise: open a new terminal so activation applies; once `mise which node python go` resolve, `dots doctor` lists Homebrew-owned runtimes to `brew uninstall`.

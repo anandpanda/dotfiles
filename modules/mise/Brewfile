@@ -1,0 +1,1 @@
+brew "mise"  # one version manager for every runtime; replaces nvm, pyenv, asdf, direnv

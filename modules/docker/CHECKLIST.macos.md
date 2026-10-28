@@ -1,0 +1,1 @@
+- docker: open Docker Desktop once, accept the terms, and let it finish starting before `docker ps`.

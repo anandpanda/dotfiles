@@ -1,0 +1,1 @@
+brew "lazydocker"  # terminal UI for containers: `ld`
