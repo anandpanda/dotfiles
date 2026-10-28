@@ -71,7 +71,7 @@ FAKE
   zsh -n "$DOTFILES_DIR/$GH/shell.zsh"
   mkdir -p "$HOME/work/w" "$HOME/other"
   run zsh -c "source '$DOTFILES_DIR/$GH/shell.zsh'; cd '$HOME/work/w'; gh pr list; cd '$HOME/other'; gh pr list; echo ok"
-  [ "$status" -eq 0 ]; [ "${lines[-1]}" = ok ]
+  [ "$status" -eq 0 ]; [[ "$output" == *ok ]]
   ! grep -q "auth switch" "$HOME/gh.log"
 }
 
