@@ -125,7 +125,9 @@ dir at the temp home; unit tests now also run on macOS in CI (bash 3.2).
 
 - Coder remote (work) returns with the work overlay; until then
   `code --install-extension coder.coder-remote` if needed.
-- Back up ~/.secrets/age.key in a password manager: it is the one key that opens secrets.yaml.
+- ~/.secrets/age.key has no off-device backup, by Anand's decision (2026-10-29):
+  if this Mac is lost, secrets.yaml is lost and its contents are re-collected.
+  Do not raise it again unless he asks.
 - Work overlay: done 2026-10-29. Private repo `anandpanda/dotfiles-work` on
   the personal account (it is Anand's config and follows him between jobs),
   checked out at ~/personal/dotfiles-work, applied from ~/.dotfiles-work.
