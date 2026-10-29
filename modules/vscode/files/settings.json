@@ -112,7 +112,7 @@
   // ---- Quiet
   "telemetry.telemetryLevel": "off",
   "update.mode": "default",
-  "extensions.autoUpdate": true,
+  "extensions.autoUpdate": "on",
   "workbench.tips.enabled": false,
   "security.workspace.trust.startupPrompt": "once",
   "cSpell.language": "en",
