@@ -33,13 +33,13 @@ FAKE
   grep -qE '^GITHUB_TOKEN ' "$DOTFILES_DIR/$S/manifest.txt"
 }
 
-@test "install creates the dir, generates the age key once, writes the sops config, and is idempotent" {
+@test "install creates the dir, generates the age key once, writes age.pub, and is idempotent" {
   fake_age_keygen
   run bash "$DOTFILES_DIR/$S/install.sh"; [ "$status" -eq 0 ]
   [ "$(stat -c %a "$HOME/.secrets" 2>/dev/null || stat -f %Lp "$HOME/.secrets")" = "700" ]
   [ -f "$HOME/.secrets/age.key" ]; [ "$(stat -c %a "$HOME/.secrets/age.key" 2>/dev/null || stat -f %Lp "$HOME/.secrets/age.key")" = "600" ]
   [[ "$output" == *"back it up"* ]]
-  grep -q "age: age1fakepublickey" "$HOME/.secrets/.sops.yaml"
+  [ "$(cat "$HOME/.secrets/age.pub")" = "age1fakepublickey" ]
   [[ "$output" == *"GITHUB_TOKEN"* ]]   # no secrets.yaml yet: every manifest key is missing
   run bash "$DOTFILES_DIR/$S/install.sh"; [ "$status" -eq 0 ]
   [[ "$output" == *"skip"*"age.key"* ]]; [[ "$output" != *"back it up"* ]]
@@ -48,11 +48,11 @@ FAKE
 @test "dry run creates nothing" {
   fake_age_keygen
   DRY_RUN=1 run bash "$DOTFILES_DIR/$S/install.sh"; [ "$status" -eq 0 ]
-  [ ! -e "$HOME/.secrets/age.key" ]; [ ! -e "$HOME/.secrets/.sops.yaml" ]
+  [ ! -e "$HOME/.secrets/age.key" ]; [ ! -e "$HOME/.secrets/age.pub" ]
 }
 
 @test "without age installed, install still creates the dir and says what to do" {
-  run bash "$DOTFILES_DIR/$S/install.sh"; [ "$status" -eq 0 ]
+  PATH="$HOME/bin:/usr/bin:/bin" run bash "$DOTFILES_DIR/$S/install.sh"; [ "$status" -eq 0 ]
   [ -d "$HOME/.secrets" ]; [[ "$output" == *"age not installed"* ]]
 }
 
@@ -64,9 +64,12 @@ FAKE
   [[ "$(secrets_missing)" == *"GITHUB_TOKEN"* ]]
 }
 
-@test "shell.zsh points sops at the key and parses" {
+@test "shell.zsh points sops at the key and the recipient, and parses" {
   zsh -n "$DOTFILES_DIR/$S/shell.zsh"
-  grep -q 'SOPS_AGE_KEY_FILE' "$DOTFILES_DIR/$S/shell.zsh"
-  run zsh -c "source '$DOTFILES_DIR/$S/shell.zsh'; print -r -- \$SOPS_AGE_KEY_FILE"
-  [ "$output" = "$HOME/.secrets/age.key" ]
+  mkdir -p "$HOME/.secrets"; echo age1fakepublickey > "$HOME/.secrets/age.pub"
+  run zsh -c "source '$DOTFILES_DIR/$S/shell.zsh'; print -r -- \$SOPS_AGE_KEY_FILE \$SOPS_AGE_RECIPIENTS"
+  [ "$output" = "$HOME/.secrets/age.key age1fakepublickey" ]
+  rm "$HOME/.secrets/age.pub"
+  run zsh -c "source '$DOTFILES_DIR/$S/shell.zsh'; print -r -- \${SOPS_AGE_RECIPIENTS:-unset}"
+  [ "$output" = "unset" ]
 }

@@ -3,8 +3,9 @@
 One file, `~/.secrets/secrets.yaml`, encrypted with sops + age. Key names are
 readable, values are ciphertext; on disk it leaks nothing. `~/.secrets/age.key`
 (generated on first install, mode 600) is the one secret that opens it: back it
-up in a password manager. `~/.secrets/.sops.yaml` makes `sops` encrypt to that
-key automatically. Nothing here is ever committed anywhere.
+up in a password manager. `age.pub` is its public half; the shell exports it as
+SOPS_AGE_RECIPIENTS so `sops` encrypts to it from any directory. Nothing here is
+ever committed anywhere.
 
     sops ~/.secrets/secrets.yaml                      # edit (decrypts in your editor, re-encrypts on save)
     with-secrets 'psql "$DEV_PG_URL" -c "select 1"'    # run with secrets as env vars

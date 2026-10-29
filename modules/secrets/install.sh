@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# ~/.secrets (700), an age key (600, generated once), a .sops.yaml that encrypts to it.
+# ~/.secrets (700), an age key (600, generated once), and its public half in age.pub
+# (the shell exports it as SOPS_AGE_RECIPIENTS, so sops encrypts to it from any directory).
 set -euo pipefail
 for f in log secrets; do
   # shellcheck disable=SC1090
   source "$DOTFILES_DIR/lib/$f.sh"
 done
-d="$(secrets_dir)"; key="$(secrets_age_key)"; cfg="$d/.sops.yaml"
+d="$(secrets_dir)"; key="$(secrets_age_key)"; pub="$d/age.pub"
 if [ -d "$d" ]; then
   echo "skip $d"
 elif [ "${DRY_RUN:-0}" = 1 ]; then
@@ -25,14 +26,13 @@ else
   echo "generated $key: the one secret that opens the rest, back it up in your password manager"
 fi
 if [ -f "$key" ] && command -v age-keygen >/dev/null 2>&1; then
-  pub="$(age-keygen -y "$key")"
-  want="$(printf 'creation_rules:\n  - path_regex: .*\n    age: %s\n' "$pub")"
-  if [ -f "$cfg" ] && [ "$(cat "$cfg")" = "$want" ]; then
-    echo "skip $cfg"
+  want="$(age-keygen -y "$key")"
+  if [ -f "$pub" ] && [ "$(cat "$pub")" = "$want" ]; then
+    echo "skip $pub"
   elif [ "${DRY_RUN:-0}" = 1 ]; then
-    echo "[dry] write $cfg"
+    echo "[dry] write $pub"
   else
-    printf '%s\n' "$want" >"$cfg" && echo "wrote $cfg (encrypts to your age key)"
+    printf '%s\n' "$want" >"$pub" && echo "wrote $pub (sops encrypts to it)"
   fi
 fi
 missing="$(secrets_missing)"
