@@ -3,9 +3,12 @@ G="modules/git"
 setup() {
   setup_home
   for f in log os link module; do source "$DOTFILES_DIR/lib/$f.sh"; done
-  # Copy the module config (not link) so tests never write into the repo.
+  # Copy the module config (not link) so tests never write into the repo. -L dereferences:
+  # identity.work in the repo is itself a link into the overlay checkout, and a plain
+  # copy of that link would let the write below land in the real overlay.
   link_tree "$DOTFILES_DIR/$G/home" "$HOME" >/dev/null
-  mkdir -p "$HOME/.config/git"; cp -R "$DOTFILES_DIR/$G/config/." "$HOME/.config/git/"
+  mkdir -p "$HOME/.config/git"; cp -RL "$DOTFILES_DIR/$G/config/." "$HOME/.config/git/"
+  [ ! -L "$HOME/.config/git/identity.work" ] || { echo "identity.work is still a link"; return 1; }
   export XDG_STATE_HOME="$HOME/.local/state"
   printf '[user]\n  name = W\n  email = w@work\n  signingkey = ~/.ssh/id_ed25519_work.pub\n' > "$HOME/.config/git/identity.work"
   mkdir -p "$HOME/work/r" "$HOME/personal/r" "$HOME/elsewhere/r"
