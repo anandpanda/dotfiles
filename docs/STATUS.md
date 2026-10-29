@@ -9,8 +9,9 @@ phase with Claude. Each phase: research options, pick with reasons, discuss,
 spec, plan, build with tests, review, install on this laptop.
 
 Working rules agreed with Anand:
-- Start from zero; nothing carried from the old repo. The old `main` branch is
-  the pre-revamp repo and will be replaced by `v2` when Anand says so.
+- Start from zero; nothing carried from the old repo. The revamp was built on
+  `v2` and replaced `main` on 2026-10-29; the pre-revamp history is the tag
+  `archive/old-main`. Work continues on `main`.
 - Every line readable and explainable. No dotfile manager.
 - Free and open source first. Paid tools mentioned in one line, never defaulted.
 - Public repo: no secrets, no company names, no overlay URL.
@@ -18,7 +19,7 @@ Working rules agreed with Anand:
 - Anand wants to learn, not just be handed results: explain the why.
 - Anand asked for concepts like paths, `~`, symlinks to be explained on the side.
 
-## Done: Phase 1, foundation (branch `v2`, CI green)
+## Done: Phase 1, foundation (CI green)
 
 Spec `docs/specs/01-foundation.md`, plan `docs/plans/01-foundation.md`.
 Modules: workspace, secrets, git, ssh, macos. `just install|update|doctor|lint|unit|test`.
@@ -28,7 +29,7 @@ Installed on this Mac with the `personal` profile. Repos moved: work code under
 All findings from the final review were fixed, including the minors.
 Nothing is deferred.
 
-## Done: Phase 2, terminal core (branch `v2`)
+## Done: Phase 2, terminal core
 
 Spec `docs/specs/02-terminal.md`, plan `docs/plans/02-terminal.md`.
 Modules: fonts, cli, zsh, starship, atuin, tmux, ghostty. Foundation gained
@@ -43,7 +44,7 @@ emacs keys, modern aliases, XDG layout, Homebrew zsh login shell), Starship
 (two lines, ssh-only hostname), atuin (Ctrl-R only, sync off), tmux (Ctrl-a,
 pinned plugins, resurrect+continuum), CLI stack, fonts.
 
-## Done: Phase 3, VS Code (branch `v2`)
+## Done: Phase 3, VS Code
 
 Spec `docs/specs/03-vscode.md`, plan `docs/plans/03-vscode.md`. Module `vscode`:
 settings, default keybindings, a C++ build-and-run task (Cmd-Shift-B), a `cp`
@@ -68,7 +69,7 @@ linked to ~/.local/include), 7 important, 9 minor; all fixed, none deferred.
 `claudeCode.allowDangerouslySkipPermissions` is on by Anand's choice.
 Doctor now reports uncommitted repo changes (VS Code writes through the links).
 
-## Done: Phase 4, git workflow (branch `v2`)
+## Done: Phase 4, git workflow
 
 Spec `docs/specs/04-git.md`, plan `docs/plans/04-git.md`. Modules: git (grown),
 lazygit, gh. Modern defaults (Chacon tiers 1-2 minus pruneTags/fetch.all),
@@ -80,7 +81,7 @@ two accounts switched by a wrapper per directory, worktree helpers gwt/gwtl/gwtr
 pushf = --force-with-lease --force-if-includes.
 Review: 0 critical, 7 important, 9 minor; all fixed, none deferred.
 
-## Done: Phase 5, runtimes (branch `v2`)
+## Done: Phase 5, runtimes
 
 Spec `docs/specs/05-runtimes.md`, plan `docs/plans/05-runtimes.md`. Modules:
 mise (node lts, python, go, uv, pnpm; per-project pinning via mise.toml or the
@@ -101,7 +102,7 @@ Hooks follow one rule: present → skip; sudo usable → act; else print the
 command and continue. `just test-server` installs the server profile as a user
 with no sudo.
 
-## Done: Phase 6, macOS desktop apps (branch `v2`)
+## Done: Phase 6, macOS desktop apps
 
 Spec `docs/specs/06-apps.md`, plan `docs/plans/06-apps.md`. Modules (both
 `os = "macos"`): apps (Brewfile: Raycast, Shottr, Ice, Stats, AltTab, todobar,
@@ -155,7 +156,6 @@ dir at the temp home; unit tests now also run on macOS in CI (bash 3.2).
 - Old configs are in `~/.dotfiles-backup/`.
 - `~/Documents/work/services` (5.4 GB of work checkouts with unpushed local
   branches) stays until Anand decides; nothing else from the clutter review is left.
-- Replace `main` with `v2` when ready.
 - After all phases: a hands-on end-to-end walkthrough of the whole setup so
   Anand can use every part of it (Anand asked for this explicitly).
 
