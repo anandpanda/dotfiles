@@ -14,4 +14,4 @@ git -C "$dest" add -A
 git -C "$dest" -c user.name=overlay-init -c user.email=overlay-init@localhost commit -qm "chore: overlay skeleton"
 echo "created $dest"
 echo "next: edit modules/git/config/identity.work, push to a private repo,"
-echo "      then: just install work <repo-url>"
+echo "      then: just install work --overlay <repo-url>"

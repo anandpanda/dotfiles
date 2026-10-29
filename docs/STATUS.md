@@ -127,7 +127,7 @@ dir at the temp home; unit tests now also run on macOS in CI (bash 3.2).
 - Create `~/.secrets/github_token` when needed (doctor reminds).
 - Work overlay: `just overlay-init ~/personal/dotfiles-work`, fill
   `modules/git/config/identity.work` (name, work email), push to a private
-  repo, then `just install work <url>` in a real terminal. Candidates found on
+  repo, then `just install work --overlay <url>` in a real terminal. Candidates found on
   this Mac for its Brewfile: formulae actionlint awscli bats-core docker-compose
   helm just kubectx kubernetes-cli libomp libpq pkgconf pre-commit shfmt temporal
   util-linux yq zizmor; casks gcloud-cli headlamp ngrok session-manager-plugin;
