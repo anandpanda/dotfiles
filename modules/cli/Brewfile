@@ -10,3 +10,8 @@ brew "dust"       # du
 brew "btop"       # top
 brew "jq"         # json
 brew "tealdeer"   # tldr pages
+# This repo's own tooling: `dots` is just; tests and lint need the other three.
+brew "just"
+brew "bats-core"
+brew "shellcheck"
+brew "shfmt"

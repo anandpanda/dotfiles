@@ -5,18 +5,9 @@ overlay_resolve_url() {
   local url="$1"
   [ -n "$url" ] || url="$(recall overlay || true)"
   if [ -z "$url" ] && is_tty; then
-    ask 'Private overlay repo url (git@github.com:org/repo.git): ' url
+    ask 'Private overlay repo url (git@github.com-personal:you/dotfiles-work.git): ' url
   fi
   echo "$url"
-}
-
-# Route GitHub urls through the work ssh alias so the work key is used.
-overlay_clone_url() {
-  case "$1" in
-    git@github.com:*) echo "git@github.com-work:${1#git@github.com:}" ;;
-    https://github.com/*) echo "git@github.com-work:${1#https://github.com/}" ;;
-    *) echo "$1" ;;
-  esac
 }
 
 overlay_ensure() {
@@ -31,7 +22,8 @@ overlay_ensure() {
     git -C "$dir" pull --ff-only -q
   else
     log_info "overlay clone"
-    git clone -q "$(overlay_clone_url "$url")" "$dir"
+    # The url is used as given: its ssh host alias (github.com-personal or -work) picks the key.
+    git clone -q "$url" "$dir"
   fi
 }
 

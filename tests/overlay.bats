@@ -51,10 +51,9 @@ teardown() { teardown_home; }
   [ ! -d "$HOME/.dotfiles-work" ]
 }
 
-@test "overlay_clone_url rewrites github urls to the work alias" {
-  [ "$(overlay_clone_url git@github.com:org/repo.git)" = "git@github.com-work:org/repo.git" ]
-  [ "$(overlay_clone_url https://github.com/org/repo.git)" = "git@github.com-work:org/repo.git" ]
-  [ "$(overlay_clone_url /local/path)" = "/local/path" ]
+@test "overlay url is cloned exactly as given: the ssh alias in it picks the key" {
+  ! grep -q "overlay_clone_url\|github.com-work" "$DOTFILES_DIR/lib/overlay.sh"
+  grep -q 'git clone -q "$url"' "$DOTFILES_DIR/lib/overlay.sh"
 }
 
 @test "overlay url prompt goes to stderr and reads from the terminal" {
@@ -70,4 +69,11 @@ teardown() { teardown_home; }
   git -C "$REMOTE" add -A; git -C "$REMOTE" -c user.name=t -c user.email=t@t commit -qm pf
   run overlay_apply "$REMOTE"
   [[ "$output" == *"OVERLAY-PREFLIGHT"* ]]
+}
+
+@test "overlay-init's own commit passes the Conventional Commits hook our git template installs" {
+  run env GIT_TEMPLATE_DIR="$DOTFILES_DIR/modules/git/config/template" "$DOTFILES_DIR/scripts/overlay-init.sh" "$HOME/ov"
+  [ "$status" -eq 0 ]
+  [ "$(git -C "$HOME/ov" log --format=%s -1)" = "chore: overlay skeleton" ]
+  [ -x "$HOME/ov/.git/hooks/commit-msg" ]
 }

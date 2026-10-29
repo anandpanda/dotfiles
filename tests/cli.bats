@@ -33,7 +33,7 @@ teardown() { teardown_home; }
 }
 
 @test "brewfile lists the stack" {
-  for t in eza bat ripgrep fd zoxide fzf git-delta yazi dust btop jq tealdeer; do
+  for t in eza bat ripgrep fd zoxide fzf git-delta yazi dust btop jq tealdeer just bats-core shellcheck shfmt; do
     grep -q "\"$t\"" "$DOTFILES_DIR/modules/cli/Brewfile"
   done
 }

@@ -120,7 +120,8 @@ Overlay flow, run after public modules when the profile has
 `overlay = true`:
 
 1. Use `--overlay` if given, else the remembered URL, else ask.
-2. Clone or pull via the `github.com-work` alias so the work key is used.
+2. Clone or pull the url as given; its ssh alias picks the key (the overlay is
+   Anand's own repo on his personal account, so `github.com-personal`).
 3. Apply overlay modules.
 
 The installer detects whether it is attached to a terminal. With no
