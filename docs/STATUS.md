@@ -125,14 +125,15 @@ dir at the temp home; unit tests now also run on macOS in CI (bash 3.2).
 - Coder remote (work) returns with the work overlay; until then
   `code --install-extension coder.coder-remote` if needed.
 - Create `~/.secrets/github_token` when needed (doctor reminds).
-- Work overlay: `just overlay-init ~/personal/dotfiles-work`, fill
-  `modules/git/config/identity.work` (name, work email), push to a private
-  repo, then `just install work --overlay <url>` in a real terminal. Candidates found on
-  this Mac for its Brewfile: formulae actionlint awscli bats-core docker-compose
-  helm just kubectx kubernetes-cli libomp libpq pkgconf pre-commit shfmt temporal
-  util-linux yq zizmor; casks gcloud-cli headlamp ngrok session-manager-plugin;
-  taps coder/coder (coder) and temporalio/brew (tcld), each declared with
-  `trusted: true` on the item like modules/apps does.
+- Work overlay: done 2026-10-29. Private repo `anandpanda/dotfiles-work` on
+  the personal account (it is Anand's config and follows him between jobs),
+  checked out at ~/personal/dotfiles-work, applied from ~/.dotfiles-work.
+  Modules: git identity.work (work-email@example.com, signs with ~/.ssh/id_ed25519_work,
+  the former id_ed25519_work key renamed), work-tools (coder, tcld, temporal,
+  kubectl, kubectx, helm, awscli, yq, libpq, pre-commit, actionlint, zizmor;
+  macOS casks gcloud-cli, headlamp, ngrok, session-manager-plugin), vscode
+  (coder.coder-remote), claude-work (~/work/CLAUDE.md slot for Phase 7).
+  `dots install work --overlay <url>` once; the url is remembered.
 - Ruling (work dev setup, when Anand asks for it): servers and services
   (Postgres, Redis, queues, anything that listens on a port) run in Docker,
   per project via compose; CLIs, runtimes (mise), and the editor stay local.
