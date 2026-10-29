@@ -201,3 +201,11 @@ teardown() { teardown_home; }
   bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
   grep -q custom "$HOME/work/old/.git/hooks/commit-msg"
 }
+
+@test "identity files rewrite every GitHub url form to the context's ssh alias" {
+  for f in "$DOTFILES_DIR/modules/git/config/identity.personal" "$DOTFILES_DIR/overlays/work.example/modules/git/config/identity.work"; do
+    for form in 'git@github.com:' 'https://github.com/' 'ssh://git@github.com/'; do
+      grep -qF "insteadOf = $form" "$f" || { echo "$f lacks $form"; false; }
+    done
+  done
+}
