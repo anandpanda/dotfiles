@@ -124,7 +124,8 @@ dir at the temp home; unit tests now also run on macOS in CI (bash 3.2).
 
 - Coder remote (work) returns with the work overlay; until then
   `code --install-extension coder.coder-remote` if needed.
-- Create `~/.secrets/github_token` when needed (doctor reminds).
+- Add GITHUB_TOKEN to ~/.secrets/secrets.yaml when needed (`sops ~/.secrets/secrets.yaml`; doctor reminds).
+- Back up ~/.secrets/age.key in a password manager: it is the one key that opens secrets.yaml.
 - Work overlay: done 2026-10-29. Private repo `anandpanda/dotfiles-work` on
   the personal account (it is Anand's config and follows him between jobs),
   checked out at ~/personal/dotfiles-work, applied from ~/.dotfiles-work.
@@ -163,6 +164,7 @@ dir at the temp home; unit tests now also run on macOS in CI (bash 3.2).
 
 (Phases 1 to 6 done. Use `dots <command>` from anywhere.)
 7. Claude harness: CLAUDE.md layering, skills, agents, hooks, memory, statusline, plugins.
+   Includes a hook that blocks reading or printing ~/.secrets values (use `with-secrets`).
 8. Learning layer: the parts of the harness that make Anand explain, review, go deep.
 
 Each phase adds modules and profile entries only; the foundation does not change.

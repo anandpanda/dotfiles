@@ -142,9 +142,11 @@ FAKE
 
 @test "secrets example in the README is the form mise accepts" {
   command -v mise >/dev/null || skip "mise missing"
-  mkdir -p "$HOME/.secrets" "$HOME/proj"; printf 'tok123\n' > "$HOME/.secrets/github_token"
+  mkdir -p "$HOME/.secrets" "$HOME/proj"
+  # A fake sops that answers the extract the README example makes; the real one would need the key.
+  printf '#!/bin/sh\n[ "$1 $2 $3" = "-d --extract [\\"GITHUB_TOKEN\\"]" ] && echo tok123\n' > "$HOME/bin/sops"; chmod +x "$HOME/bin/sops"
   sed -n '/^    \[env\]/,/^$/p' "$DOTFILES_DIR/$M/README.md" | sed 's/^    //' > "$HOME/proj/mise.toml"
-  grep -q "read_file" "$HOME/proj/mise.toml"
+  grep -q "sops -d --extract" "$HOME/proj/mise.toml"
   run env HOME="$HOME" MISE_GLOBAL_CONFIG_FILE="$DOTFILES_DIR/$M/config/config.toml" bash -c "cd '$HOME/proj' && mise trust -q . && mise env -s bash 2>&1"
   [ "$status" -eq 0 ]; [[ "$output" == *"GITHUB_TOKEN=tok123"* ]]
 }

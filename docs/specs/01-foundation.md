@@ -128,8 +128,9 @@ The installer detects whether it is attached to a terminal. With no
 terminal (CI), key generation and overlay are skipped with a warning
 instead of hanging. There is no flag for this.
 
-Secrets are never prompted. `~/.secrets/` is filled by hand and
-`doctor` reports what is missing.
+Secrets are never prompted. `~/.secrets/secrets.yaml` (one sops+age
+encrypted file, since Phase 6.5) is edited by hand with `sops`; `doctor`
+reports which manifest keys are missing.
 
 ## Installer behaviour
 
@@ -182,10 +183,12 @@ git and just, clones the repo to `~/.dotfiles`, and runs
 
 **workspace**: creates `~/work` and `~/personal`.
 
-**secrets**: creates `~/.secrets` mode 700. Ships `manifest.txt` listing
-expected secret file names with one-line purposes. `install.sh` warns
-for each missing one. `doctor` repeats the check. Nothing reads secrets
-globally; projects use `direnv` later.
+**secrets**: creates `~/.secrets` mode 700, generates an age key once
+(`age.key`, 600; `age.pub` exported as SOPS_AGE_RECIPIENTS), and expects one
+sops-encrypted `secrets.yaml`. Ships `manifest.txt` listing expected key names
+with one-line purposes; `install.sh` and `doctor` report missing keys through
+`sops` without printing values. `with-secrets <cmd>` runs a command with the
+secrets as env; projects read single keys through mise `exec()`.
 
 **git**: `home/.gitconfig` with no top-level user block and two
 `includeIf gitdir:` rules pointing at `~/.config/git/identity.personal`

@@ -12,11 +12,11 @@ project's tools without activating.
 edit the tracked config.toml: review and commit after.
 
 Per-project env lives in mise.toml `[env]`; `.env` via `_.file`; machine-only
-values in mise.local.toml (gitignored globally). Secrets stay in ~/.secrets and
-are read in, never pasted:
+values in mise.local.toml (gitignored globally). Secrets stay in the encrypted
+~/.secrets/secrets.yaml and are read in through sops, never pasted:
 
     [env]
-    GITHUB_TOKEN = "{{ read_file(path=env.HOME ~ '/.secrets/github_token') | trim }}"
+    GITHUB_TOKEN = '{{ exec(command="sops -d --extract [\\\"GITHUB_TOKEN\\\"] " ~ env.HOME ~ "/.secrets/secrets.yaml") | trim }}'
 
 Python: `uv init`, `uv add`, `uv run`; with a uv.lock the .venv is created and
 activated on cd. Node: pnpm.
