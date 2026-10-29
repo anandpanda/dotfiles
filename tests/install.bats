@@ -49,7 +49,7 @@ teardown() { teardown_home; }
   [ "$status" -eq 0 ]
   [ -d "$HOME/work" ] && [ -d "$HOME/personal" ]
   [ "$(stat -c %a "$HOME/.secrets" 2>/dev/null || stat -f %Lp "$HOME/.secrets")" = "700" ]
-  [[ "$output" == *"GITHUB_TOKEN"* ]]
+  [[ "$output" != *"missing secrets"* ]]
 }
 
 @test "non-tty skips guided steps" {

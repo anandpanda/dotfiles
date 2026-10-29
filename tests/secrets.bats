@@ -4,6 +4,8 @@ setup() {
   setup_home
   for f in log os link module secrets; do source "$DOTFILES_DIR/lib/$f.sh"; done
   mkdir -p "$HOME/bin"; export PATH="$HOME/bin:$PATH"
+  # The shipped manifest is empty; tests use their own.
+  export DOTFILES_SECRETS_MANIFEST="$HOME/manifest.txt"; printf 'GITHUB_TOKEN  for tests\n' > "$DOTFILES_SECRETS_MANIFEST"
 }
 teardown() { teardown_home; }
 
@@ -28,9 +30,11 @@ FAKE
   chmod +x "$HOME/bin/sops"
 }
 
-@test "secrets Brewfile installs age and sops; manifest lists key names" {
+@test "secrets Brewfile installs age and sops; the shipped manifest has no entries" {
   grep -q '^brew "age"' "$DOTFILES_DIR/$S/Brewfile"; grep -q '^brew "sops"' "$DOTFILES_DIR/$S/Brewfile"
-  grep -qE '^GITHUB_TOKEN ' "$DOTFILES_DIR/$S/manifest.txt"
+  ! grep -qvE '^(#|$)' "$DOTFILES_DIR/$S/manifest.txt"
+  DOTFILES_SECRETS_MANIFEST="$DOTFILES_DIR/$S/manifest.txt" run bash "$DOTFILES_DIR/$S/install.sh"
+  [[ "$output" != *"missing secrets"* ]]
 }
 
 @test "install creates the dir, generates the age key once, writes age.pub, and is idempotent" {

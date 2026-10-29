@@ -124,7 +124,6 @@ dir at the temp home; unit tests now also run on macOS in CI (bash 3.2).
 
 - Coder remote (work) returns with the work overlay; until then
   `code --install-extension coder.coder-remote` if needed.
-- Add GITHUB_TOKEN to ~/.secrets/secrets.yaml when needed (`sops ~/.secrets/secrets.yaml`; doctor reminds).
 - Back up ~/.secrets/age.key in a password manager: it is the one key that opens secrets.yaml.
 - Work overlay: done 2026-10-29. Private repo `anandpanda/dotfiles-work` on
   the personal account (it is Anand's config and follows him between jobs),

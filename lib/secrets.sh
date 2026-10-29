@@ -5,7 +5,7 @@
 secrets_dir() { echo "$HOME/.secrets"; }
 secrets_file() { echo "$(secrets_dir)/secrets.yaml"; }
 secrets_age_key() { echo "$(secrets_dir)/age.key"; }
-secrets_manifest() { echo "$DOTFILES_DIR/modules/secrets/manifest.txt"; }
+secrets_manifest() { echo "${DOTFILES_SECRETS_MANIFEST:-$DOTFILES_DIR/modules/secrets/manifest.txt}"; }
 
 # True when KEY exists in secrets.yaml. Decrypts in memory only; output discarded.
 secrets_has() {
