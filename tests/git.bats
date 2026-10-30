@@ -91,9 +91,11 @@ teardown() { teardown_home; }
   ssh-keygen -q -t ed25519 -N "" -C w -f "$HOME/.ssh/id_ed25519_work"
   bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
   [ "$(grep -c . "$f")" = 2 ]; grep -q "^w@work " "$f"
-  before="$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f")"; sleep 1
-  run bash "$DOTFILES_DIR/$G/install.sh"; [[ "$output" == *"skip"* ]]
-  [ "$(stat -f %m "$f" 2>/dev/null || stat -c %Y "$f")" = "$before" ]
+  touch -r "$f" "$BATS_TEST_TMPDIR/ref"; sleep 1
+  run bash "$DOTFILES_DIR/$G/install.sh"
+  [ "$status" -eq 0 ]
+  case "$output" in *skip*) ;; *) false ;; esac
+  [ ! "$f" -nt "$BATS_TEST_TMPDIR/ref" ]
 }
 
 @test "install dry run writes nothing" {
