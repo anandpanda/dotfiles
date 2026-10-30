@@ -186,7 +186,7 @@ reach; reads the current
 harness first; each find gets what it is, why it fits Anand, its cost, the buzz
 next to the substance (what it really does once read), a verdict of adopt /
 try / skip and a checked link; an adoption replaces something or
-earns its place). Each ships trigger evals, half "should not trigger".
+earns its place). Each skill Claude can start itself ships trigger evals, half "should not trigger"; the user-invoked ones (phase-close, handoff, retro, scout) start with `/name` and need none.
 
 Agents: `reviewer` (Read, Grep, Glob; Opus, high; fresh context; judges the
 task and claims, never the reasoning; flags tests that would pass on a no-op),
