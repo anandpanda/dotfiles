@@ -170,9 +170,12 @@ recommendation), `find-past-session` (three phrasings before "never did that"),
 `handoff` (STATUS and ledger in 5 lines; claims labelled observed / inferred /
 assumed), `retro` (one session in, harness proposals out, as above), `scout` (looks
 outward: recent Claude Code changelog and docs, plugin marketplaces, community
-skills, hooks and workflows from roughly the last month; reads the current
-harness first; each find gets what it is, why it fits Anand, its cost, a verdict
-of adopt / try / skip and a checked link; an adoption replaces something or
+skills, hooks and workflows, and what is trending (GitHub trending and stars,
+Hacker News, r/ClaudeAI, X, popular videos and newsletters) from roughly the
+last month; reads the current
+harness first; each find gets what it is, why it fits Anand, its cost, the buzz
+next to the substance (what it really does once read), a verdict of adopt /
+try / skip and a checked link; an adoption replaces something or
 earns its place). Each ships trigger evals, half "should not trigger".
 
 Agents: `reviewer` (Read, Grep, Glob; Opus, high; fresh context; judges the
