@@ -21,7 +21,7 @@ conventions, work skills) is a later step in the private overlay.
   transcript (14 across machines), over-building (days on Coder), compaction
   memory loss (~250 compactions on one workspace), heavy-compute crashes (8).
 - Saved memory notes fixed presentation habits and none of the action failures,
-  so anything with consequences is a hook or a permission rule, not prose.
+  so anything with consequences is a native permission rule, not prose.
 - Official Claude Code docs (memory, hooks, skills, sub-agents, settings,
   permissions, env-vars) and the 2026 community practice (short instructions,
   rules trace to observed mistakes, few hooks, few plugins).
@@ -34,9 +34,10 @@ conventions, work skills) is a later step in the private overlay.
 1. Prose for how to answer and decide; Claude Code's native permission rules
    for anything with consequences. No custom hook judges a command: parsing
    shell text can never cover every form (the secrets guard needed four review
-   rounds and still had gaps). Hooks only add context or run a formatter.
+   rounds and still had gaps). No hooks at all: the rules, skills and agents are
+   trusted to carry the behaviour, and the model is trusted to follow them.
 2. Every rule traces to something Anand said or a failure in his sessions.
-3. Few of everything: under 200 lines of always-loaded instructions (CLAUDE.md plus rules, the docs' target), 3 hooks, 11 skills, 3 agents,
+3. Few of everything: under 200 lines of always-loaded instructions (CLAUDE.md plus rules, the docs' target), no hooks, 11 skills, 3 agents,
    5 plugins, 1 MCP server.
 4. One home per rule: `RESOLVER.md` maps each rule to the file that owns it.
 5. Anand decides design, scope, and anything shared, prod, irreversible or
@@ -52,13 +53,12 @@ conventions, work skills) is a later step in the private overlay.
 | `home/.claude/rules/*.md` | `~/.claude/rules/` | linked per file |
 | `home/.claude/skills/<name>/SKILL.md` | `~/.claude/skills/` | linked per file |
 | `home/.claude/agents/*.md` | `~/.claude/agents/` | linked per file |
-| `home/.claude/hooks/*` | `~/.claude/hooks/` | linked per file |
 | `home/.claude/statusline.sh` | `~/.claude/statusline.sh` | linked |
 | `settings.owned.json` | merged into `~/.claude/settings.json` | install merges only the keys the dotfiles own |
 | `RESOLVER.md` | stays in the repo | documentation |
 | `Brewfile` | pyright, typescript-language-server, jq | Homebrew |
 | `install.sh` | merge settings, bootstrap plugins and the context7 MCP | idempotent |
-| `doctor.sh` | owned keys unchanged, plugins present, hooks executable, hook self-tests pass | |
+| `doctor.sh` | owned keys unchanged, plugins present, jq present | |
 
 Never tracked: `~/.claude.json`, `~/.claude/projects/`, `settings.local.json`,
 plugin caches, auto-memory.
@@ -124,7 +124,7 @@ minute runs in the background, with progress reported unasked. Learning mode on
 "teach", "with me", "guide me": map first, one step, wait. Claude's own rules
 outrank plugin skills where they conflict.
 
-## 2. Guard rails: native permission rules, and three plain hooks
+## 2. Guard rails: native permission rules
 
 Sessions run in bypass mode. Per the permission-modes docs, explicit `ask`
 rules still prompt and `deny` rules still block in every mode, including
@@ -140,27 +140,25 @@ Everything else runs freely, including pushing his own branch and opening a PR.
 Habits that are judgment, not mechanics (run only the changed tests, one heavy
 run at a time, PR text rules) live in the rules and the pr-description skill.
 
-| Hook | Event | Behaviour |
-|---|---|---|
-| format on edit | PostToolUse (Edit, Write) | runs the repo's own formatter (pre-commit on the file, else the language default); silent when none; never blocks |
-| session context | SessionStart | see §3 |
-| subagent context | SubagentStart | see §3 |
+No hooks. The repo's own formatter runs through its pre-commit at commit time.
 
 ## 3. Memory and context
 
 - Preferences that describe Anand live at user level (`rules/anand.md`), not in
   one project's memory; project memory keeps project facts.
-- Decisions ledger per repo in Claude's memory folder: date, decision, source
-  (his quote or INFERRED), status. INFERRED needs its own yes. Entries that
-  become standing rules are promoted, then deleted.
-- SessionStart (startup, resume, compact): re-inject the standing rules and the
-  ledger; on resume after 2+ hours, a 5-line "where we are / decided / next".
-- SubagentStart: inject the short standing rules (nothing fake, no skipped
-  checks, stay on task, findings to the given file, return path + count).
+- Decisions ledger per repo as a file in Claude's auto-memory folder
+  (`DECISIONS.md`, linked from `MEMORY.md`, which loads every session): date,
+  decision, source (his quote or INFERRED), status. INFERRED needs its own yes.
+  Entries that become standing rules are promoted, then deleted. The rule to
+  keep it lives in the rules files; no hook.
+- After compaction Claude Code re-reads CLAUDE.md from disk (memory docs), so
+  nothing re-injects rules. Subagents get their standing rules (nothing fake, no
+  skipped checks, stay on task, findings to the given file, return path +
+  count) from the body of each agent file.
 - History kept 365 days.
 - Self-improvement, triggered by Anand: `/retro` reads one session (the
   current one by default, or one he names) and proposes changes to the
-  harness: add, update or delete rules; new hooks, skills or agents; plugins
+  harness: add, update or delete rules; new permission rules, skills or agents; plugins
   or Claude Code features that fit, cited from current docs. He picks; git carries them to every
   machine. Nothing is applied without his go.
 
@@ -180,7 +178,7 @@ recommendation), `find-past-session` (three phrasings before "never did that"),
 `handoff` (STATUS and ledger in 5 lines; claims labelled observed / inferred /
 assumed), `retro` (one session in, harness proposals out, as above), `scout` (looks
 outward: recent Claude Code changelog and docs, plugin marketplaces, community
-skills, hooks and workflows, and what is trending, from roughly the last month.
+skills, plugins and workflows, and what is trending, from roughly the last month.
 The skill names kinds of source (official, marketplaces, trending code,
 discussion, practitioners) with one or two starting examples each; the agent
 discovers the specific places and reports where it looked and what it could not
@@ -200,7 +198,7 @@ task and claims, never the reasoning; flags tests that would pass on a no-op),
 Owned keys: bypass permission mode as the default (Anand's choice; the native
 ask and deny rules in §2 are the guard rails), history 365 days, attribution
 off, the deny and ask rules (no allow rules: they do nothing in bypass), the
-three hooks, statusline, plugins, the mode that loads both CLAUDE.md and
+statusline, plugins, the mode that loads both CLAUDE.md and
 AGENTS.md (else a CLAUDE.md in a parent folder would hide repos' AGENTS.md). Never owned:
 model, effort, theme and other `/config` preferences.
 
@@ -218,10 +216,7 @@ task count.
    for any owned rule.
 2. The current setting names for attribution, history length, and the
    CLAUDE.md + AGENTS.md loading mode.
-3. That UserPromptSubmit sees the real prompt text and SubagentStart exists in
-   the installed version.
-4. That user-level hooks fire on top of a team repo's permission allows.
-5. Plugin bootstrap on a machine that never ran an interactive session.
+3. Plugin bootstrap on a machine that never ran an interactive session.
 
 ## Out of scope
 
