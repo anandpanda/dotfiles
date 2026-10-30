@@ -17,19 +17,7 @@ problem() {
 profile="$(recall profile || echo personal)"
 log_info "profile: $profile"
 
-modules_root="${DOTFILES_MODULES:-$DOTFILES_DIR/modules}"
-module_names="$(profile_modules "$profile")" || die "cannot resolve profile: $profile"
-dirs=""
-while IFS= read -r m; do
-  [ -n "$m" ] || continue
-  d="$modules_root/$m"
-  [ -d "$d" ] || {
-    problem "module missing: $m"
-    continue
-  }
-  module_enabled_for_os "$d" && dirs="$dirs$d
-"
-done <<<"$module_names"
+dirs="$(profile_module_dirs "$profile")" || die "cannot resolve profile: $profile"
 if profile_has_overlay "$profile"; then
   if [ -d "$(overlay_dir)/.git" ]; then
     if fresh="$(overlay_is_fresh)"; then
@@ -37,11 +25,6 @@ if profile_has_overlay "$profile"; then
     else
       problem "overlay $fresh: run install.sh $profile"
     fi
-    for d in "$(overlay_dir)"/modules/*/; do
-      d="${d%/}"
-      [ -d "$d" ] && module_enabled_for_os "$d" && dirs="$dirs$d
-"
-    done
   else
     problem "overlay missing: run install.sh $profile"
   fi
@@ -94,6 +77,11 @@ while IFS= read -r d; do
     done < <(find "$d/home" -type f)
   fi
 done <<<"$dirs"
+if [ -f "$(links_record)" ]; then
+  while IFS= read -r l; do
+    if [ -L "$l" ] && [ ! -e "$l" ]; then problem "dangling link $l -> $(readlink "$l") (rerun install)"; fi
+  done <"$(links_record)"
+fi
 [ "$problems" = "$link_problems_before" ] && log_ok "links"
 
 # ssh include line (only when the ssh module is enabled)
@@ -130,7 +118,7 @@ fi
 
 # Brew
 if [ "${DOTFILES_SKIP_BREW:-0}" != 1 ] && command -v brew >/dev/null; then
-  brewfiles="$(printf '%s' "$dirs" | module_brewfiles_stdin)"
+  brewfiles="$(printf '%s\n' "$dirs" | module_brewfiles_stdin)"
   missing=""
   [ -z "$brewfiles" ] || missing="$(brew_missing_stdin <<<"$brewfiles")"
   if [ -n "$missing" ]; then problem "brew missing: $(echo "$missing" | tr '\n' ' ')"; else log_ok "brew"; fi

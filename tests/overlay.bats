@@ -5,6 +5,7 @@ setup() {
   for f in log os link profile module brew preflight overlay; do source "$DOTFILES_DIR/lib/$f.sh"; done
   export DOTFILES_SKIP_BREW=1
   export DOTFILES_MODULES="$HOME/mods"; mkdir -p "$DOTFILES_MODULES"; cp -R "$DOTFILES_DIR/modules/git" "$DOTFILES_MODULES/git"
+  export DOTFILES_PROFILES="$HOME/profiles" DOTFILES_PROFILE=g; mkdir -p "$DOTFILES_PROFILES"; printf 'modules = ["git"]\n' > "$DOTFILES_PROFILES/g.toml"
   REMOTE="$HOME/remote"; "$DOTFILES_DIR/scripts/overlay-init.sh" "$REMOTE" >/dev/null
   mkdir -p "$REMOTE/modules/extra/config"; touch "$REMOTE/modules/extra/config/x"
   git -C "$REMOTE" add -A && git -C "$REMOTE" -c user.name=t -c user.email=t@t commit -qm extra

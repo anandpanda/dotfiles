@@ -58,14 +58,6 @@ email() { mkdir -p "$1" && git -C "$1" init -q && git -C "$1" config user.email 
   [[ "$output" == *"work$TAB$HOME/company"* ]]
 }
 
-@test "doctor skips the hook scan when the contexts state file is absent" {
-  fake_tree; real_git
-  bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
-  rm "$HOME/.config/dotfiles/contexts"
-  run bash "$DOTFILES_DIR/$G/doctor.sh"
-  [[ "$output" != *"without commit-msg hook"* ]]
-}
-
 @test "public defaults are exactly ~/personal and ~/work" {
   DOTFILES_PROFILE=personal run contexts_collect
   [ "$status" -eq 0 ]

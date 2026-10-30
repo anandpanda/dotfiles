@@ -137,3 +137,58 @@ teardown() { teardown_home; }
   [ "$status" -eq 0 ]
   grep -q "you@company.com" "$HOME/.local/state/git/allowed_signers"
 }
+
+@test "link record: a file dropped from a module loses its link on the next install" {
+  mkdir -p "$DOTFILES_MODULES/one/home"; touch "$DOTFILES_MODULES/one/home/.a" "$DOTFILES_MODULES/one/home/.b"
+  "$DOTFILES_DIR/install.sh" test >/dev/null
+  [ -L "$HOME/.a" ] && [ -L "$HOME/.b" ]
+  rm "$DOTFILES_MODULES/one/home/.b"
+  run "$DOTFILES_DIR/install.sh" test
+  [ "$status" -eq 0 ]; [[ "$output" == *"removed stale link $HOME/.b"* ]]
+  [ -L "$HOME/.a" ]; [ ! -L "$HOME/.b" ]
+  ! grep -qxF "$HOME/.b" "$HOME/.config/dotfiles/links"
+}
+
+@test "link record: a module dropped from the profile has its links removed" {
+  mkdir -p "$DOTFILES_MODULES/two/home"; touch "$DOTFILES_MODULES/two/home/.t"
+  printf 'modules = ["one", "two"]\n' > "$DOTFILES_PROFILES/t2.toml"
+  "$DOTFILES_DIR/install.sh" t2 >/dev/null
+  [ -L "$HOME/.t" ]
+  "$DOTFILES_DIR/install.sh" test >/dev/null
+  [ ! -L "$HOME/.t" ]
+}
+
+@test "link record: a recorded link now pointing elsewhere is never removed" {
+  mkdir -p "$DOTFILES_MODULES/one/home"; touch "$DOTFILES_MODULES/one/home/.b" "$HOME/mine"
+  "$DOTFILES_DIR/install.sh" test >/dev/null
+  rm "$DOTFILES_MODULES/one/home/.b"; ln -sfn "$HOME/mine" "$HOME/.b"
+  "$DOTFILES_DIR/install.sh" test >/dev/null
+  [ "$(readlink "$HOME/.b")" = "$HOME/mine" ]
+}
+
+@test "link record: dry run prints the stale link and removes nothing" {
+  mkdir -p "$DOTFILES_MODULES/one/home"; touch "$DOTFILES_MODULES/one/home/.b"
+  "$DOTFILES_DIR/install.sh" test >/dev/null
+  cp "$HOME/.config/dotfiles/links" "$HOME/record-before"
+  rm "$DOTFILES_MODULES/one/home/.b"
+  run "$DOTFILES_DIR/install.sh" test --dry-run
+  [ "$status" -eq 0 ]; [[ "$output" == *"[dry] remove stale link $HOME/.b"* ]]
+  [ -L "$HOME/.b" ]; cmp "$HOME/.config/dotfiles/links" "$HOME/record-before"
+}
+
+@test "link record: the first run removes nothing" {
+  mkdir -p "$DOTFILES_MODULES/one/home" "$DOTFILES_MODULES/one/config"; touch "$DOTFILES_MODULES/one/home/.old" "$DOTFILES_MODULES/one/config/x"
+  ln -s "$DOTFILES_MODULES/one/home/.old" "$HOME/.old"; rm "$DOTFILES_MODULES/one/home/.old"
+  run "$DOTFILES_DIR/install.sh" test
+  [ "$status" -eq 0 ]; [ -L "$HOME/.old" ]
+  grep -qxF "$HOME/.config/one" "$HOME/.config/dotfiles/links"
+}
+
+@test "link record: links made by a module install.sh are recorded and kept" {
+  mkdir -p "$DOTFILES_MODULES/one/files"; touch "$DOTFILES_MODULES/one/files/f"
+  printf '#!/usr/bin/env bash\nsource "$DOTFILES_DIR/lib/log.sh"; source "$DOTFILES_DIR/lib/link.sh"\nlink_file "%s" "$HOME/elsewhere/f"\n' "$DOTFILES_MODULES/one/files/f" > "$DOTFILES_MODULES/one/install.sh"
+  "$DOTFILES_DIR/install.sh" test >/dev/null
+  run "$DOTFILES_DIR/install.sh" test
+  [[ "$output" != *"removed stale"* ]]; [ -L "$HOME/elsewhere/f" ]
+  grep -qxF "$HOME/elsewhere/f" "$HOME/.config/dotfiles/links"
+}

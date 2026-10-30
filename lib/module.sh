@@ -11,6 +11,32 @@ module_enabled_for_os() {
 overlay_dir() { echo "${DOTFILES_OVERLAY_DIR:-$HOME/personal/dotfiles-work}"; }
 modules_root() { echo "${DOTFILES_MODULES:-$DOTFILES_DIR/modules}"; }
 
+# Overlay module dirs for this OS, one per line.
+overlay_module_dirs() {
+  local d
+  for d in "$(overlay_dir)"/modules/*/; do
+    d="${d%/}"
+    if [ -d "$d" ] && module_enabled_for_os "$d"; then echo "$d"; fi
+  done
+  return 0
+}
+
+# Module dirs PROFILE applies on this OS, one per line: its public modules, then the overlay's when it uses the overlay.
+profile_module_dirs() { # PROFILE
+  local names m d
+  names="$(profile_modules "$1")" || return 1
+  for m in $names; do
+    d="$(modules_root)/$m"
+    [ -d "$d" ] || {
+      log_fail "module not found: $m"
+      return 1
+    }
+    if module_enabled_for_os "$d"; then echo "$d"; fi
+  done
+  if profile_has_overlay "$1"; then overlay_module_dirs; fi
+  return 0
+}
+
 # True when PATH is inside the overlay checkout.
 _in_overlay() { case "$1" in "$(overlay_dir)"/*) return 0 ;; *) return 1 ;; esac }
 
@@ -80,15 +106,11 @@ module_apply() {
     link_file "$dir/shell.zsh" "$rc" || return 1
   fi
   if [ -f "$dir/install.sh" ]; then
-    if [ "${DRY_RUN:-0}" = 1 ]; then
-      log_dry "run $dir/install.sh"
-    else
-      DOTFILES_DIR="$DOTFILES_DIR" HOME="$HOME" DRY_RUN="${DRY_RUN:-0}" bash "$dir/install.sh" ||
-        {
-          log_fail "module $name install.sh failed"
-          return 1
-        }
-    fi
+    DOTFILES_DIR="$DOTFILES_DIR" HOME="$HOME" DRY_RUN="${DRY_RUN:-0}" bash "$dir/install.sh" ||
+      {
+        log_fail "module $name install.sh failed"
+        return 1
+      }
   fi
 }
 

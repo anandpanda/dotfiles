@@ -25,28 +25,12 @@ _contexts_read() { # CONTEXT FILE -> context<TAB>folder per usable line
 
 contexts_profile() { echo "${DOTFILES_PROFILE:-$(recall profile || echo personal)}"; }
 
-# Module directories of the profile: its public modules, plus the overlay's when the profile uses it.
-contexts_module_dirs() { # PROFILE
-  local names m d
-  names="$(profile_modules "$1")" || return 1
-  for m in $names; do
-    echo "$(modules_root)/$m"
-  done
-  if profile_has_overlay "$1"; then
-    for d in "$(overlay_dir)"/modules/*/; do
-      [ -d "$d" ] && echo "${d%/}"
-    done
-  fi
-  return 0
-}
-
 # Unique context<TAB>folder lines, shortest folder first so a nested folder's include wins in git.
 contexts_collect() {
   local dirs d m
-  dirs="$(contexts_module_dirs "$(contexts_profile)")" || return 1
+  dirs="$(profile_module_dirs "$(contexts_profile)")" || return 1
   while IFS= read -r d; do
-    if [ -z "$d" ] || [ ! -d "$d" ]; then continue; fi
-    module_enabled_for_os "$d" || continue
+    [ -n "$d" ] || continue
     for m in personal work; do
       [ ! -f "$d/contexts/$m" ] || _contexts_read "$m" "$d/contexts/$m"
     done
@@ -63,18 +47,6 @@ contexts_render_include() { # stdin: collected lines
   done
 }
 
-_contexts_put() { # FILE CONTENT
-  if [ -f "$1" ] && [ "$(cat "$1")" = "$2" ]; then
-    echo "skip $1"
-  elif [ "${DRY_RUN:-0}" = 1 ]; then
-    echo "[dry] write $1"
-  else
-    mkdir -p "$(dirname "$1")"
-    printf '%s\n' "$2" >"$1.tmp" && mv "$1.tmp" "$1"
-    echo "wrote $1"
-  fi
-}
-
 # Write the state list and the git include; a folder in both contexts is an error.
 contexts_write() { # LINES (from contexts_collect)
   local twice
@@ -83,6 +55,6 @@ contexts_write() { # LINES (from contexts_collect)
     log_fail "contexts: listed as both personal and work: $twice"
     return 1
   fi
-  _contexts_put "$(contexts_file)" "$1"
-  _contexts_put "$(contexts_include_file)" "$(printf '%s\n' "$1" | contexts_render_include)"
+  put_file "$(contexts_file)" "$1"
+  put_file "$(contexts_include_file)" "$(printf '%s\n' "$1" | contexts_render_include)"
 }

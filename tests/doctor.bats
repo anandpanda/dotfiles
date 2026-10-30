@@ -121,3 +121,11 @@ teardown() { teardown_home; }
   run "$DOTFILES_DIR/doctor.sh"
   [[ "$output" != *"unmanaged"*"/Code"* ]]
 }
+
+@test "a recorded link that dangles is reported" {
+  mkdir -p "$DOTFILES_MODULES/one/home"; touch "$DOTFILES_MODULES/one/home/.d"
+  "$DOTFILES_DIR/install.sh" test >/dev/null
+  rm "$DOTFILES_MODULES/one/home/.d"
+  run "$DOTFILES_DIR/doctor.sh"
+  [ "$status" -ne 0 ]; [[ "$output" == *"dangling link $HOME/.d"* ]]
+}

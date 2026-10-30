@@ -39,20 +39,15 @@ os="$(os_name)" || die "unsupported OS: $(uname -s)"
 log_info "profile: $PROFILE ($os/$(os_arch))"
 [ "$DRY_RUN" = 1 ] && log_warn "dry run: nothing will change"
 
-modules_root="${DOTFILES_MODULES:-$DOTFILES_DIR/modules}"
-module_names="$(profile_modules "$PROFILE")" || die "cannot resolve profile: $PROFILE"
+all_dirs="$(profile_module_dirs "$PROFILE")" || die "cannot resolve profile: $PROFILE"
 module_dirs=""
-while IFS= read -r m; do
-  [ -n "$m" ] || continue
-  d="$modules_root/$m"
-  [ -d "$d" ] || die "module not found: $m"
-  module_enabled_for_os "$d" || {
-    log_info "skip $m (not for $os)"
-    continue
-  }
-  module_dirs="$module_dirs$d
+while IFS= read -r d; do
+  _in_overlay "$d" || module_dirs="$module_dirs$d
 "
-done <<<"$module_names"
+done <<<"$all_dirs"
+DOTFILES_LINK_RUN="$(mktemp)"
+export DOTFILES_LINK_RUN
+trap 'rm -f "$DOTFILES_LINK_RUN"' EXIT
 
 if [ "${DOTFILES_SKIP_BREW:-0}" != 1 ]; then
   brew_ensure
@@ -83,10 +78,11 @@ done 3<<<"$module_dirs"
 if profile_has_overlay "$PROFILE"; then
   overlay_apply "$OVERLAY_URL"
   # Overlay identities may add signers: regenerate allowed_signers.
-  if [ -f "$modules_root/git/install.sh" ] && grep -qx git <<<"$module_names"; then
-    DOTFILES_DIR="$DOTFILES_DIR" HOME="$HOME" DRY_RUN="$DRY_RUN" bash "$modules_root/git/install.sh"
+  if [ -f "$(modules_root)/git/install.sh" ] && grep -qxF "$(modules_root)/git" <<<"$all_dirs"; then
+    DOTFILES_DIR="$DOTFILES_DIR" HOME="$HOME" DRY_RUN="$DRY_RUN" bash "$(modules_root)/git/install.sh"
   fi
 fi
+links_prune "$DOTFILES_LINK_RUN"
 
 if [ "$DRY_RUN" != 1 ]; then
   remember profile "$PROFILE"

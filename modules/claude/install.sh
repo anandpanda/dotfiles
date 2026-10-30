@@ -74,9 +74,10 @@ if [ "${DRY_RUN:-0}" = 1 ]; then
   log_dry "merge owned settings into $HOME/.claude/settings.json"
 else
   fragments="$(claude_settings_fragments)" || die "cannot discover settings fragments"
+  frags=()
+  while IFS= read -r f; do [ -z "$f" ] || frags+=("$f"); done <<<"$fragments"
   expected="$(mktemp)"
   trap 'rm -f "$expected"' EXIT
-  # shellcheck disable=SC2086
-  claude_settings_expected "$owned" $fragments >"$expected" || die "cannot combine settings fragments"
+  claude_settings_expected "$owned" ${frags[@]+"${frags[@]}"} >"$expected" || die "cannot combine settings fragments"
   claude_settings_merge "$expected" "$HOME/.claude/settings.json"
 fi

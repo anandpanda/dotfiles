@@ -3,7 +3,7 @@
 # so `git log --show-signature` verifies locally. One line per identity whose key exists.
 # Also writes the context folder lists and the includeIf file that picks the identity.
 set -euo pipefail
-for f in log os profile module contexts; do
+for f in log os link profile module contexts; do
   # shellcheck disable=SC1090
   source "$DOTFILES_DIR/lib/$f.sh"
 done
@@ -21,15 +21,7 @@ for id in "$cfg"/identity.*; do
   if [ -z "$email" ] || [ -z "$key" ] || [ ! -f "$key" ]; then continue; fi
   want="${want}${email} namespaces=\"git\" $(cut -d' ' -f1,2 "$key")"$'\n'
 done
-if [ -f "$out" ] && [ "$(cat "$out")" = "${want%$'\n'}" ]; then
-  echo "skip $out"
-elif [ "${DRY_RUN:-0}" = 1 ]; then
-  echo "[dry] write $out"
-else
-  mkdir -p "$(dirname "$out")"
-  printf '%s' "$want" >"$out.tmp" && mv "$out.tmp" "$out"
-  echo "wrote $out ($(grep -c . "$out") signer(s))"
-fi
+put_file "$out" "${want%$'\n'}"
 
 contexts="$(contexts_collect)" || die "cannot collect context folders"
 contexts_write "$contexts" || exit 1

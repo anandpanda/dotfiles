@@ -28,7 +28,7 @@ overlay_ensure() {
 }
 
 overlay_apply() {
-  local url dir dirs="" d brewfiles
+  local url dirs d brewfiles
   url="$(overlay_resolve_url "${1:-}")"
   if [ -z "$url" ]; then
     log_warn "no overlay url: skipping overlay"
@@ -37,17 +37,9 @@ overlay_apply() {
   if [ "${OVERLAY_FETCHED:-0}" != 1 ]; then
     overlay_ensure "$url" || die "overlay fetch failed"
   fi
-  [ "${DRY_RUN:-0}" = 1 ] && return 0
-  dir="$(overlay_dir)"
-  for d in "$dir"/modules/*/; do
-    d="${d%/}"
-    [ -d "$d" ] || continue
-    module_enabled_for_os "$d" || continue
-    dirs="$dirs$d
-"
-  done
+  dirs="$(overlay_module_dirs)"
   if [ "${DOTFILES_SKIP_BREW:-0}" != 1 ]; then
-    brewfiles="$(printf '%s' "$dirs" | module_brewfiles_stdin)"
+    brewfiles="$(printf '%s\n' "$dirs" | module_brewfiles_stdin)"
     [ -z "$brewfiles" ] || brew_bundle_stdin <<<"$brewfiles"
   fi
   preflight_run "$dirs" || die "overlay preflight failed"
@@ -55,7 +47,7 @@ overlay_apply() {
     [ -n "$d" ] || continue
     module_apply "$d" || die "overlay module failed: $(basename "$d")"
   done 3<<<"$dirs"
-  remember overlay "$url"
+  [ "${DRY_RUN:-0}" = 1 ] || remember overlay "$url"
   log_ok "overlay applied"
 }
 

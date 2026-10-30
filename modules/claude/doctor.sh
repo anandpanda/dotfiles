@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Owned settings keys must match the live file; every listed plugin installed; jq and the claude CLI present.
+# Owned settings plus module fragments must match the live file; every listed plugin installed; jq and the claude CLI present.
 set -euo pipefail
 for f in log os profile module contexts claude; do
   # shellcheck disable=SC1090
@@ -15,10 +15,11 @@ fragments="$(claude_settings_fragments)" || {
   echo "cannot discover settings fragments"
   exit 1
 }
+frags=()
+while IFS= read -r f; do [ -z "$f" ] || frags+=("$f"); done <<<"$fragments"
 expected="$(mktemp)"
 trap 'rm -f "$expected"' EXIT
-# shellcheck disable=SC2086
-claude_settings_expected "$owned" $fragments >"$expected" || {
+claude_settings_expected "$owned" ${frags[@]+"${frags[@]}"} >"$expected" || {
   echo "cannot combine settings fragments"
   exit 1
 }

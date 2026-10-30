@@ -208,6 +208,16 @@ teardown() { teardown_home; }
   grep -q custom "$HOME/work/old/.git/hooks/commit-msg"
 }
 
+@test "doctor reports a repo without the hook and fails; clean once install adds it" {
+  mkdir -p "$HOME/.ssh"; ssh-keygen -q -t ed25519 -N "" -C p -f "$HOME/.ssh/id_ed25519_personal"
+  ssh-keygen -q -t ed25519 -N "" -C w -f "$HOME/.ssh/id_ed25519_work"
+  bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
+  run bash "$DOTFILES_DIR/$G/doctor.sh"; [ "$status" -eq 0 ]
+  command rm -f "$HOME/work/r/.git/hooks/commit-msg"
+  run bash "$DOTFILES_DIR/$G/doctor.sh"
+  [ "$status" -ne 0 ]; [ "$output" = "repo without commit-msg hook: $HOME/work/r (dots install)" ]
+}
+
 @test "identity files rewrite every GitHub url form to the context's ssh alias" {
   for f in "$DOTFILES_DIR/modules/git/config/identity.personal" "$DOTFILES_DIR/overlays/work.example/modules/git/config/identity.work"; do
     for form in 'git@github.com:' 'https://github.com/' 'ssh://git@github.com/'; do
