@@ -253,9 +253,43 @@ set_cwd() {
 }
 
 scan_segment() {
-  local w b ws="$1" shell=0 wrap=0 envd=0 reader=0 copy="" pend=0 prev="" src="" srcsec=0 nops=0 target=0 tsec=0 arch=0 curl=0 sops=0 find=0 found=0 fexec=0 grep=0 pat=0 next=""
+  local w b o ws="$1" shell=0 cflag=0 argn=0 argopts="" wrap=0 envd=0 reader=0 copy="" pend=0 prev="" src="" srcsec=0 nops=0 target=0 tsec=0 arch=0 curl=0 sops=0 find=0 found=0 fexec=0 grep=0 pat=0 next=""
   shift
   while [ $# -gt 0 ]; do
+    if [ "$argn" -gt 0 ]; then
+      argn=$((argn - 1))
+      shift
+      continue
+    fi
+    if [ "$shell" = 1 ]; then
+      case "$1" in
+        --)
+          if [ "$cflag" = 1 ]; then
+            scan_command "${2:-}" "$ws"
+            return 0
+          fi
+          shift
+          break
+          ;;
+        --rcfile | --init-file) argn=1 ;;
+        --*) ;;
+        [-+]*)
+          case "$1" in -*c*) cflag=1 ;; esac
+          o="${1#?}"
+          o="${o//[!oO]/}"
+          argn=${#o}
+          ;;
+        *)
+          if [ "$cflag" = 1 ]; then
+            scan_command "$1" "$ws"
+            return 0
+          fi
+          break
+          ;;
+      esac
+      shift
+      continue
+    fi
     case "$1" in "$SUBC"*)
       reader=1
       break
@@ -263,17 +297,22 @@ scan_segment() {
     esac
     b="${1##*/}"
     case "$b" in
-      bash | sh | zsh | dash | ksh | eval)
+      bash | sh | zsh | dash | ksh)
         wrap=1
         envd=0
         shell=1
-        if [ "$b" = eval ]; then
-          shift
-          scan_command "$*" "$ws"
-          return 0
-        fi
         ;;
-      sudo | command | exec | nohup | time | builtin | nice | timeout | xargs | stdbuf)
+      eval)
+        shift
+        scan_command "$*" "$ws"
+        return 0
+        ;;
+      sudo | timeout)
+        wrap=1
+        envd=0
+        argopts="$b"
+        ;;
+      command | exec | nohup | time | builtin | nice | xargs | stdbuf)
         wrap=1
         envd=0
         ;;
@@ -284,21 +323,20 @@ scan_segment() {
       with-secrets)
         ws=1
         envd=0
+        scan_command "${*:2}" 1
         ;;
       sops)
         if [ "${2:-}" != exec-env ] || [ $# -lt 3 ]; then break; fi
+        scan_command "${*:4}" 1
         shift 2
         ws=1
         ;;
       *=*) ;;
-      -*c)
-        if [ "$shell" = 1 ]; then
-          scan_command "${2:-}" "$ws"
-          return 0
-        fi
+      -*)
         if [ "$wrap" = 0 ]; then break; fi
+        case "$argopts$1" in sudo-[ugCDhprtUT] | timeout-[sk]) argn=1 ;; esac
         ;;
-      -* | [0-9]*) if [ "$wrap" = 0 ]; then break; fi ;;
+      [0-9]*) if [ "$wrap" = 0 ]; then break; fi ;;
       *) break ;;
     esac
     shift

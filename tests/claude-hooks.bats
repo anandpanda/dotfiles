@@ -254,6 +254,22 @@ EOF"
   each_allowed "cp -vt /tmp src/a.txt" "ln -s ~/.secrets/x ~/.secrets/y" "cp -av src dst"
 }
 
+@test "the script passed to with-secrets or sops exec-env is checked as a command" {
+  each_blocked "with-secrets 'env | sort'" 'with-secrets "npm test; env"' \
+    "sops exec-env ~/.secrets/s.yaml 'env | grep -i token'" 'sops exec-env ~/.secrets/s.yaml "env | sort"' \
+    "sops exec-env ~/.secrets/s.yaml 'export -p'" "sops exec-env ~/.secrets/s.yaml 'cat ~/.secrets/x'" \
+    "sops exec-env ~/.secrets/s.yaml 'cat .env'" "sops exec-env ~/.secrets/s.yaml 'sh -c env'" \
+    "sops exec-env ~/.secrets/s.yaml 'cat /proc/self/environ'" "sops exec-env ~/.secrets/s.yaml 'npm test && env'"
+  each_allowed "with-secrets 'make dev'" "with-secrets 'npm test'" "sops exec-env ~/.secrets/s.yaml 'make run'"
+}
+
+@test "shell and sudo options with values do not hide the -c script" {
+  each_blocked "bash -euo pipefail -c 'cat .env'" "bash -o pipefail -c 'cat .env'" "bash -O extglob -c 'cat .env'" \
+    "bash --norc -c 'cat .env'" "bash -c -- 'cat .env'" "sudo -u root sh -c 'cat .env'" \
+    "with-secrets bash --norc -c 'env'" "with-secrets timeout -s KILL 5 env"
+  each_allowed "bash -euo pipefail -c 'make test'" "sudo -u root make install" "bash -o pipefail script.sh"
+}
+
 @test "fails closed on unreadable input" {
   run "$SH" "$H/secrets-guard.sh" <<<'{oops'
   [ "$status" -eq 2 ]
