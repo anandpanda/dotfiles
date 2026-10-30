@@ -13,22 +13,21 @@
 ## Global Constraints
 
 - Bash 3.2 compatible (macOS); `shellcheck -S info` and `shfmt -i 2 -ci` clean; tests hermetic (temp HOME, fake binaries on PATH, never the real `~/.claude`).
-- Hook protocol: read JSON on stdin; block with exit 2 and a reason on stderr; add context with plain stdout or `{"hookSpecificOutput":{"hookEventName":…,"additionalContext":…}}`; PreToolUse decisions with `{"hookSpecificOutput":{"hookEventName":"PreToolUse","permissionDecision":"allow|deny|ask","permissionDecisionReason":…}}`.
-- Guards fail closed (unparseable input or missing `jq` → exit 2 with "hook input unreadable"); the formatter fails open.
+- No hook judges or blocks a command (Anand: parsing can never cover every form). Consequences are handled by native `permissions.deny` and `permissions.ask` rules, which apply in bypass mode. Hooks only add context (plain stdout or `{"hookSpecificOutput":{"hookEventName":…,"additionalContext":…}}`) or format a file, and fail open.
 - Every hook path in settings is absolute via `$HOME/.claude/hooks/<name>`.
-- Sessions run in bypass permission mode by Anand's choice: `"permissions": {"defaultMode": "bypassPermissions"}` is owned. Prompts never appear, so every guard decides with `allow` or `deny` itself; `ask` is only the branch for a session Anand switches back to a prompting mode.
-- Owned settings, verbatim: `"attribution": false`, `"cleanupPeriodDays": 365`, `"pluginConfigs": {"cc-plugin-agents-md@builtin": {"options": {"instructionFiles": "claude-md-and-agents-md"}}}`, plus `permissions.deny`, `permissions.allow`, `hooks`, `statusLine`, `enabledPlugins`, `extraKnownMarketplaces`. Never owned: `model`, `effortLevel`, `modelSettings`, `tui`, any other key.
+- Sessions run in bypass permission mode by Anand's choice: `"permissions": {"defaultMode": "bypassPermissions"}` is owned. Explicit ask rules still prompt and deny rules still block in bypass (permission-modes docs); allow rules have no effect there, so none are owned.
+- Owned settings, verbatim: `"attribution": false`, `"cleanupPeriodDays": 365`, `"pluginConfigs": {"cc-plugin-agents-md@builtin": {"options": {"instructionFiles": "claude-md-and-agents-md"}}}`, plus `permissions.deny`, `permissions.ask`, `hooks`, `statusLine`, `enabledPlugins`, `extraKnownMarketplaces`. Never owned: `model`, `effortLevel`, `modelSettings`, `tui`, any other key.
 - Public repo: no company names, emails, account ids or internal hostnames in any file of this module.
 - No code comments in hook scripts beyond the one-line purpose header the repo already uses on every script.
 - No AI attribution in commits.
 
 ## Review Focus
 
-1. **Chained and wrapped commands.** `a && git push`, `bash -c "rm -rf x"`, `git -C repo push --force`, `/bin/rm -rf`, heredocs: guards match on the whole command string, not its first word (tests in Tasks 3, 4, 5).
-2. **Paths spelled four ways.** `~/.secrets`, `$HOME/.secrets`, `/Users/x/.secrets`, `"$HOME"/.secrets/x`: the secrets guard normalises before matching (Task 3).
-3. **Two sessions at once.** The go-word state is keyed by `session_id`, so approval in one session never unlocks another (Task 5).
-4. **Live settings missing, empty or invalid JSON.** Install backs up an invalid file, writes owned keys into a fresh one, and never drops non-owned keys from a valid one (Task 2).
-5. **jq absent on a fresh box.** Guards fail closed with a message naming the fix (`brew install jq`); doctor reports it (Tasks 3, 11).
+1. **Rule syntax Claude Code rejects.** A deny or ask rule with a bad pattern or an unknown tool name is ignored with a startup warning; every owned rule must be in a form the permissions docs define, and Task 13 checks there are no warnings (Tasks 3, 13).
+2. **Rules that over-ask.** `gh api` reads, own-branch pushes and `gh pr create` must not prompt; only writes and shared-branch actions do (Task 3).
+3. **Live settings missing, empty or invalid JSON.** Install backs up an invalid file, writes owned keys into a fresh one, and never drops non-owned keys from a valid one (Task 2).
+4. **jq absent on a fresh box.** Install and the context hooks need jq; doctor reports it with the fix (`brew install jq`) (Task 11).
+5. **Leftover guard files.** The removed hook scripts must not stay linked in `~/.claude/hooks/` after an update (Task 3).
 
 ---
 
@@ -77,83 +76,22 @@
 - [ ] **Step 4:** Run → PASS; lint.
 - [ ] **Step 5:** Commit `feat(claude): own harness settings, leave preferences alone`.
 
-### Task 3: Hook library and secrets guard
+### Task 3: Native guard rails (replaces the custom guards of Tasks 3–7)
 
-**Files:**
-- Create: `modules/claude/home/.claude/hooks/lib.sh`, `hooks/secrets-guard.sh`, `hooks/secrets-scan.sh`
-- Modify: `settings.owned.json` (`hooks.PreToolUse` matcher `Read|Grep|Bash` → secrets-guard; `hooks.PostToolUse` matcher `Bash` → secrets-scan)
-- Test: `tests/claude-hooks.bats`
+Built and later superseded: the secrets guard (commits bdbc4be..8131f66) and a stopped go-word gate (stash). Anand ruled out custom parsing: "i dont like these parsing and deterministic ways because u can't ever cover all ... keep it native and simple".
 
-**Interfaces:**
-- Produces in `lib.sh`: `hook_input` (reads stdin once into `$HOOK_JSON`; exit 2 "hook input unreadable" on bad JSON or missing jq), `hook_field <jq-path>`, `hook_block <reason>` (stderr + exit 2), `hook_context <event> <text>` (prints the additionalContext JSON), `hook_norm_path <path>` (expands `~`, `$HOME`, quotes → absolute).
-- Secrets paths: `~/.secrets/`, `.env`, `.env.*`, `id_rsa`, `id_ed25519` (not `.pub`), `~/.aws/sso/cache/`, files matching `*backup*code*`, `*recovery*code*`, `*.pem`, `*.key`.
+**Files:** Delete `hooks/secrets-guard.sh`, `hooks/secrets-scan.sh`; Modify `hooks/lib.sh` (keep only what Tasks 8–9 use), `settings.owned.json`, `home/.claude/rules/building.md` (test habits line), `tests/claude-hooks.bats`, `tests/claude.bats`; drop the stash.
 
-- [ ] **Step 1: Failing tests** (each feeds JSON on stdin to the script):
-  - `blocks Read of each secret path spelled four ways` (`~`, `$HOME`, absolute, quoted).
-  - `blocks Bash cat, grep, head, sed, less, source on a secret path`.
-  - `blocks a literal token in a command` for `AKIA[0-9A-Z]{16}`, `ghp_…`, `github_pat_…`, `xox[abp]-…`, `glsa_…`, `sk-…`, `Bearer <20+ chars>`.
-  - `blocks slicing or decoding a secret variable` — `printf "$TOKEN" | od -c`, `echo ${TOKEN:0:6}`.
-  - `allows with-secrets and sops exec-env`.
-  - `allows Read of an ordinary file and .env.example`.
-  - `fails closed on unreadable input`.
-  - `scan warns on token-shaped output, never blocks` — PostToolUse with `tool_response.stdout` containing `ghp_…` → stdout context mentions "looks like a token"; exit 0.
+**Interfaces:** `settings.owned.json` `permissions`: `defaultMode` `bypassPermissions`; no `allow`; `deny` and `ask` as below; `hooks` holds no PreToolUse entry.
+- deny: `Read(~/.secrets/**)`, `Edit(~/.secrets/**)`, `Read(**/.env)`, `Read(**/.env.*)`, `Read(~/.ssh/id_*)`, `Read(~/.aws/sso/cache/**)`, `Edit(~/.claude/settings.json)`, `Bash(sops -d *)`, `Bash(sops decrypt *)`.
+- ask: `Bash(gh pr merge *)`, `Bash(gh pr comment *)`, `Bash(gh pr review *)`, `Bash(gh workflow run *)`, `Bash(gh run rerun *)`, `Bash(gh run cancel *)`, `gh api` write forms (`-X`/`--method` POST, PATCH, PUT, DELETE; `-f`/`-F`/`--field`/`--raw-field`), `git push` to `main`, `master`, `develop`, `release*`, `git push --force*` and `-f`, `git push --delete *`, `git reset --hard*`, `git clean *`, `git branch -D *`, `docker system prune*`, `docker volume rm *`, and MCP tools that send, post, comment or merge: the Slack send and schedule tools, Linear `save_comment`, Notion `notion-create-comment`, and any GitHub connector merge or comment tool, written as exact `mcp__…` names or tool-name globs in the forms the permissions docs define.
+- `--force-with-lease` on the own branch, own-branch push, `gh pr create` and every read do not match any ask rule.
+
+- [ ] **Step 1: Failing tests:** `owned settings ask before outward and destructive actions` (each ask entry present verbatim), `owned settings deny secret files and sops decrypt`, `no allow rules are owned`, `no PreToolUse hook is owned`, `removed guard scripts are gone`, `building rules carry the test habits` (run only the changed tests, at most `-n 4`, one heavy run at a time).
 - [ ] **Step 2:** Run → FAIL.
-- [ ] **Step 3:** Implement. Block reasons name the allowed route ("use `with-secrets <cmd>`").
-- [ ] **Step 4:** Run → PASS; lint.
-- [ ] **Step 5:** Commit `feat(claude): secrets guard hook`.
-
-### Task 4: Destructive guard
-
-**Files:** Create `hooks/destructive-guard.sh`; Modify `settings.owned.json` (PreToolUse `Bash`); Test `tests/claude-hooks.bats`
-
-**Interfaces:** Consumes `lib.sh`. Decision: `deny` with the target list in the reason when gated and not approved by Task 5's `approval_given` (sourced from `hooks/approval.sh`, Task 5); always `deny` for deleting a dir with unpushed git work and for Bash writes into `~/.claude/`.
-
-- [ ] **Step 1: Failing tests:**
-  - `gates rm -rf outside cwd and scratchpad`, `allows rm -rf inside cwd`, `allows rm -rf under $TMPDIR`.
-  - `gates git clean, reset --hard, branch -D, push --force`, `allows push --force-with-lease`.
-  - `gates docker system prune, docker volume rm, sudo rm, brew uninstall`.
-  - `catches wrapped forms` — `a && rm -rf ~/x`, `bash -c "rm -rf ~/x"`, `/bin/rm -rf ~/x`, `git -C repo reset --hard`.
-  - `refuses deleting a repo with unpushed branches even when approved` — temp repo with a local-only branch.
-  - `refuses Bash writes into ~/.claude` — `sed -i … ~/.claude/settings.json`, `> ~/.claude/hooks/x`.
-  - `passes a gated command when approval_given is true` (stub).
-- [ ] **Step 2–5:** FAIL → implement → PASS + lint → commit `feat(claude): destructive guard hook`.
-
-### Task 5: Go-word capture and outward gate
-
-**Files:** Create `hooks/prompt-capture.sh` (UserPromptSubmit), `hooks/approval.sh` (library), `hooks/outward-gate.sh` (PreToolUse `Bash`); Modify `settings.owned.json`; Test `tests/claude-hooks.bats`
-
-**Interfaces:**
-- `prompt-capture.sh` writes `~/.claude/state/prompt-<session_id>.json` = `{"prompt": <text>, "ts": <epoch>}` from the hook's `prompt` field; prints nothing.
-- `approval.sh` produces `approval_given <session_id> <action-word>`: true when the stored prompt (≤ 10 min old) contains a go-word for that action (`merge`, `push`, `post`, `send`, `run`, `do it`, `go`, `ship`), or is a short yes (`yes|y|haan|ha|ok|okay|done|sure`, ≤ 3 words) and the latest assistant turn in `transcript_path` mentions the same action word and ends with `?`. Questions (`?` in the prompt) never count.
-- Gated set: `gh pr merge`, `gh pr comment`, `gh pr review`, `gh api` with `-X POST|PATCH|PUT|DELETE` or `-f`/`--field`, `gh workflow run`, `gh run rerun|cancel`, Slack send commands, `git push` to `main|master|release|develop` or a branch whose upstream author is not the user. Ungated: `git push` of the current own branch, `gh pr create`.
-- Mode: `permission_mode` `default|acceptEdits|plan` → `ask`; `bypassPermissions|auto|dontAsk` → `allow` if `approval_given`, else `deny` "ask Anand first: say 'push it' / 'merge it'".
-
-- [ ] **Step 1: Failing tests:**
-  - `capture stores the prompt per session`.
-  - `merge is denied without a go-word in bypass mode`, `allowed after "merge it"`, `asks in default mode`.
-  - `a question never approves` — prompt `"should we merge?"` → deny.
-  - `short yes approves only the action Claude asked about` — transcript ends `"Merge #12?"` + prompt `yes` → merge allowed, `gh pr comment` denied.
-  - `approval in one session does not unlock another`.
-  - `stale approval expires after 10 minutes`.
-  - `own branch push and gh pr create pass`.
-  - `push to main is gated`, `catches a && gh pr merge`.
-- [ ] **Step 2–5:** FAIL → implement → PASS + lint → commit `feat(claude): outward-action gate with go-word`.
-
-### Task 6: Compute guard
-
-**Files:** Create `hooks/compute-guard.sh` (PreToolUse `Bash`); Modify `settings.owned.json`; Test `tests/claude-hooks.bats`
-
-- [ ] **Step 1: Failing tests:** `denies pytest on a directory`, `denies pytest with -n above 4`, `denies a second pytest while one runs` (fake `pgrep` on PATH returns 1), `allows pytest on named test files`, `allows bats on a single file`; the deny message contains "run the changed tests".
-- [ ] **Step 2–5:** FAIL → implement → PASS + lint → commit `feat(claude): compute guard hook`.
-
-### Task 7: Publish check
-
-**Files:** Create `hooks/publish-check.sh` (PreToolUse `Bash`), `hooks/publish-readback.sh` (PostToolUse `Bash`), `hooks/publish-words.txt`; Modify `settings.owned.json`; Test `tests/claude-hooks.bats`
-
-**Interfaces:** Extracts body text from `gh pr create|edit --body <s>`, `--body-file <f>`, heredoc bodies, `gh pr comment --body`, `gh api … -f body=`. Word list sections: `slop:` (ensuring, leveraging, utilizing, robust, comprehensive, seamless, it is worth noting, importantly, note that, a series of), `tells:` (great catch, good catch, great question, great point, generated with, generated by, Co-Authored-By), `hedge:` (likely, probably, I believe, should work, might). PR bodies additionally need a ```` ```mermaid ```` or ```` ```diff ```` block and no heading matching `test|testing|verification`.
-
-- [ ] **Step 1: Failing tests:** `denies a PR body without a diagram`, `denies a testing section`, `denies each slop, tell and hedge word with the word named in the reason`, `allows a clean body with a mermaid block`, `reads --body-file and heredoc bodies`, `comments need no diagram`, `readback warns when the posted text differs from the checked text` (fake `gh` prints a different body).
-- [ ] **Step 2–5:** FAIL → implement → PASS + lint → commit `feat(claude): publish check on PR and comment text`.
+- [ ] **Step 3:** Implement; read the permissions docs (code.claude.com/docs/en/permissions) for each rule's exact form, especially mid-pattern wildcards and MCP tool-name globs; record the doc line each form relies on in the report.
+- [ ] **Step 4:** Run `bats tests/claude*.bats`, `just lint` → PASS.
+- [ ] **Step 5:** Commit `refactor(claude): native ask and deny rules replace the custom guards`; `git stash drop` the go-word stash.
 
 ### Task 8: Format on edit
 
@@ -199,10 +137,10 @@
 
 **Files:** Modify `modules/claude/install.sh`, `doctor.sh`, `settings.owned.json` (`enabledPlugins`: superpowers, security-guidance, pyright-lsp, typescript-lsp true; learning-output-style false; code-review, code-simplifier false; `env.SECURITY_REVIEW_MODEL` = `claude-sonnet-5-5`); Create `modules/claude/Brewfile` (jq, pyright, typescript-language-server); Test `tests/claude.bats`
 
-**Interfaces:** `install.sh` runs, idempotently: `claude plugin marketplace add anthropics/claude-plugins-official`, `claude plugin install <p>@claude-plugins-official --scope user` for each enabled plugin not listed by `claude plugin list`, `claude plugin uninstall` for code-review and code-simplifier when present, `claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp` when `claude mcp list` lacks it. No `claude` CLI → print the commands and continue. Doctor: owned-key drift (Task 2), every hook executable and its `--self-test` passing, enabled plugins installed, jq present.
+**Interfaces:** `install.sh` runs, idempotently: `claude plugin marketplace add anthropics/claude-plugins-official`, `claude plugin install <p>@claude-plugins-official --scope user` for each enabled plugin not listed by `claude plugin list`, `claude plugin uninstall` for code-review and code-simplifier when present, `claude mcp add --scope user --transport http context7 https://mcp.context7.com/mcp` when `claude mcp list` lacks it. No `claude` CLI → print the commands and continue. Doctor: owned-key drift (Task 2), every hook executable, enabled plugins installed, jq present.
 
 - [ ] **Step 1: Failing tests** with a fake `claude` that logs calls: `installs missing plugins once`, `second run calls nothing`, `removes the duplicated review plugins`, `adds context7 once`, `no claude CLI prints the commands`, `doctor fails when a hook is not executable`, `doctor fails when jq is missing`.
-- [ ] **Step 2–5:** FAIL → implement (each hook gets a `--self-test` branch that runs one allow and one block case) → PASS + lint → commit `feat(claude): plugins, context7, tools and doctor`.
+- [ ] **Step 2–5:** FAIL → implement → PASS + lint → commit `feat(claude): plugins, context7, tools and doctor`.
 
 ### Task 12: Statusline
 
@@ -215,8 +153,8 @@
 
 **Files:** Modify `docs/STATUS.md`, `docs/specs/07-claude-harness.md` (record verified facts); Delete `.superpowers/sdd/07-*` at the end
 
-- [ ] **Step 1:** Verify the spec's five open facts in a throwaway session and record each result with its evidence: hook `ask` under bypass mode; settings names accepted (`claude doctor` shows no rejected entries); UserPromptSubmit `prompt` and SubagentStart firing (log lines from a temp hook); user hooks firing in a repo whose project settings allow `git push`; plugin bootstrap from a clean `CLAUDE_CONFIG_DIR`. Adjust the outward gate if `ask` behaves differently.
+- [ ] **Step 1:** Verify the spec's five open facts in a throwaway session and record each result with its evidence: ask rules prompt and deny rules block in a bypass session, MCP globs included, and `claude` prints no rule warnings; settings names accepted (`claude doctor` shows no rejected entries); UserPromptSubmit `prompt` and SubagentStart firing (log lines from a temp hook); user hooks firing in a repo whose project settings allow `git push`; plugin bootstrap from a clean `CLAUDE_CONFIG_DIR`. Fix any rule that warns or does not fire.
 - [ ] **Step 2:** Back up `~/.claude/settings.json`, run `dots install personal`, then `dots doctor` → clean.
-- [ ] **Step 3:** Live checks: `cat ~/.secrets/secrets.yaml` refused; a PR body without a diagram refused; `git push origin main` refused until "push it"; `/status` lists the hooks; statusline renders.
+- [ ] **Step 3:** Live checks: Read of `~/.secrets/secrets.yaml` refused; `gh pr merge` and `git push origin main` prompt; `/status` lists the hooks; statusline renders.
 - [ ] **Step 4:** Full suite, lint, CI green on macOS and Ubuntu.
 - [ ] **Step 5:** Fresh reviewer (the new `reviewer` agent), fix every finding, STATUS Phase 7 section, delete the ledger dir, commit `docs: phase 7 closed`.

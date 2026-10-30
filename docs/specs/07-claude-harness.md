@@ -31,10 +31,12 @@ conventions, work skills) is a later step in the private overlay.
 
 ## Principles
 
-1. Prose for how to answer and decide; hooks and permissions for anything with
-   consequences.
+1. Prose for how to answer and decide; Claude Code's native permission rules
+   for anything with consequences. No custom hook judges a command: parsing
+   shell text can never cover every form (the secrets guard needed four review
+   rounds and still had gaps). Hooks only add context or run a formatter.
 2. Every rule traces to something Anand said or a failure in his sessions.
-3. Few of everything: under 200 lines of always-loaded instructions (CLAUDE.md plus rules, the docs' target), 6 hooks, 11 skills, 3 agents,
+3. Few of everything: under 200 lines of always-loaded instructions (CLAUDE.md plus rules, the docs' target), 3 hooks, 11 skills, 3 agents,
    5 plugins, 1 MCP server.
 4. One home per rule: `RESOLVER.md` maps each rule to the file that owns it.
 5. Anand decides design, scope, and anything shared, prod, irreversible or
@@ -122,19 +124,27 @@ minute runs in the background, with progress reported unasked. Learning mode on
 "teach", "with me", "guide me": map first, one step, wait. Claude's own rules
 outrank plugin skills where they conflict.
 
-## 2. Hooks
+## 2. Guard rails: native permission rules, and three plain hooks
+
+Sessions run in bypass mode. Per the permission-modes docs, explicit `ask`
+rules still prompt and `deny` rules still block in every mode, including
+bypass; allow rules have no effect there, so none are owned. Claude Code does
+the command matching (compound commands, subshells, wrappers), not our code.
+
+| Kind | Rules | Effect |
+|---|---|---|
+| deny | Read and Edit of `~/.secrets/**`, `**/.env`, `**/.env.*`, `~/.ssh/id_*`, `~/.aws/sso/cache/**`; Edit of `~/.claude/settings.json`; Bash `sops -d`, `sops decrypt` | always blocked; secrets are used only through `with-secrets <cmd>` |
+| ask | merge, PR comment and review, `gh api` writes, workflow run and rerun; push to main, master, develop or release branches; force push; branch delete; `git reset --hard`, `git clean`, `docker system prune`, `docker volume rm`; MCP tools that send, post, comment or merge (Slack, Linear, Notion, GitHub) | a native prompt; Anand clicks once |
+
+Everything else runs freely, including pushing his own branch and opening a PR.
+Habits that are judgment, not mechanics (run only the changed tests, one heavy
+run at a time, PR text rules) live in the rules and the pr-description skill.
 
 | Hook | Event | Behaviour |
 |---|---|---|
-| secrets guard | PreToolUse (Read, Grep, Bash) + permission deny; PostToolUse warn | blocks reading, searching or printing `~/.secrets`, `.env*`, private keys, `~/.aws/sso/cache`, recovery-code files; blocks literal tokens in commands and slicing or decoding secret values; allowed route `with-secrets`. Output that looks like a token: warning only |
-| destructive guard | PreToolUse (Bash) | `rm -rf` outside cwd/scratchpad, `git clean`, `reset --hard`, `branch -D`, force push (except `--force-with-lease` on own branch), docker prune/volume rm, `sudo rm`, `brew uninstall`: gated with the target list. Deleting a directory with unpushed git work: refused. Bash writes into `~/.claude/`: refused |
-| outward gate | PreToolUse (Bash) + UserPromptSubmit records the go | merge, PR comments/reviews in his name, Slack sends, workflow runs, `gh api` writes, push to main/release/others' branches. Prompts on: native ask. Prompts off: allowed only if Anand's latest real message (captured by UserPromptSubmit, never relayed by Claude) has an explicit go-word, or a short yes answering Claude's question about that same action. Own-branch push and opening a PR pass freely. Only the main session's user messages count; subagents act within what it approved |
-| compute guard | PreToolUse (Bash) | refuses whole-folder test runs, `-n` above 4, a second heavy run while one is active; message points to changed tests |
-| publish check | PreToolUse (Bash) on `gh` writes; PostToolUse read-back | extracts the text being posted; refuses hedge words, slop and agent-tell phrases, attribution lines, a testing section, a PR body with no diagram; after posting, reads it back. In team repos with their own checker, theirs runs too |
-| format on edit | PostToolUse (Edit, Write) | runs the repo's own formatter (pre-commit on the file, else the language default); silent when none |
-
-Hooks fail closed for guards, open for formatters; each has a self-test that
-doctor runs.
+| format on edit | PostToolUse (Edit, Write) | runs the repo's own formatter (pre-commit on the file, else the language default); silent when none; never blocks |
+| session context | SessionStart | see §3 |
+| subagent context | SubagentStart | see §3 |
 
 ## 3. Memory and context
 
@@ -187,11 +197,11 @@ task and claims, never the reasoning; flags tests that would pass on a no-op),
 
 ## 5. Settings and plugins
 
-Owned keys: bypass permission mode as the default (Anand's choice; the hooks
-and deny rules are the guard rails, so the go-word path is the normal path),
-history 365 days, attribution off, permission denies and read-only
-allows, hooks, statusline, plugins, the mode that loads both CLAUDE.md and
-AGENTS.md (else `~/work/CLAUDE.md` would hide repos' AGENTS.md). Never owned:
+Owned keys: bypass permission mode as the default (Anand's choice; the native
+ask and deny rules in §2 are the guard rails), history 365 days, attribution
+off, the deny and ask rules (no allow rules: they do nothing in bypass), the
+three hooks, statusline, plugins, the mode that loads both CLAUDE.md and
+AGENTS.md (else a CLAUDE.md in a parent folder would hide repos' AGENTS.md). Never owned:
 model, effort, theme and other `/config` preferences.
 
 Plugins: superpowers, security-guidance (reviewer on Sonnet), pyright-lsp,
@@ -203,7 +213,9 @@ task count.
 
 ## To verify during the build (not assumed)
 
-1. Whether a hook's `ask` still prompts with permissions bypassed.
+1. That the ask rules prompt and the deny rules block in a bypass session,
+   including MCP tool-name globs, and that `claude` shows no startup warning
+   for any owned rule.
 2. The current setting names for attribution, history length, and the
    CLAUDE.md + AGENTS.md loading mode.
 3. That UserPromptSubmit sees the real prompt text and SubagentStart exists in
