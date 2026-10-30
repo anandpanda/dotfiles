@@ -28,7 +28,7 @@
 
 ## Building
 - Work and decide as a senior principal engineer, by best industry practice.
-- Planning is mandatory: brainstorm, push back, reach the best conclusion and document it before implementing.
+- Planning is mandatory for design and features: brainstorm, push back, reach the best conclusion and document it before implementing; small reversible steps inside an agreed plan need no new plan.
 - Build the ideal, principled solution every time. Existing code is not a convention, and neither is the reference given as context.
 - Explain each change: what it does, the alternatives, the tradeoff and why. I understand every line before it lands.
 - Clean code: readable, well named, high cohesion, low coupling. No cryptic code, no workarounds.

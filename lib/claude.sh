@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Claude Code owns ~/.claude/settings.json; the dotfiles own only the top-level keys in settings.owned.json.
 
-# Rewrites each top-level key of OWNED into LIVE (replace, not deep merge). Prints "skip settings" or "merged settings".
+CLAUDE_MERGE='def merge: .[0] + .[1] + {pluginConfigs: ((.[0].pluginConfigs // {}) + .[1].pluginConfigs)};'
+
+# Rewrites each top-level key of OWNED into LIVE (replace; pluginConfigs one level deep). Prints "skip settings" or "merged settings".
 claude_settings_merge() { # OWNED LIVE
   local owned="$1" live="$2" tmp
   mkdir -p "$(dirname "$live")"
@@ -10,7 +12,7 @@ claude_settings_merge() { # OWNED LIVE
   fi
   [ -f "$live" ] || echo '{}' >"$live"
   tmp="$(mktemp "$live.XXXXXX")"
-  jq -s '.[0] + .[1]' "$live" "$owned" >"$tmp" || {
+  jq -s "$CLAUDE_MERGE merge" "$live" "$owned" >"$tmp" || {
     rm -f "$tmp"
     return 1
   }
@@ -25,12 +27,10 @@ claude_settings_merge() { # OWNED LIVE
 
 # Prints each owned key whose live value differs; exit 1 if any.
 claude_settings_drift() { # OWNED LIVE
-  local owned="$1" live="$2" key drift=0
-  while IFS= read -r key; do
-    if [ "$(jq -cS --arg k "$key" '.[$k]' "$owned")" != "$(jq -cS --arg k "$key" '.[$k]' "$live" 2>/dev/null)" ]; then
-      echo "$key"
-      drift=1
-    fi
-  done < <(jq -r 'keys[]' "$owned")
-  return "$drift"
+  local owned="$1" live="$2" drifted
+  drifted="$(jq -rs "$CLAUDE_MERGE merge as \$merged | .[0] as \$live | .[1] | keys[] | select(\$merged[.] != \$live[.])" "$live" "$owned" 2>/dev/null)" ||
+    drifted="$(jq -r 'keys[]' "$owned")"
+  [ -z "$drifted" ] && return 0
+  echo "$drifted"
+  return 1
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Owned settings keys must match the live file; enabled plugins installed; jq present.
+# Owned settings keys must match the live file; every listed plugin installed; jq and the claude CLI present.
 set -euo pipefail
 # shellcheck disable=SC1090
 source "$DOTFILES_DIR/lib/claude.sh"
@@ -17,6 +17,9 @@ if command -v claude >/dev/null 2>&1; then
       echo "plugin not installed: $id"
       fail=1
     }
-  done < <(jq -r '.enabledPlugins | to_entries[] | select(.value) | .key' "$owned")
+  done < <(jq -r '.enabledPlugins | keys[]' "$owned")
+else
+  echo "claude CLI missing: plugins not checked"
+  fail=1
 fi
 exit "$fail"

@@ -15,6 +15,7 @@ CLAUDE.md is then brought in line.
 | Who Anand is, language | `home/.claude/rules/anand.md` |
 | Decisions ledger (`DECISIONS.md`) | `home/.claude/rules/building.md` |
 | Test habits | `home/.claude/rules/building.md` |
+| Guard rails (ask and deny rules), plugins, statusline | `settings.owned.json` |
 | How to explain a concept or file | `home/.claude/skills/explain/SKILL.md` (the rules on how he learns stay in `home/.claude/rules/anand.md`) |
 | Stress-testing a plan with questions | `home/.claude/skills/grill/SKILL.md` |
 | Closing a phase, doc-drift | `home/.claude/skills/phase-close/SKILL.md` |

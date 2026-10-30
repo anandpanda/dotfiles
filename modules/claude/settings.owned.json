@@ -5,12 +5,17 @@
       "Read(~/.secrets/**)",
       "Edit(~/.secrets/**)",
       "Read(**/.env)",
+      "Edit(**/.env)",
       "Read(**/.env.*)",
+      "Edit(**/.env.*)",
       "Read(~/.ssh/id_*)",
+      "Edit(~/.ssh/id_*)",
       "Read(~/.aws/sso/cache/**)",
+      "Edit(~/.aws/sso/cache/**)",
       "Edit(~/.claude/settings.json)",
       "Bash(sops -d *)",
-      "Bash(sops decrypt *)"
+      "Bash(sops decrypt *)",
+      "Bash(sops --decrypt *)"
     ],
     "ask": [
       "Bash(gh pr merge *)",
