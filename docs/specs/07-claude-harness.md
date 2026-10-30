@@ -34,7 +34,7 @@ conventions, work skills) is a later step in the private overlay.
 1. Prose for how to answer and decide; hooks and permissions for anything with
    consequences.
 2. Every rule traces to something Anand said or a failure in his sessions.
-3. Few of everything: about 30 lines of CLAUDE.md, 6 hooks, 9 skills, 3 agents,
+3. Few of everything: under 200 lines of always-loaded instructions (CLAUDE.md plus rules, the docs' target), 6 hooks, 10 skills, 3 agents,
    5 plugins, 1 MCP server.
 4. One home per rule: `RESOLVER.md` maps each rule to the file that owns it.
 5. Anand decides design, scope, and anything shared, prod, irreversible or
@@ -61,7 +61,7 @@ conventions, work skills) is a later step in the private overlay.
 Never tracked: `~/.claude.json`, `~/.claude/projects/`, `settings.local.json`,
 plugin caches, auto-memory.
 
-## 1. Working agreement (`CLAUDE.md`, at most 45 lines)
+## 1. Working agreement (`CLAUDE.md`, the short core; CLAUDE.md plus rules stay under 200 lines)
 
 Answering: literal question first; yes/no starts with yes or no; number and
 answer every part; re-check any sentence of Claude's quoted back with "?";
