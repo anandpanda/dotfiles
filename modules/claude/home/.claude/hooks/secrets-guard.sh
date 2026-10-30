@@ -13,6 +13,135 @@ LEAK_RE+="|${REF}[^;&]*\\|[[:space:]]*(od|xxd|hexdump|base64|cut|rev|fold|string
 LEAK_RE+="|<<<[[:space:]]*\"?$REF"
 LEAK_RE+="|(^|[;&|(\`][[:space:]]*)(export[[:space:]]+|local[[:space:]]+)?[A-Za-z_][A-Za-z0-9_]*=\"?$REF"
 GLOB_NAMES=".env .env.local .envrc .netrc .git-credentials credentials id_rsa id_ed25519 id_ecdsa id_dsa x.pem x.key backup-codes.txt recovery-codes.txt"
+SPLIT_AWK='
+function put(x) {
+  if (lvl == 1) printf "%s", x
+  else acc[lvl] = acc[lvl] x
+}
+function plain(line) {
+  gsub(/["\047\\]/, "", line)
+  gsub(/[|&;]/, "\n", line)
+  gsub(/[()\140]/, " ", line)
+  gsub(/>/, " > ", line)
+  gsub(/</, " < ", line)
+  return line
+}
+function closing(s, i, n, op, cl,   d, c, q) {
+  d = 1
+  q = ""
+  for (; i <= n; i++) {
+    c = substr(s, i, 1)
+    if (q != "") {
+      if (c == q) q = ""
+      else if (c == "\\" && q == "\"") i++
+      continue
+    }
+    if (c == "\\") { i++; continue }
+    if (cl != "\140" && (c == "\047" || c == "\"")) { q = c; continue }
+    if (op != cl && c == op) d++
+    else if (c == cl && --d == 0) return i
+  }
+  return n + 1
+}
+function subst(inner,   r) {
+  r = norm(inner)
+  extra = extra "\n" r
+  gsub(/[ \t\n\001]+/, "\003", r)
+  gsub(/\002/, "", r)
+  put("\002" r "\002")
+}
+function norm(s,   n, i, c, nx, q, hd, j, k, t, line, r) {
+  lvl++
+  acc[lvl] = ""
+  n = length(s)
+  q = ""
+  hd = ""
+  for (i = 1; i <= n; i++) {
+    c = substr(s, i, 1)
+    nx = substr(s, i + 1, 1)
+    if (q == "\047") {
+      if (c == "\047") q = ""
+      else put(index(" \t\n", c) ? "\001" : c)
+      continue
+    }
+    if (q == "\"" && c == "\"") { q = ""; continue }
+    if (c == "\\") {
+      if (nx != "\n") put(index(" \t", nx) ? "\001" : nx)
+      i++
+      continue
+    }
+    if (nx == "(" && (c == "\044" || (q == "" && (c == "<" || c == ">")))) {
+      j = closing(s, i + 2, n, "(", ")")
+      subst(substr(s, i + 2, j - i - 2))
+      i = j
+      continue
+    }
+    if (c == "\140") {
+      j = closing(s, i + 1, n, "\140", "\140")
+      subst(substr(s, i + 1, j - i - 1))
+      i = j
+      continue
+    }
+    if (q == "\"") { put(index(" \t\n", c) ? "\001" : c); continue }
+    if (c == "\047" || c == "\"") { q = c; continue }
+    if (c == "#" && (i == 1 || index(" \t\n;&|(", substr(s, i - 1, 1)))) {
+      while (i < n && substr(s, i + 1, 1) != "\n") i++
+      continue
+    }
+    if (c == ">") {
+      put(" > ")
+      while (index(">&|", substr(s, i + 1, 1)) && i < n) i++
+      continue
+    }
+    if (c == "&" && nx == ">") continue
+    if (c == "<") {
+      k = i
+      while (substr(s, k + 1, 1) == "<") k++
+      if (k - i == 1) {
+        j = k + 1
+        if (substr(s, j, 1) == "-") j++
+        while (index(" \t", substr(s, j, 1)) && j <= n) j++
+        t = ""
+        while (j <= n && !index(" \t\n;&|<>()", substr(s, j, 1))) { t = t substr(s, j, 1); j++ }
+        gsub(/["\047\\]/, "", t)
+        hd = t
+      }
+      put(" < ")
+      i = k
+      continue
+    }
+    if (c == "\n" && hd != "") {
+      put("\n")
+      while (i < n) {
+        j = index(substr(s, i + 1), "\n")
+        if (j == 0) j = n - i + 1
+        line = substr(s, i + 1, j - 1)
+        i += j
+        t = line
+        sub(/^\t+/, "", t)
+        if (t == hd) break
+        put(plain(line) "\n")
+      }
+      hd = ""
+      continue
+    }
+    if (index("|&;()\n", c)) { put("\n"); continue }
+    put(c)
+  }
+  r = acc[lvl]
+  lvl--
+  return r
+}
+BEGIN {
+  while ((getline line) > 0) s = s line "\n"
+  gsub("[\044][{]HOME[}]", "\044HOME", s)
+  norm(s)
+  printf "\n%s\n", extra
+}
+'
+SP=$'\001'
+SUBC=$'\002'
+SUBSEP_=$'\003'
 XARGS=0
 PHYS=""
 ABS=""
@@ -60,8 +189,21 @@ absolute() {
 }
 
 is_secret() {
-  local v="${1##*=}" a m
+  local v a m t x
+  case "$1" in
+    *"$SUBC"*)
+      if is_secret "${1%%"$SUBC"*}X${1##*"$SUBC"}"; then return 0; fi
+      t="${1#*"$SUBC"}"
+      t="${t%"$SUBC"*}"
+      for x in ${t//$SUBSEP_/ }; do
+        if is_secret "$x"; then return 0; fi
+      done
+      return 1
+      ;;
+  esac
+  v="${1##*=}"
   v="${v#@}"
+  v="${v//$SP/ }"
   case "$v" in "" | -*) return 1 ;; esac
   absolute "$v"
   a="$ABS"
@@ -111,13 +253,27 @@ set_cwd() {
 }
 
 scan_segment() {
-  local w b words ws=0 wrap=0 envd=0 reader=0 copy="" pend=0 prev="" target=0 arch=0 curl=0 sops=0 find=0 found=0 fexec=0 grep=0 pat=0 next=""
-  read -r -a words <<<"$1"
-  set -- "${words[@]+"${words[@]}"}"
+  local w b ws="$1" shell=0 wrap=0 envd=0 reader=0 copy="" pend=0 prev="" src="" srcsec=0 nops=0 target=0 tsec=0 arch=0 curl=0 sops=0 find=0 found=0 fexec=0 grep=0 pat=0 next=""
+  shift
   while [ $# -gt 0 ]; do
+    case "$1" in "$SUBC"*)
+      reader=1
+      break
+      ;;
+    esac
     b="${1##*/}"
     case "$b" in
-      sudo | command | exec | nohup | time | builtin | bash | sh | zsh | nice | timeout | xargs | stdbuf)
+      bash | sh | zsh | dash | ksh | eval)
+        wrap=1
+        envd=0
+        shell=1
+        if [ "$b" = eval ]; then
+          shift
+          scan_command "$*" "$ws"
+          return 0
+        fi
+        ;;
+      sudo | command | exec | nohup | time | builtin | nice | timeout | xargs | stdbuf)
         wrap=1
         envd=0
         ;;
@@ -135,6 +291,13 @@ scan_segment() {
         ws=1
         ;;
       *=*) ;;
+      -*c)
+        if [ "$shell" = 1 ]; then
+          scan_command "${2:-}" "$ws"
+          return 0
+        fi
+        if [ "$wrap" = 0 ]; then break; fi
+        ;;
       -* | [0-9]*) if [ "$wrap" = 0 ]; then break; fi ;;
       *) break ;;
     esac
@@ -160,7 +323,10 @@ scan_segment() {
   esac
   for w; do
     if [ -n "$next" ]; then
-      case "$next" in in | tgt) if is_secret "$w"; then block_path "$w"; fi ;; esac
+      case "$next" in
+        in | tgt) if is_secret "$w"; then block_path "$w"; fi ;;
+        tdir) if is_secret "$w"; then tsec=1; fi ;;
+      esac
       next=""
       continue
     fi
@@ -186,13 +352,25 @@ scan_segment() {
     if [ -n "$copy" ]; then
       if [ "$copy" != rsync ]; then
         case "$w" in
-          -t | --target-directory) target=1 && next=skip && continue ;;
-          -t?* | --target-directory=*) target=1 && continue ;;
+          -t | --target-directory | -[!-]*t) target=1 && next=tdir && continue ;;
+          --target-directory=*)
+            target=1
+            if is_secret "${w#*=}"; then tsec=1; fi
+            continue
+            ;;
+          -t?* | -[!-]*t?*)
+            target=1
+            if is_secret "${w#*t}"; then tsec=1; fi
+            continue
+            ;;
         esac
       fi
       case "$w" in -*) continue ;; esac
-      if [ "$target" = 1 ] && is_secret "$w"; then block_path "$w"; fi
-      if [ "$pend" = 1 ]; then block_path "$prev"; fi
+      nops=$((nops + 1))
+      if [ "$pend" = 1 ]; then
+        srcsec=1
+        src="$prev"
+      fi
       pend=0
       if is_secret "$w"; then
         pend=1
@@ -230,19 +408,31 @@ scan_segment() {
       found=1
     fi
   done
-  if [ "$target$pend" = 11 ]; then block_path "$prev"; fi
+  if [ -n "$copy" ]; then
+    if [ "$target" = 1 ]; then
+      if [ "$tsec" = 0 ] && [ "$srcsec$pend" != 00 ]; then block_path "${src:-$prev}"; fi
+    elif [ "$copy$nops$pend" = ln11 ]; then
+      block_path "$prev"
+    elif [ "$srcsec$pend" = 10 ]; then
+      block_path "$src"
+    fi
+  fi
   if [ "$find$found" = 11 ] && [ "$fexec$XARGS" != 00 ]; then block_path "a secret path found by find"; fi
   return 0
 }
 
 check_bash() {
-  local s seg
   if hook_has_token <<<"$1"; then hook_block "Blocked: the command carries a literal token. Store it in ~/.secrets and $ROUTE."; fi
   if grep -Eq "$LEAK_RE" <<<"$1"; then hook_block "Blocked: printing, slicing, copying or decoding a secret variable leaks it. $ROUTE."; fi
-  s="$(sed -e 's/\\//g' -e "s/[\"']//g" -e "s/\\\${HOME}/\\\$HOME/g" -e 's/>&/>/g' -e 's/&>/>/g' -e 's/>/ > /g' -e 's/</ < /g' -e 's/[()`]/ /g' <<<"$1" | tr '|&;' '[\n*]')"
+  scan_command "$1" 0
+}
+
+scan_command() {
+  local s words
+  s="$(awk "$SPLIT_AWK" <<<"${1//$SP/ }")"
   case "$s" in *xargs*) XARGS=1 ;; esac
   set -f
-  while IFS= read -r seg; do scan_segment "$seg"; done <<<"$s"
+  while read -r -a words; do scan_segment "$2" "${words[@]+"${words[@]}"}"; done <<<"$s"
   return 0
 }
 

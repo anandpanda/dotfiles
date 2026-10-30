@@ -225,6 +225,35 @@ $body"
     "grep -rn -A 2 TOKEN ~/.secrets" "rg -t py foo .env"
 }
 
+@test "separators inside quotes do not split a command" {
+  each_blocked "grep -E 'a|b' ~/.secrets/x" 'grep "a;b" ~/.secrets/x' 'cat ~/.secrets/x # a|b' \
+    "grep 'a&b' .env" 'diff <(cat ~/.secrets/x) /tmp/y' "bash <<EOF
+cat ~/.secrets/x
+EOF" "cat <<'EOF'
+don't
+EOF
+cat ~/.secrets/x"
+  each_allowed "echo 'a|b' | grep a" 'git commit -m "fix: a; b"' "grep -n 'foo .env' README.md" \
+    'echo "a > .env" >> notes.txt' "cat >> .env <<EOF
+A=1
+EOF"
+}
+
+@test "a substitution is its own command; its reader does not make the outer one read" {
+  each_allowed 'docker run -e V=$(cat VERSION) --env-file .env img' 'docker run $(cat image.txt) --env-file .env' \
+    'TAG=$(jq -r .version package.json) docker compose --env-file .env up' \
+    'docker build --build-arg V=$(cat VERSION) --secret id=env,src=.env .' \
+    'docker run -e V=`cat VERSION` --env-file .env img' 'docker run -e "V=$(cat VERSION)" --env-file .env img'
+  each_blocked '$(which cat) ~/.secrets/x' 'cat $(echo ~/.secrets/x)' 'cat `echo ~/.secrets/x`' \
+    'docker run -e V=$(cat .env) img' 'echo "$(cat ~/.secrets/x)"' 'echo $(echo $(cat ~/.secrets/x))' \
+    'cat ~/.secrets/`echo x`' 'cat ~/.secrets/$(echo x)' "sh -c 'grep -E \"a|b\" ~/.secrets/x'" 'eval "cat ~/.secrets/x"'
+}
+
+@test "combined cp flags with t and one-operand ln read their sources" {
+  each_blocked "cp -at /tmp ~/.secrets/x" "cp -rt /tmp ~/.secrets" "ln -s ~/.secrets/x" "ln ~/.secrets/x"
+  each_allowed "cp -vt /tmp src/a.txt" "ln -s ~/.secrets/x ~/.secrets/y" "cp -av src dst"
+}
+
 @test "fails closed on unreadable input" {
   run "$SH" "$H/secrets-guard.sh" <<<'{oops'
   [ "$status" -eq 2 ]
