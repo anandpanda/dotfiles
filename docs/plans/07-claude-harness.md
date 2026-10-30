@@ -139,7 +139,7 @@ Formatter and context hooks are removed with the rest (see Task 3). Compaction r
 **Files:** Modify `docs/STATUS.md`, `docs/specs/07-claude-harness.md` (record verified facts); Delete `.superpowers/sdd/07-*` at the end
 
 - [ ] **Step 1:** Verify the spec's open facts in a throwaway session and record each result with its evidence: ask rules prompt and deny rules block in a bypass session, MCP globs included, and `claude` prints no rule warnings; settings names accepted (`claude doctor` shows no rejected entries); plugin bootstrap from a clean `CLAUDE_CONFIG_DIR`. Fix any rule that warns or does not fire.
-- [ ] **Step 2:** Back up `~/.claude/settings.json`, run `dots install personal`, then `dots doctor` → clean.
+- [ ] **Step 2:** Back up `~/.claude/settings.json`, run `dots install` (reuses the remembered profile; this Mac is `work`), then `dots doctor` → clean.
 - [ ] **Step 3:** Live checks: Read of `~/.secrets/secrets.yaml` refused; `gh pr merge` and `git push origin main` prompt; statusline renders.
 - [ ] **Step 4:** Full suite, lint, CI green on macOS and Ubuntu.
 - [ ] **Step 5:** Fresh reviewer (the new `reviewer` agent), fix every finding, STATUS Phase 7 section, delete the ledger dir, commit `docs: phase 7 closed`.
