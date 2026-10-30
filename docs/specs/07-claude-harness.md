@@ -131,7 +131,7 @@ doctor runs.
 ## 4. Skills and agents
 
 Skills: `explain` (map, one step, his files, smallest diagram, restate),
-`grill-me` (numbered rounds, recommended answer each; facts are Claude's job,
+`grill` (numbered rounds, recommended answer each; facts are Claude's job,
 decisions his), `phase-close` (tests with count vs previous, lint, doctor,
 clean git, reviewer, fix all, doc-drift, "what I got wrong", STATUS, yours to
 do), `pr-description` (what, before/after, a diagram, merge risk, what did not

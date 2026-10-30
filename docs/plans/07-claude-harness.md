@@ -177,7 +177,7 @@
 ### Task 10: Skills and agents
 
 **Files:**
-- Create: `home/.claude/skills/{explain,grill-me,phase-close,pr-description,voice-draft,review-pr,research,find-past-session,handoff}/SKILL.md`, each with `evals/trigger.json`
+- Create: `home/.claude/skills/{explain,grill,phase-close,pr-description,voice-draft,review-pr,research,find-past-session,handoff}/SKILL.md`, each with `evals/trigger.json`
 - Create: `home/.claude/agents/{reviewer,researcher,worker}.md`
 - Create: `home/.claude/skills/find-past-session/search.sh`
 - Test: `tests/claude-skills.bats`
@@ -188,9 +188,9 @@
 - `search.sh <phrase>...` greps `~/.claude/projects/*/*.jsonl` for any phrase, prints `session  date  matching line` (≤ 200 chars), never more than 30 lines.
 - `evals/trigger.json`: `[{"query": …, "should_trigger": bool}]`, ≥ 6 entries, half `false`.
 
-- [ ] **Step 1: Failing tests:** `every skill has name and description frontmatter on line 1`, `side-effect skills disable model invocation`, `review-pr does not shadow a team skill named pr-review`, `each skill ships a trigger eval with at least half negatives`, `agents carry the agreed tools, model and effort`, `reviewer cannot edit` (no Edit/Write/Bash in tools), `pr-description forbids a testing section and requires a diagram`, `search.sh finds a phrase in a fixture transcript and caps output`.
+- [ ] **Step 1: Failing tests:** `every skill has name and description frontmatter on line 1`, `side-effect skills disable model invocation`, `no skill shares a name with a team skill` (pr-review, grill-me; the work layer extends the list from the team repo), `each skill ships a trigger eval with at least half negatives`, `agents carry the agreed tools, model and effort`, `reviewer cannot edit` (no Edit/Write/Bash in tools), `pr-description forbids a testing section and requires a diagram`, `search.sh finds a phrase in a fixture transcript and caps output`.
 - [ ] **Step 2:** FAIL.
-- [ ] **Step 3:** Write skills from spec §4 and the adopted team ideas: review-pr lenses find → refute → report ≥ strong, each finding tied to a line read, comment ledger, drafts via voice-draft; reviewer brief "oracle is the task and its claims, never the reasoning; flag tests that pass on a no-op"; phase-close includes doc-drift and the anti-cheat contract; explain uses map → one step → smallest diagram → restate; grill-me numbers each question with a recommended answer.
+- [ ] **Step 3:** Write skills from spec §4 and the adopted team ideas: review-pr lenses find → refute → report ≥ strong, each finding tied to a line read, comment ledger, drafts via voice-draft; reviewer brief "oracle is the task and its claims, never the reasoning; flag tests that pass on a no-op"; phase-close includes doc-drift and the anti-cheat contract; explain uses map → one step → smallest diagram → restate; grill numbers each question with a recommended answer.
 - [ ] **Step 4–5:** PASS + lint → commit `feat(claude): skills and agents`.
 
 ### Task 11: Plugins, MCP, tools, doctor
