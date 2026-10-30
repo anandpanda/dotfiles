@@ -51,4 +51,5 @@
 
 - [x] `./install.sh` (remembered profile `work`), `./doctor.sh` clean for the touched modules; remove the stale `~/work/CLAUDE.md` link.
 - [x] Verify live: `git config user.email` in a temp repo under each work and personal folder and in the overlay checkout; `jq` shows the prod ask rules in `~/.claude/settings.json`; `~/.claude/rules/work.md` linked; the clash check passes.
-- [x] Full `bats tests`, `just lint`; fresh reviewer on both repos; fix; STATUS; push both repos on Anand's go; CI green.
+- [x] Full `bats tests`, `just lint`; fresh reviewer on both repos; fix; STATUS.
+- [ ] Push both repos on Anand's go; CI green.

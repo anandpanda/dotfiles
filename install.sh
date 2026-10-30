@@ -82,7 +82,11 @@ if profile_has_overlay "$PROFILE"; then
     DOTFILES_DIR="$DOTFILES_DIR" HOME="$HOME" DRY_RUN="$DRY_RUN" bash "$(modules_root)/git/install.sh"
   fi
 fi
-links_prune "$DOTFILES_LINK_RUN"
+if profile_has_overlay "$PROFILE" && [ -z "$OVERLAY_URL" ]; then
+  log_warn "overlay not applied: link record kept until a full run"
+else
+  links_prune "$DOTFILES_LINK_RUN"
+fi
 
 if [ "$DRY_RUN" != 1 ]; then
   remember profile "$PROFILE"
