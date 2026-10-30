@@ -1,4 +1,5 @@
 load helper
+bats_require_minimum_version 1.5.0
 setup() {
   setup_home
   for f in log os link profile module brew preflight overlay; do source "$DOTFILES_DIR/lib/$f.sh"; done
