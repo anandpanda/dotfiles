@@ -1,23 +1,31 @@
 #!/usr/bin/env bash
-# Blocks reading, searching or printing secrets; the allowed route is with-secrets or sops exec-env.
+# Blocks reading, searching or printing secrets; with-secrets and sops exec-env are the route and are checked too.
 set -euo pipefail
 . "$(dirname "$0")/lib.sh"
 
 ROUTE="use \`with-secrets <cmd>\` (or \`sops exec-env\`) so the value reaches the command, never the transcript"
-SECRET_VAR='[A-Za-z0-9_]*(TOKEN|SECRET|PASSW|KEY|CREDENTIAL)[A-Za-z0-9_]*'
-SLICE_RE='\$\{'"$SECRET_VAR"'(:[[:space:]]*-?[0-9]|[#%/^,])'
-PRINT_RE='(^|[^A-Za-z0-9_])(echo|printf)[^|;&]*\$\{?'"$SECRET_VAR"
-DECODE_RE='\$\{?'"$SECRET_VAR"'[^;&]*\|[[:space:]]*(od|xxd|hexdump|base64|cut|rev|fold|strings|head|tail)'
+NAME='([A-Z0-9]+_)*(TOKEN|SECRET|PASSWORD|PASSWD|API_KEY|KEY|CREDENTIALS?)(_[A-Z0-9]+)*'
+REF='\$\{?'"$NAME"'([^A-Za-z0-9_]|$)'
+LEAK_RE='\$\{'"$NAME"'(:[[:space:]]*-?[0-9]|[#%/^,])'
+LEAK_RE+="|(^|[^A-Za-z0-9_])(echo|printf)[^|;&]*$REF"
+LEAK_RE+="|(^|[^A-Za-z0-9_])printenv[[:space:]]+$NAME([^A-Za-z0-9_]|\$)"
+LEAK_RE+="|${REF}[^;&]*\\|[[:space:]]*(od|xxd|hexdump|base64|cut|rev|fold|strings|head|tail|tee|cat)"
+LEAK_RE+="|<<<[[:space:]]*\"?$REF"
+LEAK_RE+="|(^|[;&|(\`][[:space:]]*)(export[[:space:]]+|local[[:space:]]+)?[A-Za-z_][A-Za-z0-9_]*=\"?$REF"
+GLOB_NAMES=".env .env.local .envrc .netrc .git-credentials credentials id_rsa id_ed25519 id_ecdsa id_dsa x.pem x.key backup-codes.txt recovery-codes.txt"
+XARGS=0
+PHYS=""
+ABS=""
 
 secret_path() {
-  local p="$1" base="${1##*/}" hit=1
+  local base="${1##*/}" hit=1
   shopt -s nocasematch
-  case "$p" in
-    */.secrets/* | */.secrets | .secrets/* | .secrets | */.aws/sso/cache* | .aws/sso/cache*) hit=0 ;;
+  case "$1" in
+    */.secrets/* | */.secrets | */.aws/sso/cache | */.aws/sso/cache/* | */.aws/credentials) hit=0 ;;
     *)
       case "$base" in
-        .env.example | .env.sample | .env.template) ;;
-        .env | .env.* | id_rsa | id_ed25519 | *backup*code* | *recovery*code* | *.pem | *.key) hit=0 ;;
+        .env*.example | .env*.sample | .env*.template) ;;
+        .env | .env.* | .envrc | .netrc | .git-credentials | id_rsa | id_ed25519 | id_ecdsa | id_dsa | *backup*code* | *recovery*code* | *.pem | *.key) hit=0 ;;
       esac
       ;;
   esac
@@ -25,36 +33,222 @@ secret_path() {
   return "$hit"
 }
 
-check_path() {
-  [ -n "$1" ] || return 0
-  secret_path "$(hook_norm_path "$1")" && hook_block "Blocked: $1 holds secrets. $ROUTE."
+physical() {
+  local d b t here="$PWD"
+  PHYS=""
+  [ -e "$1" ] || return 0
+  d="${1%/*}"
+  b="${1##*/}"
+  if [ -L "$1" ]; then
+    t="$(readlink "$1")"
+    case "$t" in /*) ;; *) t="$d/$t" ;; esac
+    d="${t%/*}"
+    b="${t##*/}"
+  fi
+  CDPATH='' cd -P "${d:-/}" 2>/dev/null || return 0
+  PHYS="$PWD/$b"
+  cd "$here"
+}
+
+absolute() {
+  case "$1" in
+    \~ | \~/*) ABS="$HOME${1#\~}" ;;
+    \$HOME | \$HOME/*) ABS="$HOME${1#\$HOME}" ;;
+    /*) ABS="$1" ;;
+    *) ABS="$CWD/$1" ;;
+  esac
+}
+
+is_secret() {
+  local v="${1##*=}" a m
+  v="${v#@}"
+  case "$v" in "" | -*) return 1 ;; esac
+  absolute "$v"
+  a="$ABS"
+  secret_path "$a" && return 0
+  case "$a" in
+    *[*?[]*)
+      case "$a" in *.secr* | *secrets* | *.SECR* | *SECRETS*) return 0 ;; esac
+      set +f
+      shopt -s nullglob dotglob
+      for m in $a; do
+        if secret_path "$m"; then
+          set -f
+          shopt -u nullglob dotglob
+          return 0
+        fi
+      done
+      set -f
+      shopt -u nullglob dotglob
+      return 1
+      ;;
+  esac
+  physical "$a"
+  [ -n "$PHYS" ] && secret_path "$PHYS"
+}
+
+block_path() { hook_block "Blocked: $1 holds secrets and this command would read or send it. $ROUTE."; }
+block_dump() { hook_block "Blocked: this prints the values with-secrets loads. Run the command that needs them, never an environment dump."; }
+
+env_runs() {
+  shift
+  local w
+  for w; do
+    case "$w" in -* | *=*) ;; *) return 0 ;; esac
+  done
+  return 1
+}
+
+set_cwd() {
+  local v m
+  absolute "$1"
+  v="$ABS"
+  case "$v" in
+    *[*?[]*)
+      set +f
+      shopt -s nullglob dotglob
+      for m in $v; do
+        v="$m"
+        break
+      done
+      set -f
+      shopt -u nullglob dotglob
+      ;;
+  esac
+  CWD="$v"
+  cd "$CWD" 2>/dev/null || true
+}
+
+scan_segment() {
+  local w b words ws=0 reader=0 copy=0 pend=0 prev="" arch=0 curl=0 sops=0 find=0 found=0 fexec=0 next=""
+  read -r -a words <<<"$1"
+  set -- "${words[@]+"${words[@]}"}"
+  while [ $# -gt 0 ]; do
+    case "$1" in
+      sudo | command | exec | nohup | time | builtin | bash | sh | zsh | -c | -lc | -l | -e) shift ;;
+      with-secrets)
+        shift
+        ws=1
+        ;;
+      sops)
+        if [ "${2:-}" != exec-env ] || [ $# -lt 3 ]; then break; fi
+        shift 3
+        ws=1
+        ;;
+      *) break ;;
+    esac
+  done
+  if [ "$ws" = 1 ]; then
+    case "${1:-}" in
+      printenv | compgen) block_dump ;;
+      set) if [ $# -eq 1 ]; then block_dump; fi ;;
+      export | declare | typeset) case "${2:--p}" in -p | -x | -px | -xp) block_dump ;; esac ;;
+      env) if ! env_runs "$@"; then block_dump; fi ;;
+    esac
+  fi
+  case "${1:-}" in
+    cd | pushd)
+      shift
+      case "${1:-}" in -P | -L) shift ;; esac
+      set_cwd "${1:-$HOME}"
+      return 0
+      ;;
+    source | .) reader=1 ;;
+  esac
+  for w; do
+    if [ -n "$next" ]; then
+      case "$next" in in | tgt) if is_secret "$w"; then block_path "$w"; fi ;; esac
+      next=""
+      continue
+    fi
+    case "$w" in
+      "<") next=in && continue ;;
+      ">") next=out && continue ;;
+      -d | --decrypt | decrypt) if [ "$sops" = 1 ]; then reader=1; fi ;;
+      -exec | -execdir | -ok | -okdir) fexec=1 ;;
+      -T | --upload-file) if [ "$curl" = 1 ]; then next=tgt && continue; fi ;;
+      -C) if [ "$arch" = 1 ]; then next=skip && continue; fi ;;
+    esac
+    b="${w##*/}"
+    case "$b" in
+      cat | less | more | head | tail | sed | awk | gawk | grep | egrep | fgrep | rg | ag | source | base64 | xxd | od | hexdump | strings | bat | nl | tac | sort | uniq | cut | diff | cmp | jq | yq | python | python3 | node | ruby | perl | php)
+        reader=1
+        continue
+        ;;
+      cp | scp | rsync) copy=1 && continue ;;
+      tar | zip | 7z) arch=1 && continue ;;
+      curl | wget) curl=1 && continue ;;
+      sops) sops=1 && continue ;;
+      find) find=1 && continue ;;
+    esac
+    if [ "$copy" = 1 ]; then
+      case "$w" in -*) continue ;; esac
+      if [ "$pend" = 1 ]; then block_path "$prev"; fi
+      if is_secret "$w"; then
+        pend=1
+        prev="$w"
+      fi
+      continue
+    fi
+    if [ "$reader$arch$curl$find" = 0000 ]; then continue; fi
+    if is_secret "$w"; then
+      if [ "$reader" = 1 ] || [ "$arch" = 1 ]; then block_path "$w"; fi
+      case "$curl$w" in 1*@*) block_path "$w" ;; esac
+      found=1
+    fi
+  done
+  if [ "$find$found" = 11 ] && [ "$fexec$XARGS" != 00 ]; then block_path "a secret path found by find"; fi
   return 0
 }
 
 check_bash() {
-  local seg w
-  printf '%s' "$1" | hook_has_token &&
-    hook_block "Blocked: the command carries a literal token. Store it in ~/.secrets and $ROUTE."
-  printf '%s' "$1" | grep -Eiq "$SLICE_RE|$PRINT_RE|$DECODE_RE" &&
-    hook_block "Blocked: printing, slicing or decoding a secret variable leaks it. $ROUTE."
+  local s seg
+  if hook_has_token <<<"$1"; then hook_block "Blocked: the command carries a literal token. Store it in ~/.secrets and $ROUTE."; fi
+  if grep -Eq "$LEAK_RE" <<<"$1"; then hook_block "Blocked: printing, slicing, copying or decoding a secret variable leaks it. $ROUTE."; fi
+  s="$(sed -e 's/\\//g' -e "s/[\"']//g" -e "s/\\\${HOME}/\\\$HOME/g" -e 's/>&/>/g' -e 's/&>/>/g' -e 's/>/ > /g' -e 's/</ < /g' <<<"$1" | tr '|&;()`' '[\n*]')"
+  case "$s" in *xargs*) XARGS=1 ;; esac
   set -f
-  while IFS= read -r seg; do
-    seg="${seg#"${seg%%[![:space:]]*}"}"
-    case "$seg" in with-secrets | with-secrets\ * | sops\ exec-env\ *) continue ;; esac
-    for w in $(printf '%s' "$seg" | tr -d "\"'" | tr '<>=' '   '); do
-      secret_path "$w" && hook_block "Blocked: $w holds secrets. $ROUTE."
+  while IFS= read -r seg; do scan_segment "$seg"; done <<<"$s"
+  return 0
+}
+
+check_path() {
+  local p
+  [ -n "$1" ] || return 0
+  p="$(hook_norm_path "$1")"
+  physical "$p"
+  if secret_path "$p" || { [ -n "$PHYS" ] && secret_path "$PHYS"; }; then hook_block "Blocked: $1 holds secrets. $ROUTE."; fi
+  return 0
+}
+
+check_glob() {
+  local piece base letters re c
+  [ -n "$1" ] || return 0
+  case "$1" in *[Ss][Ee][Cc][Rr]* | *sso/cache*) hook_block "Blocked: glob $1 reaches secrets. $ROUTE." ;; esac
+  set -f
+  for piece in ${1//[\{\},]/ }; do
+    base="${piece##*/}"
+    letters="${base//[^A-Za-z0-9_]/}"
+    [ "${#letters}" -ge 2 ] || continue
+    re="${base//./\\.}"
+    re="${re//\*/.*}"
+    re="^${re//\?/.}\$"
+    for c in $GLOB_NAMES; do
+      if [[ $c =~ $re ]]; then hook_block "Blocked: glob $1 matches secret files like $c. $ROUTE."; fi
     done
-  done < <(printf '%s\n' "$1" | tr '|&;()`' '[\n*]')
+  done
   return 0
 }
 
 hook_input
+CWD="$(hook_field .cwd)"
+CWD="${CWD:-$PWD}"
+cd "$CWD" 2>/dev/null || true
 case "$(hook_field .tool_name)" in
   Read) check_path "$(hook_field .tool_input.file_path)" ;;
   Grep)
     check_path "$(hook_field .tool_input.path)"
-    glob="$(hook_field .tool_input.glob)"
-    check_path "${glob//\*/}"
+    check_glob "$(hook_field .tool_input.glob)"
     ;;
   Bash) check_bash "$(hook_field .tool_input.command)" ;;
 esac

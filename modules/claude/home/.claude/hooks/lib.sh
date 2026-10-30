@@ -2,7 +2,7 @@
 # Shared helpers for Claude Code hooks: read the input once, pull fields, block, add context, normalise paths.
 
 hook_has_token() {
-  grep -Eq '(^|[^A-Za-z0-9_])(AKIA[0-9A-Z]{16}|ghp_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|xox[abp]-[A-Za-z0-9-]{10,}|glsa_[A-Za-z0-9_]{20,}|sk-[A-Za-z0-9_-]{20,}|Bearer [A-Za-z0-9._~+/=-]{20,})'
+  grep -Eq '(^|[^A-Za-z0-9_])((AKIA|ASIA)[0-9A-Z]{16}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}|xox[abp]-[A-Za-z0-9-]{10,}|glsa_[A-Za-z0-9_]{20,}|glpat-[A-Za-z0-9_-]{20,}|AIza[0-9A-Za-z_-]{35}|sk-[A-Za-z0-9_-]{20,}|Bearer [A-Za-z0-9._~+/=-]{20,})|-----BEGIN [A-Z ]*PRIVATE KEY-----'
 }
 
 hook_block() {
