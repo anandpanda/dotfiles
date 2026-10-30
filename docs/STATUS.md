@@ -136,9 +136,10 @@ dir at the temp home; unit tests now also run on macOS in CI (bash 3.2).
   coder, temporal, kubectl, kubectx, helm, awscli, psql via libpq, bash 5;
   repo/CI tooling and admin UIs deliberately not in dotfiles), vscode
   (coder.coder-remote), claude-work (~/work/CLAUDE.md slot for Phase 7), aws
-  (~/.aws/config declared: `work-<env>` for dev, stg, prd-us, prd-eu, plus
-  dev secrets and the two RDS bastion profiles; readonly, prd-me and the
-  duplicates dropped 2026-10-30).
+  (~/.aws/config declared, profiles `work-<env>-<what>`: dev admin/secrets/
+  readonly, stg readonly/secrets, prd us-readonly/eu-readonly/readonly, and the
+  PAM-granted prd admin/bastion ones; install.sh generates one kube context per
+  cluster, `kubectx work-dev`; prd-me and the duplicates dropped 2026-10-30).
   `dots install work --overlay <url>` once; the url is remembered.
 - Ruling (work dev setup, when Anand asks for it): servers and services
   (Postgres, Redis, queues, anything that listens on a port) run in Docker,
