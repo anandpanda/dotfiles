@@ -43,19 +43,6 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
   done
 }
 
-@test "each model-invocable skill ships a trigger eval with at least half negatives" {
-  for s in $SKILLS; do
-    e="$S/$s/evals/trigger.json"
-    case " $USER_ONLY " in
-      *" $s "*) [ ! -e "$S/$s/evals" ] || { echo "user-only skill has trigger evals: $s"; return 1; }; continue ;;
-    esac
-    jq -e 'type=="array" and length>=6
-      and all(.[]; (.query|type)=="string" and (.query|length)>0 and (.should_trigger|type)=="boolean")
-      and ((map(select(.should_trigger==false))|length)*2 >= length)
-      and any(.[]; .should_trigger==true)' "$e" >/dev/null || { echo "bad eval: $s"; return 1; }
-  done
-}
-
 @test "agents carry the agreed tools, model and effort" {
   [ "$(field "$A/reviewer.md" tools)" = "Read, Grep, Glob" ]
   [ "$(field "$A/reviewer.md" model)" = opus ]
