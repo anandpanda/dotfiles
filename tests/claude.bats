@@ -86,7 +86,7 @@ teardown() { teardown_home; }
 OWNED="$BATS_TEST_DIRNAME/../modules/claude/settings.owned.json"
 
 @test "owned file sets the verbatim values" {
-  run jq -e '.permissions.defaultMode=="bypassPermissions" and .attribution==false and .cleanupPeriodDays==365
+  run jq -e '.permissions.defaultMode=="bypassPermissions" and .attribution=={"commit":"","pr":"","sessionUrl":false} and .cleanupPeriodDays==365
     and .pluginConfigs["cc-plugin-agents-md@builtin"].options.instructionFiles=="claude-md-and-agents-md"
     and (has("model")|not) and (has("effortLevel")|not) and (has("modelSettings")|not)' "$OWNED"
   [ "$status" -eq 0 ]
@@ -98,7 +98,7 @@ OWNED="$BATS_TEST_DIRNAME/../modules/claude/settings.owned.json"
   run claude_settings_merge "$OWNED" "$HOME/.claude/settings.json"
   [ "$status" -eq 0 ]
   [ "$output" = "merged settings" ]
-  jq -e '.model=="opus" and .effortLevel=="xhigh" and .attribution==false and .cleanupPeriodDays==365' "$HOME/.claude/settings.json"
+  jq -e '.model=="opus" and .effortLevel=="xhigh" and .attribution=={"commit":"","pr":"","sessionUrl":false} and .cleanupPeriodDays==365' "$HOME/.claude/settings.json"
 }
 
 @test "merge is idempotent" {
@@ -207,7 +207,7 @@ OWNED="$BATS_TEST_DIRNAME/../modules/claude/settings.owned.json"
   claude_settings_merge "$OWNED" "$live" >/dev/null
   ls "$live".invalid.* >/dev/null
   grep -qF '{oops' "$live".invalid.*
-  jq -e '.attribution==false' "$live"
+  jq -e '.attribution=={"commit":"","pr":"","sessionUrl":false}' "$live"
 }
 
 @test "missing live file is created" {
@@ -238,7 +238,7 @@ OWNED="$BATS_TEST_DIRNAME/../modules/claude/settings.owned.json"
   [ ! -e "$HOME/.claude/settings.json" ]
   run bash "$DOTFILES_DIR/$C/install.sh"
   [ "${lines[0]}" = "merged settings" ]
-  jq -e '.attribution==false' "$HOME/.claude/settings.json"
+  jq -e '.attribution=={"commit":"","pr":"","sessionUrl":false}' "$HOME/.claude/settings.json"
 }
 
 enabled() { jq -r '.enabledPlugins | to_entries[] | select(.value) | .key' "$OWNED"; }
@@ -249,8 +249,8 @@ enabled() { jq -r '.enabledPlugins | to_entries[] | select(.value) | .key' "$OWN
     and .enabledPlugins["pyright-lsp@claude-plugins-official"]==true
     and .enabledPlugins["typescript-lsp@claude-plugins-official"]==true
     and .enabledPlugins["learning-output-style@claude-plugins-official"]==false
-    and .enabledPlugins["code-review@claude-plugins-official"]==false
-    and .enabledPlugins["code-simplifier@claude-plugins-official"]==false
+    and (.enabledPlugins|has("code-review@claude-plugins-official")|not)
+    and (.enabledPlugins|has("code-simplifier@claude-plugins-official")|not)
     and .env.SECURITY_REVIEW_MODEL=="claude-sonnet-5-5"' "$OWNED"
   [ "$status" -eq 0 ]
 }
@@ -303,7 +303,7 @@ enabled() { jq -r '.enabledPlugins | to_entries[] | select(.value) | .key' "$OWN
   [ "$status" -eq 0 ]
   [[ "$output" == *"run: claude plugin install superpowers@claude-plugins-official --scope user"* ]]
   [[ "$output" == *"run: claude mcp add --scope user --transport http context7"* ]]
-  jq -e '.attribution==false' "$HOME/.claude/settings.json"
+  jq -e '.attribution=={"commit":"","pr":"","sessionUrl":false}' "$HOME/.claude/settings.json"
 }
 
 @test "doctor names an enabled plugin that is not installed" {

@@ -56,7 +56,7 @@
       "mcp__*github*__*comment*"
     ]
   },
-  "attribution": false,
+  "attribution": {"commit": "", "pr": "", "sessionUrl": false},
   "cleanupPeriodDays": 365,
   "pluginConfigs": {
     "cc-plugin-agents-md@builtin": {
@@ -70,9 +70,7 @@
     "security-guidance@claude-plugins-official": true,
     "pyright-lsp@claude-plugins-official": true,
     "typescript-lsp@claude-plugins-official": true,
-    "learning-output-style@claude-plugins-official": false,
-    "code-review@claude-plugins-official": false,
-    "code-simplifier@claude-plugins-official": false
+    "learning-output-style@claude-plugins-official": false
   },
   "env": {
     "SECURITY_REVIEW_MODEL": "claude-sonnet-5-5"
