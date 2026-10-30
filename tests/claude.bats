@@ -11,8 +11,9 @@ teardown() { teardown_home; }
   done
 }
 
-@test "CLAUDE.md stays short" {
-  n=$(wc -l < "$DOTFILES_DIR/$C/home/.claude/CLAUDE.md"); [ "$n" -le 45 ]
+@test "always-loaded instructions stay under 200 lines" {
+  n=$(cat "$DOTFILES_DIR/$C/home/.claude/CLAUDE.md" "$DOTFILES_DIR/$C"/home/.claude/rules/*.md | wc -l)
+  [ "$n" -lt 200 ]
 }
 
 @test "working agreement carries the agreed rules" {
@@ -87,6 +88,84 @@ OWNED="$BATS_TEST_DIRNAME/../modules/claude/settings.owned.json"
   run claude_settings_merge "$OWNED" "$live"
   [ "$output" = "skip settings" ]
   cmp "$live" "$HOME/before.json"
+}
+
+@test "owned settings ask before outward and destructive actions" {
+  for r in 'Bash(gh pr merge *)' 'Bash(gh pr comment *)' 'Bash(gh pr review *)' 'Bash(gh workflow run *)' \
+    'Bash(gh run rerun *)' 'Bash(gh run cancel *)' \
+    'Bash(gh api *-X POST*)' 'Bash(gh api *-X PATCH*)' 'Bash(gh api *-X PUT*)' 'Bash(gh api *-X DELETE*)' \
+    'Bash(gh api *--method POST*)' 'Bash(gh api *--method PATCH*)' 'Bash(gh api *--method PUT*)' 'Bash(gh api *--method DELETE*)' \
+    'Bash(gh api *-f *)' 'Bash(gh api *-F *)' 'Bash(gh api *--field *)' 'Bash(gh api *--raw-field *)' \
+    'Bash(git push * main)' 'Bash(git push * master)' 'Bash(git push * develop)' 'Bash(git push * release*)' \
+    'Bash(git push --force *)' 'Bash(git push * --force)' 'Bash(git push * --force *)' \
+    'Bash(git push -f *)' 'Bash(git push * -f)' 'Bash(git push * -f *)' \
+    'Bash(git push --delete *)' 'Bash(git push * --delete *)' \
+    'Bash(git reset --hard*)' 'Bash(git clean *)' 'Bash(git branch -D *)' \
+    'Bash(docker system prune*)' 'Bash(docker volume rm *)' \
+    'mcp__claude_ai_Slack__slack_send_message' 'mcp__claude_ai_Slack__slack_schedule_message' \
+    'mcp__claude_ai_Linear__save_comment' 'mcp__claude_ai_Notion__notion-create-comment' \
+    'mcp__*github*__*merge*' 'mcp__*github*__*comment*'; do
+    jq -e --arg r "$r" '.permissions.ask | index($r)' "$OWNED" >/dev/null || { echo "missing ask: $r"; return 1; }
+  done
+  run jq -e '.permissions.ask | map(select(test("force\\*|gh pr create|--force-with-lease"))) | length == 0' "$OWNED"
+  [ "$status" -eq 0 ]
+}
+
+@test "owned settings deny secret files and sops decrypt" {
+  for r in 'Read(~/.secrets/**)' 'Edit(~/.secrets/**)' 'Read(**/.env)' 'Read(**/.env.*)' 'Read(~/.ssh/id_*)' \
+    'Read(~/.aws/sso/cache/**)' 'Edit(~/.claude/settings.json)' 'Bash(sops -d *)' 'Bash(sops decrypt *)'; do
+    jq -e --arg r "$r" '.permissions.deny | index($r)' "$OWNED" >/dev/null || { echo "missing deny: $r"; return 1; }
+  done
+  run jq -e '.permissions.deny | length == 9' "$OWNED"
+  [ "$status" -eq 0 ]
+}
+
+@test "no allow rules are owned" {
+  run jq -e '.permissions | has("allow") | not' "$OWNED"
+  [ "$status" -eq 0 ]
+}
+
+@test "no hooks key is owned" {
+  run jq -e 'has("hooks") | not' "$OWNED"
+  [ "$status" -eq 0 ]
+}
+
+@test "the hooks directory is gone" {
+  [ ! -e "$DOTFILES_DIR/$C/home/.claude/hooks" ]
+  [ ! -e "$DOTFILES_DIR/tests/claude-hooks.bats" ]
+}
+
+@test "rules carry the decisions ledger" {
+  f="$DOTFILES_DIR/$C/home/.claude/rules/building.md"
+  grep -qF 'DECISIONS.md' "$f"
+  grep -qF 'MEMORY.md' "$f"
+  grep -qF '| date | decision | source | status |' "$f"
+  grep -qF 'INFERRED' "$f"
+  grep -qF 'DECISIONS.md' "$DOTFILES_DIR/$C/RESOLVER.md"
+}
+
+@test "building rules carry the test habits" {
+  f="$DOTFILES_DIR/$C/home/.claude/rules/building.md"
+  grep -qF 'watch it fail' "$f"
+  grep -qF 'only the tests for what changed' "$f"
+}
+
+@test "install prunes stale links to removed hooks" {
+  mkdir -p "$HOME/.claude/hooks"
+  ln -s "$DOTFILES_DIR/$C/home/.claude/hooks/secrets-guard.sh" "$HOME/.claude/hooks/secrets-guard.sh"
+  echo mine >"$HOME/.claude/hooks/own.sh"
+  DRY_RUN=1 run bash "$DOTFILES_DIR/$C/install.sh"
+  [ -L "$HOME/.claude/hooks/secrets-guard.sh" ]
+  run bash "$DOTFILES_DIR/$C/install.sh"
+  [ ! -L "$HOME/.claude/hooks/secrets-guard.sh" ]
+  [ -f "$HOME/.claude/hooks/own.sh" ]
+}
+
+@test "install removes the emptied hooks directory" {
+  mkdir -p "$HOME/.claude/hooks"
+  ln -s "$DOTFILES_DIR/$C/home/.claude/hooks/lib.sh" "$HOME/.claude/hooks/lib.sh"
+  run bash "$DOTFILES_DIR/$C/install.sh"
+  [ ! -e "$HOME/.claude/hooks" ]
 }
 
 @test "merge restores a loosened deny" {

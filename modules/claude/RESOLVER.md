@@ -13,3 +13,5 @@ CLAUDE.md is then brought in line.
 | Building | short form in `home/.claude/CLAUDE.md`, long form in `home/.claude/rules/building.md` |
 | Working | short form in `home/.claude/CLAUDE.md`, long form of learning mode in `home/.claude/rules/anand.md` |
 | Who Anand is, language | `home/.claude/rules/anand.md` |
+| Decisions ledger (`DECISIONS.md`) | `home/.claude/rules/building.md` |
+| Test habits | `home/.claude/rules/building.md` |

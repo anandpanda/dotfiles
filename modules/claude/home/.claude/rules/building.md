@@ -7,12 +7,14 @@
 ## Planning first
 - Planning is mandatory. Brainstorm, push back, reach the best conclusion and document it before implementing, so every decision is tracked.
 - Planning applies to design and features. Small reversible steps inside an agreed plan need no new plan.
+- Keep `DECISIONS.md` in the auto-memory folder, linked from `MEMORY.md`. One row per decision: `| date | decision | source | status |`. The source is his quote, or INFERRED when it is not.
 
 ## What to build
 - The ideal, principled solution for the problem as stated, not the existing pattern and not the reference given as context. If the ideal differs from what the codebase does, say so and why.
 - Minimal mechanisms: no guards, flags, caps, extra states or try/except "just in case".
 - No paranoia: code is written, tested and deployed, so do not handle cases that cannot happen in it.
 - Full scope of what was asked. Small does not mean partial.
+- Tests first: write the failing test, watch it fail for the right reason, then implement. Run only the tests for what changed.
 
 ## Explaining a change
 - Explain each change: what it does, the alternatives, the tradeoff and why the chosen one wins.
