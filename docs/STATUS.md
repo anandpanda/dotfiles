@@ -145,19 +145,23 @@ dir at the temp home; unit tests now also run on macOS in CI (bash 3.2).
 - Ruling (work dev setup, when Anand asks for it): servers and services
   (Postgres, Redis, queues, anything that listens on a port) run in Docker,
   per project via compose; CLIs, runtimes (mise), and the editor stay local.
-- Work setup has two halves, both wanted (Anand, 2026-10-29):
-  1. Local Mac: the `dotfiles-work` overlay above.
-  2. Coder workspaces: today they come from a team-shared template that also
-     pulls a setup repo, CLIs, Coder machine defaults, and scripts that start
-     the backend/frontend servers, much of which he does not want. Work needed:
-     read the shared template, decide whether a personal template (or a
-     personal startup script on top of the shared one) is the right cut, keep
-     only what he uses, and have the workspace run `dotfiles` with the `server`
-     / `server-work` profile so terminal, git and zsh match the Mac.
-     Principle: a Coder workspace is only a bigger machine. The dev setup on it
-     is the same plain one a person uses locally (clone, mise runtimes, compose
-     for services, run and test the standard way), not the template's own
-     launch scripts.
+- Coder half, decided 2026-10-30, parked until after Phase 7 at Anand's request:
+  reuse the team's `work-ai-setup-eks-stable` template as is (it already has
+  Coder's dotfiles module: set the workspace's "Dotfiles URL" parameter to
+  github.com/anandpanda/dotfiles and `install.sh` runs on every start, no tty,
+  log in ~/.dotfiles.log). No own template, no write to the team repo. Needed
+  on our side first: (1) `~/.gitconfig` becomes a plain file that includes the
+  repo config, because the template's git-commit-signing module runs
+  `git config --global` and would write into the linked repo file; (2)
+  `install.sh` detects a Coder workspace (CODER env) and defaults to the
+  `server-work` profile; (3) the overlay's work module gets an install.sh that
+  clones the standard repo set into ~/work/work when missing. Known noise from
+  the template: clones into ~/work, work CLI, Claude bootstrap writing
+  ~/.claude/settings.json only if absent (Phase 7 writes it first). A fresh
+  workspace prints a new work SSH key to register once. Template source read:
+  ~/work/work/coder-template (work-internal; nothing from it in this repo).
+  Principle: a Coder workspace is only a bigger machine; the dev setup on it is
+  the same plain one as local (clone, mise, make), not the template's scripts.
 - GitHub: register ~/.ssh/id_ed25519_personal.pub as a *Signing Key* so
   commits show "Verified" (they already verify locally).
 - Old configs are in `~/.dotfiles-backup/`.
