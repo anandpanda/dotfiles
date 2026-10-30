@@ -119,6 +119,10 @@ OWNED="$BATS_TEST_DIRNAME/../modules/claude/settings.owned.json"
     'Bash(gh api *--method POST*)' 'Bash(gh api *--method PATCH*)' 'Bash(gh api *--method PUT*)' 'Bash(gh api *--method DELETE*)' \
     'Bash(gh api *-f *)' 'Bash(gh api *-F *)' 'Bash(gh api *--field *)' 'Bash(gh api *--raw-field *)' \
     'Bash(git push * main)' 'Bash(git push * master)' 'Bash(git push * develop)' 'Bash(git push * release*)' \
+    'Bash(git push * main *)' 'Bash(git push *:main)' 'Bash(git push *:main *)' \
+    'Bash(git push * master *)' 'Bash(git push *:master)' 'Bash(git push *:master *)' \
+    'Bash(git push * develop *)' 'Bash(git push *:develop)' 'Bash(git push *:develop *)' \
+    'Bash(git push * release* *)' 'Bash(git push *:release*)' 'Bash(git push *:release* *)' \
     'Bash(git push --force *)' 'Bash(git push * --force)' 'Bash(git push * --force *)' \
     'Bash(git push -f *)' 'Bash(git push * -f)' 'Bash(git push * -f *)' \
     'Bash(git push --delete *)' 'Bash(git push * --delete *)' \
