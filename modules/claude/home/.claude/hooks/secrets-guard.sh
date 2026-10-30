@@ -21,7 +21,7 @@ secret_path() {
   local base="${1##*/}" hit=1
   shopt -s nocasematch
   case "$1" in
-    */.secrets/* | */.secrets | */.aws/sso/cache | */.aws/sso/cache/* | */.aws/credentials) hit=0 ;;
+    */.secrets/* | */.secrets | */.aws/sso/cache | */.aws/sso/cache/* | */.aws/credentials | /proc/*/environ) hit=0 ;;
     *)
       case "$base" in
         .env*.example | .env*.sample | .env*.template) ;;
@@ -90,15 +90,6 @@ is_secret() {
 block_path() { hook_block "Blocked: $1 holds secrets and this command would read or send it. $ROUTE."; }
 block_dump() { hook_block "Blocked: this prints the values with-secrets loads. Run the command that needs them, never an environment dump."; }
 
-env_runs() {
-  shift
-  local w
-  for w; do
-    case "$w" in -* | *=*) ;; *) return 0 ;; esac
-  done
-  return 1
-}
-
 set_cwd() {
   local v m
   absolute "$1"
@@ -120,30 +111,42 @@ set_cwd() {
 }
 
 scan_segment() {
-  local w b words ws=0 reader=0 copy=0 pend=0 prev="" arch=0 curl=0 sops=0 find=0 found=0 fexec=0 next=""
+  local w b words ws=0 wrap=0 envd=0 reader=0 copy="" pend=0 prev="" target=0 arch=0 curl=0 sops=0 find=0 found=0 fexec=0 grep=0 pat=0 next=""
   read -r -a words <<<"$1"
   set -- "${words[@]+"${words[@]}"}"
   while [ $# -gt 0 ]; do
-    case "$1" in
-      sudo | command | exec | nohup | time | builtin | bash | sh | zsh | -c | -lc | -l | -e) shift ;;
+    b="${1##*/}"
+    case "$b" in
+      sudo | command | exec | nohup | time | builtin | bash | sh | zsh | nice | timeout | xargs | stdbuf)
+        wrap=1
+        envd=0
+        ;;
+      env)
+        wrap=1
+        envd=1
+        ;;
       with-secrets)
-        shift
         ws=1
+        envd=0
         ;;
       sops)
         if [ "${2:-}" != exec-env ] || [ $# -lt 3 ]; then break; fi
-        shift 3
+        shift 2
         ws=1
         ;;
+      *=*) ;;
+      -* | [0-9]*) if [ "$wrap" = 0 ]; then break; fi ;;
       *) break ;;
     esac
+    shift
   done
   if [ "$ws" = 1 ]; then
-    case "${1:-}" in
+    b="${1:-}"
+    case "${b##*/}" in
       printenv | compgen) block_dump ;;
       set) if [ $# -eq 1 ]; then block_dump; fi ;;
       export | declare | typeset) case "${2:--p}" in -p | -x | -px | -xp) block_dump ;; esac ;;
-      env) if ! env_runs "$@"; then block_dump; fi ;;
+      "" | "<" | ">") if [ "$envd" = 1 ]; then block_dump; fi ;;
     esac
   fi
   case "${1:-}" in
@@ -164,6 +167,40 @@ scan_segment() {
     case "$w" in
       "<") next=in && continue ;;
       ">") next=out && continue ;;
+    esac
+    if [ "$grep" = 1 ]; then
+      case "$w" in
+        -e | --regexp) pat=1 && next=skip && continue ;;
+        -f | --file) pat=1 && next=tgt && continue ;;
+        -A | -B | -C | -m | -d | -D | -g | -t | -T | -j | -M | --glob | --type | --type-not | --max-count | --context | --after-context | --before-context) next=skip && continue ;;
+        -e* | --regexp=*) pat=1 && continue ;;
+        -*) continue ;;
+      esac
+      if [ "$pat" = 0 ]; then
+        pat=1
+        continue
+      fi
+      if is_secret "$w"; then block_path "$w"; fi
+      continue
+    fi
+    if [ -n "$copy" ]; then
+      if [ "$copy" != rsync ]; then
+        case "$w" in
+          -t | --target-directory) target=1 && next=skip && continue ;;
+          -t?* | --target-directory=*) target=1 && continue ;;
+        esac
+      fi
+      case "$w" in -*) continue ;; esac
+      if [ "$target" = 1 ] && is_secret "$w"; then block_path "$w"; fi
+      if [ "$pend" = 1 ]; then block_path "$prev"; fi
+      pend=0
+      if is_secret "$w"; then
+        pend=1
+        prev="$w"
+      fi
+      continue
+    fi
+    case "$w" in
       -d | --decrypt | decrypt) if [ "$sops" = 1 ]; then reader=1; fi ;;
       -exec | -execdir | -ok | -okdir) fexec=1 ;;
       -T | --upload-file) if [ "$curl" = 1 ]; then next=tgt && continue; fi ;;
@@ -171,25 +208,21 @@ scan_segment() {
     esac
     b="${w##*/}"
     case "$b" in
-      cat | less | more | head | tail | sed | awk | gawk | grep | egrep | fgrep | rg | ag | source | base64 | xxd | od | hexdump | strings | bat | nl | tac | sort | uniq | cut | diff | cmp | jq | yq | python | python3 | node | ruby | perl | php)
+      grep | egrep | fgrep | rg | ag)
+        reader=1
+        grep=1
+        continue
+        ;;
+      cat | less | more | head | tail | sed | awk | gawk | source | base64 | xxd | od | hexdump | strings | bat | nl | tac | sort | uniq | cut | diff | cmp | jq | yq | python | python3 | node | ruby | perl | php)
         reader=1
         continue
         ;;
-      cp | scp | rsync) copy=1 && continue ;;
+      cp | scp | rsync | install | ln) copy="$b" && continue ;;
       tar | zip | 7z) arch=1 && continue ;;
       curl | wget) curl=1 && continue ;;
       sops) sops=1 && continue ;;
       find) find=1 && continue ;;
     esac
-    if [ "$copy" = 1 ]; then
-      case "$w" in -*) continue ;; esac
-      if [ "$pend" = 1 ]; then block_path "$prev"; fi
-      if is_secret "$w"; then
-        pend=1
-        prev="$w"
-      fi
-      continue
-    fi
     if [ "$reader$arch$curl$find" = 0000 ]; then continue; fi
     if is_secret "$w"; then
       if [ "$reader" = 1 ] || [ "$arch" = 1 ]; then block_path "$w"; fi
@@ -197,6 +230,7 @@ scan_segment() {
       found=1
     fi
   done
+  if [ "$target$pend" = 11 ]; then block_path "$prev"; fi
   if [ "$find$found" = 11 ] && [ "$fexec$XARGS" != 00 ]; then block_path "a secret path found by find"; fi
   return 0
 }
@@ -205,7 +239,7 @@ check_bash() {
   local s seg
   if hook_has_token <<<"$1"; then hook_block "Blocked: the command carries a literal token. Store it in ~/.secrets and $ROUTE."; fi
   if grep -Eq "$LEAK_RE" <<<"$1"; then hook_block "Blocked: printing, slicing, copying or decoding a secret variable leaks it. $ROUTE."; fi
-  s="$(sed -e 's/\\//g' -e "s/[\"']//g" -e "s/\\\${HOME}/\\\$HOME/g" -e 's/>&/>/g' -e 's/&>/>/g' -e 's/>/ > /g' -e 's/</ < /g' <<<"$1" | tr '|&;()`' '[\n*]')"
+  s="$(sed -e 's/\\//g' -e "s/[\"']//g" -e "s/\\\${HOME}/\\\$HOME/g" -e 's/>&/>/g' -e 's/&>/>/g' -e 's/>/ > /g' -e 's/</ < /g' -e 's/[()`]/ /g' <<<"$1" | tr '|&;' '[\n*]')"
   case "$s" in *xargs*) XARGS=1 ;; esac
   set -f
   while IFS= read -r seg; do scan_segment "$seg"; done <<<"$s"
