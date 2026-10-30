@@ -151,9 +151,7 @@ doctor runs.
 - Self-improvement, triggered by Anand: `/retro` reads one session (the
   current one by default, or one he names) and proposes changes to the
   harness: add, update or delete rules; new hooks, skills or agents; plugins
-  or Claude Code features that fit, cited from current docs. Each finding is
-  checked against his other sessions and labelled recurring or one-off; only
-  recurring ones become proposals. He picks; git carries them to every
+  or Claude Code features that fit, cited from current docs. He picks; git carries them to every
   machine. Nothing is applied without his go.
 
 ## 4. Skills and agents
