@@ -140,7 +140,31 @@ Dropped, with why: the custom hooks (a secrets guard and a go-word gate, built
 then replaced; formatter and context hooks) gave way to the native deny and ask rules, which Claude Code matches itself
 and which hold in bypass mode, at Anand's call to trust rules and skills over
 message-reading hooks; the skill trigger evals, because `claude plugin eval`
-cannot run our format. Next: the work layer in the overlay.
+cannot run our format.
+
+## Done: Phase 8, work layer
+
+Spec `docs/specs/08-work-layer.md`, plan `docs/plans/08-work-layer.md`; the
+private half lives in the overlay's `docs/08-work-layer.md`.
+- Context folders: "work or personal" is decided by per-machine folder lists.
+  Any module may ship `contexts/personal` or `contexts/work`; the git install
+  collects them into `~/.config/dotfiles/contexts` and generates the git
+  `includeIf` lines. The gh context function, the commit-hook install and the
+  git doctor read the same lists. Public defaults: `~/personal`, `~/work`; the
+  workspace module creates the folders it lists.
+- The overlay checkout moved to `~/personal/dotfiles-work`, so it is a personal
+  repo through the normal list. The overlay lists its own work folders.
+- Settings fragments: any module may ship `claude-settings.json`; the claude
+  module merges every active module's fragment into `~/.claude/settings.json`
+  (deny and ask lists combined) and doctor checks the combined result. The
+  overlay adds the work rules file, prod ask rules and a team-skill clash check.
+- Claude Code itself is installed by the claude module with the official
+  installer when it is missing.
+- Link record: install records every link it makes in
+  `~/.config/dotfiles/links`; a successful run removes links from the last
+  record that it no longer makes, if they still point into the repo or the
+  overlay. Doctor reports recorded links that dangle. Dry runs now run module
+  install scripts in dry mode and walk the overlay, so they show the full plan.
 
 ## Pending for Anand
 
@@ -151,9 +175,11 @@ cannot run our format. Next: the work layer in the overlay.
   Do not raise it again unless he asks.
 - Work overlay: done 2026-10-29. A private repo on the personal account (it is
   Anand's config and follows him between jobs) holds the work identity, the
-  cross-repo work CLIs, the work VS Code extensions, the work CLAUDE.md slot,
-  and the work AWS profiles and kube contexts; the details live only there.
-  `dots install work --overlay <url>` once; the url is remembered.
+  cross-repo work CLIs, the work VS Code extensions, the work Claude rules and
+  settings fragment, the work folders, and the work AWS profiles and kube
+  contexts; the details live only there. Checked out at
+  `~/personal/dotfiles-work`. `dots install work --overlay <url>` once; the url
+  is remembered.
 - Ruling (work dev setup, when Anand asks for it): servers and services
   (Postgres, Redis, queues, anything that listens on a port) run in Docker,
   per project via compose; CLIs, runtimes (mise), and the editor stay local.
@@ -182,9 +208,10 @@ cannot run our format. Next: the work layer in the overlay.
 
 ## Next: phases in order
 
-(Phases 1 to 7 done. Use `dots <command>` from anywhere.)
+(Phases 1 to 8 done. Use `dots <command>` from anywhere.)
 7. Claude harness: done (above). Secrets are guarded by the native deny rules
    in `modules/claude/settings.owned.json` (use `with-secrets`).
-8. Learning layer: the parts of the harness that make Anand explain, review, go deep.
+8. Work layer: done (above).
+9. Learning layer: the parts of the harness that make Anand explain, review, go deep.
 
 Each phase adds modules and profile entries only; the foundation does not change.

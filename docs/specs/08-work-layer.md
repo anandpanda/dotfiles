@@ -48,6 +48,19 @@ no user-level drop-in folder (settings docs). So:
 - The public module never names the overlay; a personal-only machine has no
   work fragment and so no work rules.
 
+## 3. Claude Code install
+
+The claude module installs Claude Code with the official native installer when
+no `claude` binary exists (found when CI failed: nothing installed it).
+
+## 4. Link record
+
+Install records every link it makes in `~/.config/dotfiles/links`. At the end
+of a successful run it removes links from the previous record that this run did
+not make, if they still point into the dotfiles repo or the overlay; anything
+pointing elsewhere is left alone. The first run (no record) removes nothing.
+Doctor reports recorded links that dangle. This replaces per-case prunes.
+
 ## Out of scope
 
 Coder workspace setup (next phase), Phase 8's learning-layer idea (folded into
