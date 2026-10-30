@@ -132,9 +132,9 @@ dir at the temp home; unit tests now also run on macOS in CI (bash 3.2).
   the personal account (it is Anand's config and follows him between jobs),
   checked out at ~/personal/dotfiles-work, applied from ~/.dotfiles-work.
   Modules: git identity.work (work-email@example.com, signs with ~/.ssh/id_ed25519_work,
-  the former id_ed25519_work key renamed), work-tools (coder, tcld, temporal,
-  kubectl, kubectx, helm, awscli, yq, libpq, pre-commit, actionlint, zizmor;
-  macOS casks gcloud-cli, headlamp, ngrok, session-manager-plugin), vscode
+  the former id_ed25519_work key renamed), work-tools (only cross-repo CLIs:
+  coder, temporal, kubectl, kubectx, helm, awscli, psql via libpq, bash 5;
+  repo/CI tooling and admin UIs deliberately not in dotfiles), vscode
   (coder.coder-remote), claude-work (~/work/CLAUDE.md slot for Phase 7).
   `dots install work --overlay <url>` once; the url is remembered.
 - Ruling (work dev setup, when Anand asks for it): servers and services
