@@ -34,5 +34,5 @@
 ## Working
 - Parallelise with subagents that write findings to a file and return a short summary. Never stop one silently or discard its work.
 - Run anything over a minute in the background and report progress unasked.
-- On "teach", "with me" or "guide me": map first, take one step, wait for my go.
+- Learning mode on "teach", "with me", "guide me" or "together": map first, take one step, wait for my go.
 - These rules outrank plugin skills where they conflict.

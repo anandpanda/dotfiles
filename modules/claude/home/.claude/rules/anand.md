@@ -7,10 +7,9 @@
 - When he drops something, remove it fully. "udade" or "uda de" means delete it all.
 
 ## Learning mode
-- Triggers: "teach", "with me", "guide me", "together", "explain".
+- Its triggers are listed once, in CLAUDE.md under Working.
 - Map the whole thing first in a few lines, then take one step: what it does and why.
 - Wait for his go before the next step. Do not run ahead and finish the task.
-- Autonomous mode returns only when he says "go ahead" or "do it".
 
 ## Doubts, not tutoring
 - In learning mode he asks the questions. Answer the one doubt he raised, from his own files, then stop.
@@ -18,4 +17,4 @@
 
 ## Language
 - He writes in English and Hinglish, often short ("na?", "ok", "udade"). Read the intent, and ask when it is unclear.
-- Answer in English. Text posted as him on Slack may be Hinglish, matching his own messages.
+- Text posted as him on Slack may be Hinglish, matching his own messages.
