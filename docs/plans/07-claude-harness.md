@@ -123,13 +123,14 @@
 **Files:** Create `hooks/prompt-capture.sh` (UserPromptSubmit), `hooks/approval.sh` (library), `hooks/outward-gate.sh` (PreToolUse `Bash`); Modify `settings.owned.json`; Test `tests/claude-hooks.bats`
 
 **Interfaces:**
-- `prompt-capture.sh` writes `~/.claude/state/prompt-<session_id>.json` = `{"prompt": <text>, "ts": <epoch>}` from the hook's `prompt` field; prints nothing.
+- `prompt-capture.sh` writes `~/.claude/state/prompt-<session_id>.json` = `{"prompt": <text>, "ts": <epoch>}` from the hook's `prompt` field; prints nothing. When the prompt matches a correction phrase from `hooks/correction-words.txt` (`i told u`, `i told you`, `wrong`, `why did u`, `why did you`, `no,`, `not what i asked`, `again?`, `stop`), it also appends `{"ts","session_id","cwd","prompt"}` as one line to `~/.claude/state/corrections.jsonl`.
 - `approval.sh` produces `approval_given <session_id> <action-word>`: true when the stored prompt (≤ 10 min old) contains a go-word for that action (`merge`, `push`, `post`, `send`, `run`, `do it`, `go`, `ship`), or is a short yes (`yes|y|haan|ha|ok|okay|done|sure`, ≤ 3 words) and the latest assistant turn in `transcript_path` mentions the same action word and ends with `?`. Questions (`?` in the prompt) never count.
 - Gated set: `gh pr merge`, `gh pr comment`, `gh pr review`, `gh api` with `-X POST|PATCH|PUT|DELETE` or `-f`/`--field`, `gh workflow run`, `gh run rerun|cancel`, Slack send commands, `git push` to `main|master|release|develop` or a branch whose upstream author is not the user. Ungated: `git push` of the current own branch, `gh pr create`.
 - Mode: `permission_mode` `default|acceptEdits|plan` → `ask`; `bypassPermissions|auto|dontAsk` → `allow` if `approval_given`, else `deny` "ask Anand first: say 'push it' / 'merge it'".
 
 - [ ] **Step 1: Failing tests:**
   - `capture stores the prompt per session`.
+  - `a correction is appended to corrections.jsonl`, `an ordinary prompt is not`.
   - `merge is denied without a go-word in bypass mode`, `allowed after "merge it"`, `asks in default mode`.
   - `a question never approves` — prompt `"should we merge?"` → deny.
   - `short yes approves only the action Claude asked about` — transcript ends `"Merge #12?"` + prompt `yes` → merge allowed, `gh pr comment` denied.
@@ -177,7 +178,7 @@
 ### Task 10: Skills and agents
 
 **Files:**
-- Create: `home/.claude/skills/{explain,grill,phase-close,pr-description,voice-draft,review-pr,research,find-past-session,handoff}/SKILL.md`, each with `evals/trigger.json`
+- Create: `home/.claude/skills/{explain,grill,phase-close,pr-description,voice-draft,review-pr,research,find-past-session,handoff,retro}/SKILL.md`, each with `evals/trigger.json`
 - Create: `home/.claude/agents/{reviewer,researcher,worker}.md`
 - Create: `home/.claude/skills/find-past-session/search.sh`
 - Test: `tests/claude-skills.bats`
@@ -188,7 +189,7 @@
 - `search.sh <phrase>...` greps `~/.claude/projects/*/*.jsonl` for any phrase, prints `session  date  matching line` (≤ 200 chars), never more than 30 lines.
 - `evals/trigger.json`: `[{"query": …, "should_trigger": bool}]`, ≥ 6 entries, half `false`.
 
-- [ ] **Step 1: Failing tests:** `every skill has name and description frontmatter on line 1`, `side-effect skills disable model invocation`, `no skill shares a name with a team skill` (pr-review, grill-me; the work layer extends the list from the team repo), `each skill ships a trigger eval with at least half negatives`, `agents carry the agreed tools, model and effort`, `reviewer cannot edit` (no Edit/Write/Bash in tools), `pr-description forbids a testing section and requires a diagram`, `search.sh finds a phrase in a fixture transcript and caps output`.
+- [ ] **Step 1: Failing tests:** `every skill has name and description frontmatter on line 1`, `side-effect skills disable model invocation`, `no skill shares a name with a team skill` (pr-review, grill-me; the work layer extends the list from the team repo), `each skill ships a trigger eval with at least half negatives`, `agents carry the agreed tools, model and effort`, `reviewer cannot edit` (no Edit/Write/Bash in tools), `pr-description forbids a testing section and requires a diagram`, `search.sh finds a phrase in a fixture transcript and caps output`, `retro is user-invoked only and never commits`.
 - [ ] **Step 2:** FAIL.
 - [ ] **Step 3:** Write skills from spec §4 and the adopted team ideas: review-pr lenses find → refute → report ≥ strong, each finding tied to a line read, comment ledger, drafts via voice-draft; reviewer brief "oracle is the task and its claims, never the reasoning; flag tests that pass on a no-op"; phase-close includes doc-drift and the anti-cheat contract; explain uses map → one step → the diagram type that fits (flow, sequence, state, architecture) with balanced text → real terms each explained → resources → restate; offers an Artifact page for deep topics; grill numbers each question with a recommended answer.
 - [ ] **Step 4–5:** PASS + lint → commit `feat(claude): skills and agents`.

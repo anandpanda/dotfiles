@@ -148,6 +148,12 @@ doctor runs.
 - SubagentStart: inject the short standing rules (nothing fake, no skipped
   checks, stay on task, findings to the given file, return path + count).
 - History kept 365 days.
+- Self-improvement, proposed never automatic: the hook that reads each of
+  Anand's messages also logs the ones that correct Claude ("bro i told u",
+  "wrong", "why did u", "no,") with session, repo and time to
+  `~/.claude/state/corrections.jsonl`. The `retro` skill (Task 10) turns repeats into a
+  proposed dotfiles diff (new rule, sharper rule, rule moved into a hook,
+  unused rule deleted); Anand approves, git carries it to every machine.
 
 ## 4. Skills and agents
 
@@ -163,7 +169,9 @@ that find, refute and keep strong findings tied to read lines; comment ledger;
 drafts via voice-draft), `research` (docs first, cited, links checked, one
 recommendation), `find-past-session` (three phrasings before "never did that"),
 `handoff` (STATUS and ledger in 5 lines; claims labelled observed / inferred /
-assumed). Each ships trigger evals, half "should not trigger".
+assumed), `retro` (reads the corrections log and recent transcripts, groups
+repeated failures, checks each against existing rules, proposes a dotfiles diff;
+never applies it without his go). Each ships trigger evals, half "should not trigger".
 
 Agents: `reviewer` (Read, Grep, Glob; Opus, high; fresh context; judges the
 task and claims, never the reasoning; flags tests that would pass on a no-op),
