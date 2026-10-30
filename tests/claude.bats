@@ -146,7 +146,8 @@ OWNED="$BATS_TEST_DIRNAME/../modules/claude/settings.owned.json"
 }
 
 @test "owned settings: connector ask globs match writes and never reads" {
-  mapfile -t globs < <(jq -r '.permissions.ask[] | select(startswith("mcp__"))' "$OWNED")
+  globs=()
+  while IFS= read -r g; do globs+=("$g"); done < <(jq -r '.permissions.ask[] | select(startswith("mcp__"))' "$OWNED")
   [ "${#globs[@]}" -gt 0 ]
   matches() {
     local g

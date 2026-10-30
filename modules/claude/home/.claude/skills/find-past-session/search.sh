@@ -17,12 +17,15 @@ for phrase in "$@"; do patterns+=(-e "$phrase"); done
 PHRASES="$(printf '%s\n' "$@")"
 export PHRASES
 
+# The loop stops itself at 30 lines; a trailing head would close the pipe early and
+# leave the remaining stages writing into it (stderr noise where SIGPIPE is ignored).
+shown=0
 { grep -iF -H "${patterns[@]}" -- "$HOME"/.claude/projects/*/*.jsonl 2>/dev/null || true; } |
   while IFS= read -r hit; do
     file="${hit%%.jsonl:*}.jsonl"
     session="$(basename "$file" .jsonl)"
     [ "$session" != "$exclude" ] || continue
-    printf '%s\n' "${hit#*.jsonl:}" |
+    line="$(printf '%s\n' "${hit#*.jsonl:}" |
       jq -r '
         select(.type == "user" or .type == "assistant")
         | [
@@ -48,5 +51,10 @@ export PHRASES
           start = at > 60 ? at - 60 : 1
           printf "%s  %s  %s\n", session, $1, substr(text, start, 200)
         }
-      '
-  done | head -n 30
+      ')"
+    [ -z "$line" ] || {
+      printf '%s\n' "$line"
+      shown=$((shown + 1))
+      [ "$shown" -lt 30 ] || break
+    }
+  done
