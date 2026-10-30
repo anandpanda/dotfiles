@@ -134,7 +134,7 @@ the command matching (compound commands, subshells, wrappers), not our code.
 | Kind | Rules | Effect |
 |---|---|---|
 | deny | Read and Edit of `~/.secrets/**`, `**/.env`, `**/.env.*`, `~/.ssh/id_*`, `~/.aws/sso/cache/**`; Edit of `~/.claude/settings.json`; Bash `sops -d`, `sops decrypt` | always blocked; secrets are used only through `with-secrets <cmd>` |
-| ask | merge, PR comment and review, `gh api` writes, workflow run and rerun; push to main, master, develop or release branches; force push; branch delete; `git reset --hard`, `git clean`, `docker system prune`, `docker volume rm`; MCP tools that send, post, comment or merge (Slack, Linear, Notion, GitHub) | a native prompt; Anand clicks once |
+| ask | merge, PR comment and review, `gh api` writes, workflow run and rerun; push to main, master, develop or release branches; force push; branch delete; `git reset --hard`, `git clean`, `docker system prune`, `docker volume rm`; every connected-tool action that changes something outside the machine (one glob per action verb, e.g. send, create, update, delete, deploy, promote, merge, comment); reads run freely; drafts prompt too (accepted) | a native prompt; Anand clicks once |
 
 Everything else runs freely, including pushing his own branch and opening a PR.
 Habits that are judgment, not mechanics (run only the changed tests, one heavy

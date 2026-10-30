@@ -138,13 +138,53 @@ OWNED="$BATS_TEST_DIRNAME/../modules/claude/settings.owned.json"
     'Bash(git push --delete *)' 'Bash(git push * --delete *)' \
     'Bash(git reset --hard*)' 'Bash(git clean *)' 'Bash(git branch -D *)' \
     'Bash(docker system prune*)' 'Bash(docker volume rm *)' \
-    'mcp__claude_ai_Slack__slack_send_message' 'mcp__claude_ai_Slack__slack_schedule_message' \
-    'mcp__claude_ai_Linear__save_comment' 'mcp__claude_ai_Notion__notion-create-comment' \
-    'mcp__*github*__*merge*' 'mcp__*github*__*comment*'; do
+    'mcp__*send*' 'mcp__*create*' 'mcp__*update*' 'mcp__*delete*' 'mcp__*merge*'; do
     jq -e --arg r "$r" '.permissions.ask | index($r)' "$OWNED" >/dev/null || { echo "missing ask: $r"; return 1; }
   done
   run jq -e '.permissions.ask | map(select(test("force\\*|gh pr create|--force-with-lease"))) | length == 0' "$OWNED"
   [ "$status" -eq 0 ]
+}
+
+@test "owned settings: connector ask globs match writes and never reads" {
+  mapfile -t globs < <(jq -r '.permissions.ask[] | select(startswith("mcp__"))' "$OWNED")
+  [ "${#globs[@]}" -gt 0 ]
+  matches() {
+    local g
+    for g in "${globs[@]}"; do
+      # shellcheck disable=SC2254
+      case "$1" in $g) return 0 ;; esac
+    done
+    return 1
+  }
+  local reads=(
+    mcp__claude_ai_Slack__slack_read_channel mcp__claude_ai_Slack__slack_search_public
+    mcp__claude_ai_Linear__list_issues mcp__claude_ai_Linear__get_issue
+    mcp__claude_ai_Notion__notion-fetch mcp__claude_ai_Notion__notion-search
+    mcp__claude_ai_Vercel__get_deployment mcp__claude_ai_Vercel__list_projects
+    mcp__claude_ai_Sentry__search_issues mcp__claude_ai_Google_Drive__read_file_content
+    mcp__claude_ai_Gmail__get_thread mcp__claude_ai_Google_Calendar__list_events
+    mcp__claude_ai_Vercel__get_runtime_logs mcp__claude_ai_Slack__slack_read_user_profile
+    mcp__claude_ai_Vercel__list_deployments mcp__claude_ai_Vercel__get_flag_settings
+    mcp__claude_ai_Gmail__list_labels mcp__claude_ai_Linear__list_issue_labels
+    mcp__claude_ai_Linear__list_comments mcp__claude_ai_Notion__notion-get-comments
+    mcp__claude_ai_Notion__notion-list-shared-pages mcp__claude_ai_Notion__notion-get-suggested-edit
+    mcp__claude_ai_Vercel__get_shared_env_var mcp__claude_ai_Vercel__get_toolbar_thread
+  )
+  local writes=(
+    mcp__claude_ai_Slack__slack_send_message mcp__claude_ai_Slack__slack_schedule_message
+    mcp__claude_ai_Linear__save_comment mcp__claude_ai_Linear__save_issue
+    mcp__claude_ai_Notion__notion-create-comment mcp__claude_ai_Notion__notion-update-page
+    mcp__claude_ai_Vercel__request_promote mcp__claude_ai_Vercel__request_rollback
+    mcp__claude_ai_Vercel__create_deployment mcp__claude_ai_Vercel__add_project_domain
+    mcp__claude_ai_Google_Docs__update_doc mcp__claude_ai_Gmail__create_draft
+    mcp__claude_ai_Google_Calendar__create_event mcp__claude_ai_Sentry__update_issue
+    mcp__claude_ai_Vercel__run_session_command mcp__claude_ai_Drive__share_file
+    mcp__claude_ai_Linear__delete_comment mcp__claude_ai_Gmail__label_message
+    mcp__claude_ai_Notion__notion-set-comment-reaction mcp__claude_ai_Vercel__edit_project_env
+  )
+  local t
+  for t in "${reads[@]}"; do ! matches "$t" || { echo "read matches an ask glob: $t"; return 1; }; done
+  for t in "${writes[@]}"; do matches "$t" || { echo "write matches no ask glob: $t"; return 1; }; done
 }
 
 @test "owned settings deny secret files and sops decrypt" {
