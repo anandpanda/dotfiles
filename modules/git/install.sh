@@ -24,7 +24,7 @@ done
 if [ -f "$out" ] && [ "$(cat "$out")" = "${want%$'\n'}" ]; then
   echo "skip $out"
 elif [ "${DRY_RUN:-0}" = 1 ]; then
-  echo "[dry] write $out ($(printf '%s' "$want" | grep -c .) signer(s))"
+  echo "[dry] write $out"
 else
   mkdir -p "$(dirname "$out")"
   printf '%s' "$want" >"$out.tmp" && mv "$out.tmp" "$out"

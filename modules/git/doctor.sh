@@ -30,10 +30,12 @@ done < <(printf '%s\n' "$dry" | sed -n 's/^\[dry\] write //p')
   rc=1
 }
 # Repos under the context folders without the commit-msg hook (install fixes them).
-while IFS=$'\t' read -r _ root; do
-  if [ -z "$root" ] || [ ! -d "$root" ]; then continue; fi
-  while IFS= read -r gitdir; do
-    [ -e "$gitdir/hooks/commit-msg" ] || echo "repo without commit-msg hook: $(dirname "$gitdir") (dots install)"
-  done < <(find "$root" -maxdepth 4 -type d -name .git -not -path '*/node_modules/*' 2>/dev/null)
-done < <(cat "$(state_dir)/contexts" 2>/dev/null)
+if [ -f "$(state_dir)/contexts" ]; then
+  while IFS=$'\t' read -r _ root; do
+    if [ -z "$root" ] || [ ! -d "$root" ]; then continue; fi
+    while IFS= read -r gitdir; do
+      [ -e "$gitdir/hooks/commit-msg" ] || echo "repo without commit-msg hook: $(dirname "$gitdir") (dots install)"
+    done < <(find "$root" -maxdepth 4 -type d -name .git -not -path '*/node_modules/*' 2>/dev/null)
+  done <"$(state_dir)/contexts"
+fi
 exit $rc

@@ -5,3 +5,5 @@ username; the shell switches the active account when you cd between
 personal and work folders (the context lists, see modules/workspace). Aliases: `gh pc` create a PR from the branch (opens the
 browser to finish), `gh pv` view, `gh co 123` check out a PR, `gh pm`
 squash-merge and delete the branch, `gh prs` my open PRs, `gh runs` recent CI.
+
+The personal and work folders come from the git module's context list, not from this module.

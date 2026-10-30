@@ -14,7 +14,8 @@ teardown() { teardown_home; }
 fake_tree() {
   export DOTFILES_MODULES="$HOME/mods" DOTFILES_PROFILES="$HOME/profiles" DOTFILES_PROFILE=p
   mkdir -p "$DOTFILES_MODULES/a/contexts" "$DOTFILES_MODULES/b/contexts" "$DOTFILES_MODULES/c/contexts" "$DOTFILES_PROFILES" "$O/modules/x/contexts"
-  printf 'modules = ["a", "b"]\n' > "$DOTFILES_PROFILES/p.toml"
+  printf 'modules = ["a", "b"]\noverlay = true\n' > "$DOTFILES_PROFILES/p.toml"
+  printf 'modules = ["a", "b"]\n' > "$DOTFILES_PROFILES/q.toml"
   printf '# personal roots\n~/personal\n\n' > "$DOTFILES_MODULES/a/contexts/personal"
   printf '~/work/\n' > "$DOTFILES_MODULES/a/contexts/work"
   printf '  ~/work   # again\n' > "$DOTFILES_MODULES/b/contexts/work"
@@ -49,10 +50,26 @@ email() { mkdir -p "$1" && git -C "$1" init -q && git -C "$1" config user.email 
   [ "$status" -eq 0 ]; [[ "$output" != *company* ]]; [[ "$output" == *"work$TAB$HOME/work"* ]]
 }
 
+@test "collect ignores an overlay checkout when the profile does not use the overlay" {
+  fake_tree
+  DOTFILES_PROFILE=q run contexts_collect
+  [ "$status" -eq 0 ]; [[ "$output" != *company* ]]; [[ "$output" == *"work$TAB$HOME/work"* ]]
+  DOTFILES_PROFILE=p run contexts_collect
+  [[ "$output" == *"work$TAB$HOME/company"* ]]
+}
+
+@test "doctor skips the hook scan when the contexts state file is absent" {
+  fake_tree; real_git
+  bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
+  rm "$HOME/.config/dotfiles/contexts"
+  run bash "$DOTFILES_DIR/$G/doctor.sh"
+  [[ "$output" != *"without commit-msg hook"* ]]
+}
+
 @test "public defaults are exactly ~/personal and ~/work" {
   DOTFILES_PROFILE=personal run contexts_collect
   [ "$status" -eq 0 ]
-  [ "$output" = "personal$TAB$HOME/personal"$'\n'"work$TAB$HOME/work" ] || [ "$output" = "work$TAB$HOME/work"$'\n'"personal$TAB$HOME/personal" ]
+  [ "$output" = "work$TAB$HOME/work"$'\n'"personal$TAB$HOME/personal" ]
 }
 
 @test "overlay checkout defaults to ~/personal/dotfiles-work, override kept" {
