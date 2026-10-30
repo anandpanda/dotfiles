@@ -121,4 +121,8 @@
   // Deliberate (Anand's choice, 2026-10-28): Claude Code acts without permission prompts.
   "claudeCode.allowDangerouslySkipPermissions": true,
   "security.workspace.trust.untrustedFiles": "open",
+  "remote.SSH.connectTimeout": 1800,
+  "remote.SSH.reconnectionGraceTime": 28800,
+  "remote.SSH.maxReconnectionAttempts": null,
+  "claudeCode.hideOnboarding": true,
 }
