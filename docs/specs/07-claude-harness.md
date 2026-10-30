@@ -148,14 +148,13 @@ doctor runs.
 - SubagentStart: inject the short standing rules (nothing fake, no skipped
   checks, stay on task, findings to the given file, return path + count).
 - History kept 365 days.
-- Self-improvement, proposed never automatic. No capture hook: session
-  transcripts (kept 365 days) already hold every message. The `retro` skill
-  (Task 10) extracts each of Anand's messages with the end of the Claude turn
-  before it, has a mid-tier model judge which are corrections and what failed,
-  groups repeats, checks them against the rules, and proposes a dotfiles diff
-  (new rule, sharper rule, rule moved into a hook, unused rule deleted).
-  A message starting `rule:` is always a correction. Anand approves; git
-  carries it to every machine.
+- Self-improvement, triggered by Anand: `/retro` reads one session (the
+  current one by default, or one he names) and proposes changes to the
+  harness: add, update or delete rules; new hooks, skills or agents; plugins
+  or Claude Code features that fit, cited from current docs. Each finding is
+  checked against his other sessions and labelled recurring or one-off; only
+  recurring ones become proposals. He picks; git carries them to every
+  machine. Nothing is applied without his go.
 
 ## 4. Skills and agents
 
@@ -171,9 +170,7 @@ that find, refute and keep strong findings tied to read lines; comment ledger;
 drafts via voice-draft), `research` (docs first, cited, links checked, one
 recommendation), `find-past-session` (three phrasings before "never did that"),
 `handoff` (STATUS and ledger in 5 lines; claims labelled observed / inferred /
-assumed), `retro` (reads transcripts since its last run, a model judges which of
-Anand's messages are corrections, groups repeated failures, checks each against existing rules, proposes a dotfiles diff;
-never applies it without his go). Each ships trigger evals, half "should not trigger".
+assumed), `retro` (one session in, harness proposals out, as above). Each ships trigger evals, half "should not trigger".
 
 Agents: `reviewer` (Read, Grep, Glob; Opus, high; fresh context; judges the
 task and claims, never the reasoning; flags tests that would pass on a no-op),
