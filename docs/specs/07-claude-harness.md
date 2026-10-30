@@ -1,7 +1,7 @@
 # Phase 7: Claude harness (everywhere layer)
 
 Date: 2026-10-30
-Status: draft for Anand's approval (every pick below was closed in conversation)
+Status: approved, built
 
 ## Purpose
 
@@ -121,7 +121,7 @@ needs them, and say so.
 Working: parallelise with subagents that write findings to a file and return a
 short summary; never stop one silently or discard its work. Anything over a
 minute runs in the background, with progress reported unasked. Learning mode on
-"teach", "with me", "guide me": map first, one step, wait. Claude's own rules
+"teach", "with me", "guide me", "together": map first, one step, wait. Claude's own rules
 outrank plugin skills where they conflict.
 
 ## 2. Guard rails: native permission rules
@@ -198,7 +198,8 @@ task and claims, never the reasoning; flags tests that would pass on a no-op),
 Owned keys: bypass permission mode as the default (Anand's choice; the native
 ask and deny rules in §2 are the guard rails), history 365 days, attribution
 off, the deny and ask rules (no allow rules: they do nothing in bypass), the
-statusline, plugins, the mode that loads both CLAUDE.md and
+statusline, plugins, `env` (SECURITY_REVIEW_MODEL for the security-guidance
+reviewer), the mode that loads both CLAUDE.md and
 AGENTS.md (else a CLAUDE.md in a parent folder would hide repos' AGENTS.md). Never owned:
 model, effort, theme and other `/config` preferences.
 
@@ -206,8 +207,7 @@ Plugins: superpowers, security-guidance (reviewer on Sonnet), pyright-lsp,
 typescript-lsp; remove code-review and code-simplifier (built in now);
 learning-output-style installed and off. MCP: context7 at user scope, no key.
 
-Statusline: model, context %, repo and branch with a dirty mark, background
-task count.
+Statusline: model, context %, repo and branch with a dirty mark.
 
 ## To verify during the build (not assumed)
 
@@ -217,6 +217,14 @@ task count.
 2. The current setting names for attribution, history length, and the
    CLAUDE.md + AGENTS.md loading mode.
 3. Plugin bootstrap on a machine that never ran an interactive session.
+
+Verified:
+- Deny rules block and ask rules prompt in bypass mode, checked headless on
+  2026-10-30. The push rules were fixed after Anand's live check.
+- The MCP ask rules use the session's real connector tool names.
+- `claude plugin eval` cannot run our trigger-eval format, so the evals were
+  dropped.
+- Fresh-machine plugin bootstrap is verified in the Coder phase.
 
 ## Out of scope
 

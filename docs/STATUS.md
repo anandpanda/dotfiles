@@ -121,6 +121,27 @@ Phase 6 review: 0 critical, 5 important, 15 minor; all fixed, none deferred.
 mise 2026.10 resolves home from the user database, so tests point every mise
 dir at the temp home; unit tests now also run on macOS in CI (bash 3.2).
 
+## Done: Phase 7, Claude harness
+
+Spec `docs/specs/07-claude-harness.md`, plan `docs/plans/07-claude-harness.md`.
+Module `claude`: the working agreement (`CLAUDE.md`) and long-form rules,
+`RESOLVER.md` naming one home per rule, eleven skills, three agents
+(reviewer, researcher, worker), a statusline (model, context %, repo and
+branch), and `settings.owned.json`, whose top-level keys are merged into
+`~/.claude/settings.json` (model, effort and theme stay Anand's). Guard rails
+are native permission rules that apply in bypass mode: deny for secret files
+and `sops` decrypt, ask for merges, PR comments, `gh api` writes, pushes to
+shared branches, force pushes and destructive git and docker commands. Plugins
+(superpowers, security-guidance, pyright-lsp, typescript-lsp,
+learning-output-style installed and off) and context7 are installed through
+the claude CLI; doctor reports drift, missing plugins, and a missing jq or CLI.
+
+Dropped, with why: the custom hooks (a secrets guard and a go-word gate, built
+then replaced; formatter and context hooks) gave way to the native deny and ask rules, which Claude Code matches itself
+and which hold in bypass mode, at Anand's call to trust rules and skills over
+message-reading hooks; the skill trigger evals, because `claude plugin eval`
+cannot run our format. Next: the work layer in the overlay.
+
 ## Pending for Anand
 
 - Coder remote (work) returns with the work overlay; until then
@@ -128,53 +149,42 @@ dir at the temp home; unit tests now also run on macOS in CI (bash 3.2).
 - ~/.secrets/age.key has no off-device backup, by Anand's decision (2026-10-29):
   if this Mac is lost, secrets.yaml is lost and its contents are re-collected.
   Do not raise it again unless he asks.
-- Work overlay: done 2026-10-29. Private repo `anandpanda/dotfiles-work` on
-  the personal account (it is Anand's config and follows him between jobs),
-  checked out at ~/personal/dotfiles-work, applied from ~/.dotfiles-work.
-  Modules: git identity.work (work-email@example.com, signs with ~/.ssh/id_ed25519_work,
-  the former id_ed25519_work key renamed), work-tools (only cross-repo CLIs:
-  coder, temporal, kubectl, kubectx, helm, awscli, psql via libpq, bash 5;
-  repo/CI tooling and admin UIs deliberately not in dotfiles), vscode
-  (coder.coder-remote), claude-work (~/work/CLAUDE.md slot for Phase 7), aws
-  (~/.aws/config declared, profiles `work-<env>-<what>`: `-cluster` for kubectl
-  (admin on dev, read-only on prd), `-secrets`, `-readonly`, and the PAM-granted
-  prd `-cluster-admin` / `-bastion`; install.sh generates one kube context per
-  cluster: work-dev, work-prd-us, work-prd-eu. Staging and prd-me dropped as
-  unused, 2026-10-30; each profile verified against the SSO portal roles).
+- Work overlay: done 2026-10-29. A private repo on the personal account (it is
+  Anand's config and follows him between jobs) holds the work identity, the
+  cross-repo work CLIs, the work VS Code extensions, the work CLAUDE.md slot,
+  and the work AWS profiles and kube contexts; the details live only there.
   `dots install work --overlay <url>` once; the url is remembered.
 - Ruling (work dev setup, when Anand asks for it): servers and services
   (Postgres, Redis, queues, anything that listens on a port) run in Docker,
   per project via compose; CLIs, runtimes (mise), and the editor stay local.
 - Coder half, decided 2026-10-30, parked until after Phase 7 at Anand's request:
-  reuse the team's `work-ai-setup-eks-stable` template as is (it already has
-  Coder's dotfiles module: set the workspace's "Dotfiles URL" parameter to
-  github.com/anandpanda/dotfiles and `install.sh` runs on every start, no tty,
-  log in ~/.dotfiles.log). No own template, no write to the team repo. Needed
-  on our side first: (1) `~/.gitconfig` becomes a plain file that includes the
-  repo config, because the template's git-commit-signing module runs
-  `git config --global` and would write into the linked repo file; (2)
-  `install.sh` detects a Coder workspace (CODER env) and defaults to the
-  `server-work` profile; (3) the overlay's work module gets an install.sh that
-  clones the standard repo set into ~/work/work when missing. Known noise from
-  the template: clones into ~/work, work CLI, Claude bootstrap writing
-  ~/.claude/settings.json only if absent (Phase 7 writes it first). A fresh
-  workspace prints a new work SSH key to register once. Template source read:
-  ~/work/work/coder-template (work-internal; nothing from it in this repo).
+  reuse the team's Coder template as is (it already has Coder's dotfiles
+  module: set the workspace's "Dotfiles URL" parameter to this repo and
+  `install.sh` runs on every start, no tty, log in ~/.dotfiles.log). No own
+  template, no write to the team repo. Needed on our side first: (1)
+  `~/.gitconfig` becomes a plain file that includes the repo config, because
+  the template's commit-signing module runs `git config --global` and would
+  write into the linked repo file; (2) `install.sh` detects a Coder workspace
+  (CODER env) and defaults to the `server-work` profile; (3) the overlay's work
+  module gets an install.sh that clones the standard repo set when missing.
+  The template's own noise: extra clones, a company CLI, and a Claude bootstrap
+  that writes ~/.claude/settings.json only if absent (Phase 7 writes it first).
+  A fresh workspace prints a new work SSH key to register once.
   Principle: a Coder workspace is only a bigger machine; the dev setup on it is
   the same plain one as local (clone, mise, make), not the template's scripts.
 - GitHub: register ~/.ssh/id_ed25519_personal.pub as a *Signing Key* so
   commits show "Verified" (they already verify locally).
 - Old configs are in `~/.dotfiles-backup/`.
-- `~/Documents/work/services` (5.4 GB of work checkouts with unpushed local
-  branches) stays until Anand decides; nothing else from the clutter review is left.
+- A folder of old work checkouts with unpushed local branches (5.4 GB) stays
+  until Anand decides; nothing else from the clutter review is left.
 - After all phases: a hands-on end-to-end walkthrough of the whole setup so
   Anand can use every part of it (Anand asked for this explicitly).
 
 ## Next: phases in order
 
-(Phases 1 to 6 done. Use `dots <command>` from anywhere.)
-7. Claude harness: CLAUDE.md layering, skills, agents, hooks, memory, statusline, plugins.
-   Includes a hook that blocks reading or printing ~/.secrets values (use `with-secrets`).
+(Phases 1 to 7 done. Use `dots <command>` from anywhere.)
+7. Claude harness: done (above). Secrets are guarded by the native deny rules
+   in `modules/claude/settings.owned.json` (use `with-secrets`).
 8. Learning layer: the parts of the harness that make Anand explain, review, go deep.
 
 Each phase adds modules and profile entries only; the foundation does not change.

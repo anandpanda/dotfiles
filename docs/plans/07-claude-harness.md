@@ -10,6 +10,17 @@
 
 **Spec:** `docs/specs/07-claude-harness.md`
 
+## Changes during the build
+
+- No hooks: the custom guards were replaced by native deny and ask rules in `settings.owned.json`; Tasks 4–9 were removed, and the stale-hook-link prune with them (no install ever had hooks).
+- Attribution is owned as the object `{"commit": "", "pr": "", "sessionUrl": false}`, the shape Claude Code keeps.
+- The skill trigger evals were dropped: `claude plugin eval` cannot run their format.
+- `voice-draft` is model-invocable; the `researcher` agent has Write so it can save findings.
+- The statusline has no background task count.
+- Push rules take the forms `git push * main`, `git push * main *`, `git push *:main`, `git push *:main *` (and the same for master, develop, release*).
+- `gh api -f/-F/--field` ask rules also prompt on some reads (graphql, `-X GET -f`); that over-ask is accepted.
+- Every plugin in `enabledPlugins` is installed, the disabled one included, and settings merge after installs so owned values win; `pluginConfigs` is merged one level deep.
+
 ## Global Constraints
 
 - Bash 3.2 compatible (macOS); `shellcheck -S info` and `shfmt -i 2 -ci` clean; tests hermetic (temp HOME, fake binaries on PATH, never the real `~/.claude`).
@@ -44,7 +55,7 @@
   - `claude module links CLAUDE.md and rules` — after `module_apply`, `~/.claude/CLAUDE.md` and each `~/.claude/rules/*.md` are symlinks into the repo.
   - `CLAUDE.md stays short` — `wc -l < CLAUDE.md` ≤ 45.
   - `working agreement carries the agreed rules` — CLAUDE.md contains each of: `literal question`, `UNVERIFIED`, `stands because`, `not a go`, `small reversible`, `No comments in code`, `AI slop`, `Do not overcorrect`, `outrank plugin skills`.
-  - `no company data in the public module` — `grep -rniE 'work|backend|@[a-z0-9-]+\.(ai|com)' modules/claude` finds nothing.
+  - `no company data in the public module` — the company-name and work-email grep over `modules/claude` finds nothing.
   - `resolver names an owner for every rule heading` — each `##` heading in CLAUDE.md appears in RESOLVER.md.
   - `claude is in personal and server profiles`.
 - [ ] **Step 2:** `bats tests/claude.bats` → FAIL (module missing).
