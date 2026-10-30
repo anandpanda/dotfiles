@@ -23,6 +23,8 @@ _contexts_read() { # CONTEXT FILE -> context<TAB>folder per usable line
   done <"$2"
 }
 
+contexts_profile() { echo "${DOTFILES_PROFILE:-$(recall profile || echo personal)}"; }
+
 # Module directories of the profile: its public modules, plus the overlay's when the profile uses it.
 contexts_module_dirs() { # PROFILE
   local names m d
@@ -40,9 +42,8 @@ contexts_module_dirs() { # PROFILE
 
 # Unique context<TAB>folder lines, shortest folder first so a nested folder's include wins in git.
 contexts_collect() {
-  local profile dirs d m
-  profile="${DOTFILES_PROFILE:-$(recall profile || echo personal)}"
-  dirs="$(contexts_module_dirs "$profile")" || return 1
+  local dirs d m
+  dirs="$(contexts_module_dirs "$(contexts_profile)")" || return 1
   while IFS= read -r d; do
     if [ -z "$d" ] || [ ! -d "$d" ]; then continue; fi
     module_enabled_for_os "$d" || continue

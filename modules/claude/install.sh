@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Install every listed plugin and context7 through the claude CLI, then merge owned settings so their values win.
 set -euo pipefail
-for f in log claude; do
+for f in log os profile module contexts claude; do
   # shellcheck disable=SC1090
   source "$DOTFILES_DIR/lib/$f.sh"
 done
@@ -73,5 +73,10 @@ fi
 if [ "${DRY_RUN:-0}" = 1 ]; then
   log_dry "merge owned settings into $HOME/.claude/settings.json"
 else
-  claude_settings_merge "$owned" "$HOME/.claude/settings.json"
+  fragments="$(claude_settings_fragments)" || die "cannot discover settings fragments"
+  expected="$(mktemp)"
+  trap 'rm -f "$expected"' EXIT
+  # shellcheck disable=SC2086
+  claude_settings_expected "$owned" $fragments >"$expected" || die "cannot combine settings fragments"
+  claude_settings_merge "$expected" "$HOME/.claude/settings.json"
 fi

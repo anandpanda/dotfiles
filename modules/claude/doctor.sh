@@ -1,15 +1,28 @@
 #!/usr/bin/env bash
 # Owned settings keys must match the live file; every listed plugin installed; jq and the claude CLI present.
 set -euo pipefail
-# shellcheck disable=SC1090
-source "$DOTFILES_DIR/lib/claude.sh"
+for f in log os profile module contexts claude; do
+  # shellcheck disable=SC1090
+  source "$DOTFILES_DIR/lib/$f.sh"
+done
 owned="$DOTFILES_DIR/modules/claude/settings.owned.json"
 fail=0
 if ! command -v jq >/dev/null 2>&1; then
   echo "jq missing: brew install jq"
   exit 1
 fi
-claude_settings_drift "$owned" "$HOME/.claude/settings.json" || fail=1
+fragments="$(claude_settings_fragments)" || {
+  echo "cannot discover settings fragments"
+  exit 1
+}
+expected="$(mktemp)"
+trap 'rm -f "$expected"' EXIT
+# shellcheck disable=SC2086
+claude_settings_expected "$owned" $fragments >"$expected" || {
+  echo "cannot combine settings fragments"
+  exit 1
+}
+claude_settings_drift "$expected" "$HOME/.claude/settings.json" || fail=1
 if command -v claude >/dev/null 2>&1; then
   installed="$(claude plugin list --json 2>/dev/null | jq -r '.[].id' 2>/dev/null || true)"
   while IFS= read -r id; do

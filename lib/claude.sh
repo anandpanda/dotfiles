@@ -34,3 +34,30 @@ claude_settings_drift() { # OWNED LIVE
   echo "$drifted"
   return 1
 }
+
+# Prints the owned settings with each fragment layered on: permissions.deny and .ask concatenate without duplicates, other keys deep-merge.
+claude_settings_expected() { # OWNED [FRAGMENT...]
+  local owned="$1"
+  shift
+  jq -s '
+    def deep(a; b): if (a | type) == "object" and (b | type) == "object"
+      then reduce (b | keys_unsorted[]) as $k (a; .[$k] = deep(.[$k]; b[$k])) else b end;
+    def uniq: reduce .[] as $x ([]; if index([$x]) then . else . + [$x] end);
+    def layer($f): . as $acc | deep($acc; $f)
+      | reduce ("deny", "ask") as $k (.;
+          if (($acc.permissions[$k] // []) + ($f.permissions[$k] // [])) == [] then .
+          else .permissions[$k] = ((($acc.permissions[$k] // []) + ($f.permissions[$k] // [])) | uniq) end);
+    reduce .[1:][] as $f (.[0]; layer($f))
+  ' "$owned" "$@"
+}
+
+# Prints the claude-settings.json of every module the active profile applies, public first, then the overlay's.
+claude_settings_fragments() {
+  local dirs d
+  dirs="$(contexts_module_dirs "$(contexts_profile)")" || return 1
+  while IFS= read -r d; do
+    if [ -z "$d" ] || [ ! -f "$d/claude-settings.json" ]; then continue; fi
+    module_enabled_for_os "$d" || continue
+    echo "$d/claude-settings.json"
+  done <<<"$dirs"
+}

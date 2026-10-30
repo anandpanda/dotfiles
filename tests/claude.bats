@@ -289,6 +289,70 @@ OWNED="$BATS_TEST_DIRNAME/../modules/claude/settings.owned.json"
   [[ "$output" == *cleanupPeriodDays* ]]
 }
 
+frag_tree() {
+  export DOTFILES_MODULES="$HOME/mods" DOTFILES_PROFILES="$HOME/profiles" DOTFILES_PROFILE=p
+  O="$HOME/personal/dotfiles-work"
+  mkdir -p "$DOTFILES_MODULES/a" "$DOTFILES_MODULES/b" "$DOTFILES_MODULES/c" "$DOTFILES_PROFILES" "$O/modules/x"
+  printf 'modules = ["a", "b"]\noverlay = true\n' >"$DOTFILES_PROFILES/p.toml"
+  printf 'modules = ["a", "b"]\n' >"$DOTFILES_PROFILES/q.toml"
+  echo '{"permissions":{"ask":["Bash(deploy *)","Bash(gh pr merge *)"]},"env":{"A":"1"}}' >"$DOTFILES_MODULES/a/claude-settings.json"
+  echo '{"permissions":{"ask":["Bash(deploy *)"],"deny":["Read(~/.x/**)"]},"env":{"B":"2"}}' >"$DOTFILES_MODULES/b/claude-settings.json"
+  echo '{"permissions":{"ask":["Bash(not-in-profile)"]}}' >"$DOTFILES_MODULES/c/claude-settings.json"
+  echo '{"permissions":{"ask":["Bash(prod *)"]}}' >"$O/modules/x/claude-settings.json"
+}
+
+@test "expected: ask and deny concatenate without duplicates in order, other keys deep-merge" {
+  echo '{"permissions":{"deny":["d1"],"ask":["a1","a2"],"defaultMode":"m"},"env":{"K":"0"},"x":1}' >"$HOME/o.json"
+  echo '{"permissions":{"ask":["a2","a3"],"deny":["d2","d1"]},"env":{"L":"1"},"x":2}' >"$HOME/f1.json"
+  echo '{"permissions":{"ask":["a4","a3"]}}' >"$HOME/f2.json"
+  run claude_settings_expected "$HOME/o.json" "$HOME/f1.json" "$HOME/f2.json"
+  [ "$status" -eq 0 ]
+  [ "$(jq -c '.permissions' <<<"$output")" = '{"deny":["d1","d2"],"ask":["a1","a2","a3","a4"],"defaultMode":"m"}' ]
+  jq -e '.env=={"K":"0","L":"1"} and .x==2' <<<"$output"
+}
+
+@test "expected without fragments is the owned file" {
+  run claude_settings_expected "$OWNED"
+  [ "$status" -eq 0 ]
+  [ "$(jq -cS . <<<"$output")" = "$(jq -cS . "$OWNED")" ]
+}
+
+@test "install lands public and overlay fragment rules in live settings; a second install keeps them" {
+  frag_tree
+  run bash "$DOTFILES_DIR/$C/install.sh"
+  [ "$status" -eq 0 ]
+  live="$HOME/.claude/settings.json"
+  jq -e '.permissions.ask | index("Bash(deploy *)") and index("Bash(prod *)") and index("Bash(gh pr merge *)")' "$live"
+  jq -e '.permissions.deny | index("Read(~/.x/**)")' "$live"
+  jq -e '.env.A=="1" and .env.B=="2"' "$live"
+  [ "$(jq '[.permissions.ask[] | select(. == "Bash(deploy *)")] | length' "$live")" -eq 1 ]
+  [ "$(jq '[.permissions.ask[] | select(. == "Bash(gh pr merge *)")] | length' "$live")" -eq 1 ]
+  ! jq -e '.permissions.ask | index("Bash(not-in-profile)")' "$live" >/dev/null
+  run bash "$DOTFILES_DIR/$C/install.sh"
+  [ "${lines[${#lines[@]}-1]}" = "skip settings" ]
+  jq -e '.permissions.ask | index("Bash(deploy *)")' "$live"
+}
+
+@test "overlay fragments apply only when the profile uses the overlay" {
+  frag_tree
+  DOTFILES_PROFILE=q run bash "$DOTFILES_DIR/$C/install.sh"
+  [ "$status" -eq 0 ]
+  jq -e '.permissions.ask | index("Bash(deploy *)")' "$HOME/.claude/settings.json"
+  ! jq -e '.permissions.ask | index("Bash(prod *)")' "$HOME/.claude/settings.json" >/dev/null
+}
+
+@test "doctor reports drift when a fragment rule is removed from the live file" {
+  frag_tree
+  bash "$DOTFILES_DIR/$C/install.sh" >/dev/null
+  jq -r '.enabledPlugins | keys[]' "$OWNED" >"$HOME/fake/plugins"
+  run bash "$DOTFILES_DIR/$C/doctor.sh"
+  [ "$status" -eq 0 ]; [ -z "$output" ]
+  live="$HOME/.claude/settings.json"
+  jq '.permissions.ask -= ["Bash(prod *)"]' "$live" >"$live.t" && mv "$live.t" "$live"
+  run bash "$DOTFILES_DIR/$C/doctor.sh"
+  [ "$status" -ne 0 ]; [[ "$output" == *permissions* ]]
+}
+
 @test "install merges settings and dry run leaves them alone" {
   DRY_RUN=1 run bash "$DOTFILES_DIR/$C/install.sh"
   [ "$status" -eq 0 ]
