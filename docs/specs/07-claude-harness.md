@@ -34,7 +34,7 @@ conventions, work skills) is a later step in the private overlay.
 1. Prose for how to answer and decide; hooks and permissions for anything with
    consequences.
 2. Every rule traces to something Anand said or a failure in his sessions.
-3. Few of everything: under 200 lines of always-loaded instructions (CLAUDE.md plus rules, the docs' target), 6 hooks, 10 skills, 3 agents,
+3. Few of everything: under 200 lines of always-loaded instructions (CLAUDE.md plus rules, the docs' target), 6 hooks, 11 skills, 3 agents,
    5 plugins, 1 MCP server.
 4. One home per rule: `RESOLVER.md` maps each rule to the file that owns it.
 5. Anand decides design, scope, and anything shared, prod, irreversible or
@@ -168,7 +168,12 @@ that find, refute and keep strong findings tied to read lines; comment ledger;
 drafts via voice-draft), `research` (docs first, cited, links checked, one
 recommendation), `find-past-session` (three phrasings before "never did that"),
 `handoff` (STATUS and ledger in 5 lines; claims labelled observed / inferred /
-assumed), `retro` (one session in, harness proposals out, as above). Each ships trigger evals, half "should not trigger".
+assumed), `retro` (one session in, harness proposals out, as above), `scout` (looks
+outward: recent Claude Code changelog and docs, plugin marketplaces, community
+skills, hooks and workflows from roughly the last month; reads the current
+harness first; each find gets what it is, why it fits Anand, its cost, a verdict
+of adopt / try / skip and a checked link; an adoption replaces something or
+earns its place). Each ships trigger evals, half "should not trigger".
 
 Agents: `reviewer` (Read, Grep, Glob; Opus, high; fresh context; judges the
 task and claims, never the reasoning; flags tests that would pass on a no-op),
