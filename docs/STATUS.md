@@ -212,6 +212,14 @@ private half lives in the overlay's `docs/08-work-layer.md`.
 7. Claude harness: done (above). Secrets are guarded by the native deny rules
    in `modules/claude/settings.owned.json` (use `with-secrets`).
 8. Work layer: done (above).
-9. Learning layer: the parts of the harness that make Anand explain, review, go deep.
+Next, in Anand's order (2026-10-31):
+1. Hands-on end-to-end walkthrough of the Mac setup, one step at a time with
+   his go: terminal, git and identities, secrets, AWS and kube, VS Code, apps,
+   the Claude harness. Fix anything that does not feel right on the spot.
+2. `/retro` on the Phase 7-8 session: first real run of the self-improving loop.
+3. Coder, at the very end (reuse the team's template and its dotfiles hook;
+   first question: how a workspace reaches the private overlay).
+The learning-layer idea is folded into the explain, grill, retro and scout
+skills; revisit only if real use shows a gap.
 
 Each phase adds modules and profile entries only; the foundation does not change.
