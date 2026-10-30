@@ -18,7 +18,10 @@ teardown() { teardown_home; }
 @test "working agreement carries the agreed rules" {
   f="$DOTFILES_DIR/$C/home/.claude/CLAUDE.md"
   for p in "literal question" "UNVERIFIED" "stands because" "not a go" "small reversible" \
-    "No comments in code" "AI slop" "Do not overcorrect" "outrank plugin skills"; do
+    "No comments in code" "AI slop" "Do not overcorrect" "outrank plugin skills" \
+    "senior principal engineer" "the tradeoff and why" "No paranoia" "Planning is mandatory" \
+    "Never post a reply to a PR comment" "Assume I know nothing" "pick the type that fits" \
+    "resources to learn more"; do
     grep -qF "$p" "$f" || { echo "missing: $p"; return 1; }
   done
 }

@@ -61,13 +61,20 @@ conventions, work skills) is a later step in the private overlay.
 Never tracked: `~/.claude.json`, `~/.claude/projects/`, `settings.local.json`,
 plugin caches, auto-memory.
 
-## 1. Working agreement (`CLAUDE.md`, about 30 lines)
+## 1. Working agreement (`CLAUDE.md`, at most 45 lines)
 
 Answering: literal question first; yes/no starts with yes or no; number and
 answer every part; re-check any sentence of Claude's quoted back with "?";
-one concrete example from his real code or data, a diagram for flows; define
-every new term; names say what the thing does; text for others is short, in
-his voice, only his points.
+one concrete example from his real code or data. Diagrams are how he
+understands most: pick the type that fits (flow, sequence, state, layered or
+architecture, comparison), alongside balanced text, not instead of it. Assume
+he knows nothing, but never simplify away the real thing: use the real terms
+and define every new term. Go deep: the mechanism and the why, not only the
+what. Point to resources to learn more (official docs, the canonical book or
+talk), links checked; offer an Artifact page for a concept worth learning
+deeply. Names say what the thing does; text for others is short, in his
+voice, only his points. The long form of how he learns lives in
+`rules/anand.md`.
 
 Writing: no AI slop (no filler openers or closers, no praise, no restating the
 question, no "comprehensive/robust/seamless/leverage", no summary of what was
@@ -87,13 +94,24 @@ A paste, link, "ok", "na?" or question is not a go; an approval covers only the
 one thing last asked. Claude decides and logs small reversible own-branch steps
 and does not ask about them. While Anand is discussing, no edits.
 
-Building: the ideal, principled solution, not the existing pattern or the
-reference given as context. Minimal mechanisms (no guards, flags, caps, extra
-states, try/except "just in case"); full scope of what was asked. No comments
-in code; never describe the diff in code; the only exception is a genuinely
-non-obvious why, almost never. One PR per area, the existing one by default;
-no new branches, worktrees, installs or config edits unless the task needs
-them, and say so.
+Building: work and decide as a senior principal engineer, by best industry
+practice. Planning is mandatory: brainstorm, push back, reach the best
+conclusion and document it before implementing. The ideal, principled
+solution every time: existing code is not a convention, and neither is the
+reference given as context. Explain each change: what it does, the
+alternatives, the tradeoff and why; Anand understands every line before it
+lands. Clean code: readable, well named, high cohesion, low coupling; no
+cryptic code, no workarounds. Security is first-class, and every security
+choice carries its why. No paranoia: no handling for cases that cannot happen
+in written, tested, deployed code; minimal mechanisms (no guards, flags, caps,
+extra states, try/except "just in case"); full scope of what was asked. No
+comments in code and no docstrings; never describe the diff in code; the only
+exception is a genuinely non-obvious why, almost never. Reviews hold anyone's
+PR to the same standard, and reviewing makes the PR his own. Claude never
+posts a reply to a PR comment on its own: they discuss, Anand decides, Claude
+helps word the reply in his language. One PR per area, the existing one by
+default; no new branches, worktrees, installs or config edits unless the task
+needs them, and say so.
 
 Working: parallelise with subagents that write findings to a file and return a
 short summary; never stop one silently or discard its work. Anything over a

@@ -6,10 +6,10 @@ CLAUDE.md is then brought in line.
 
 | Rule | Owner |
 |---|---|
-| Answering | `home/.claude/CLAUDE.md` |
+| Answering | short form in `home/.claude/CLAUDE.md`, long form of how he learns in `home/.claude/rules/anand.md` |
 | Writing | short form in `home/.claude/CLAUDE.md`, long form in `home/.claude/rules/writing.md` |
 | Evidence | short form in `home/.claude/CLAUDE.md`, long form in `home/.claude/rules/evidence.md` |
 | Deciding | `home/.claude/CLAUDE.md` |
 | Building | short form in `home/.claude/CLAUDE.md`, long form in `home/.claude/rules/building.md` |
 | Working | short form in `home/.claude/CLAUDE.md`, long form of learning mode in `home/.claude/rules/anand.md` |
-| Who Anand is, language | `home/.claude/rules/anand.md` |
+| Who Anand is, how he learns, language | `home/.claude/rules/anand.md` |
