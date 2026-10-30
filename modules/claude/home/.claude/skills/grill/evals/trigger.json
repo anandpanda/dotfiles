@@ -1,0 +1,30 @@
+[
+  {
+    "query": "grill me on this design before we build it",
+    "should_trigger": true
+  },
+  {
+    "query": "what am I missing in this plan?",
+    "should_trigger": true
+  },
+  {
+    "query": "stress-test the migration idea, ask me the open questions",
+    "should_trigger": true
+  },
+  {
+    "query": "explain how the cache works",
+    "should_trigger": false
+  },
+  {
+    "query": "fix the failing test in tests/git.bats",
+    "should_trigger": false
+  },
+  {
+    "query": "summarise this PR for me",
+    "should_trigger": false
+  },
+  {
+    "query": "push the branch",
+    "should_trigger": false
+  }
+]

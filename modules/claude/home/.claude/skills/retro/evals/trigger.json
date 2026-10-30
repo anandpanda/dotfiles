@@ -1,0 +1,30 @@
+[
+  {
+    "query": "/retro",
+    "should_trigger": true
+  },
+  {
+    "query": "retro on this session, what should change in my harness?",
+    "should_trigger": true
+  },
+  {
+    "query": "review session abc123 and suggest rule changes",
+    "should_trigger": true
+  },
+  {
+    "query": "review this PR",
+    "should_trigger": false
+  },
+  {
+    "query": "find new Claude Code plugins",
+    "should_trigger": false
+  },
+  {
+    "query": "explain my CLAUDE.md",
+    "should_trigger": false
+  },
+  {
+    "query": "fix the failing test",
+    "should_trigger": false
+  }
+]

@@ -1,0 +1,34 @@
+[
+  {
+    "query": "how does the link_tree function in lib/link.sh work?",
+    "should_trigger": true
+  },
+  {
+    "query": "explain why the settings merge backs up an invalid file",
+    "should_trigger": true
+  },
+  {
+    "query": "teach me how git rebase works, step by step",
+    "should_trigger": true
+  },
+  {
+    "query": "what is a symlink and why do we use them here?",
+    "should_trigger": true
+  },
+  {
+    "query": "rename the variable foo to bar in install.sh",
+    "should_trigger": false
+  },
+  {
+    "query": "run the bats tests",
+    "should_trigger": false
+  },
+  {
+    "query": "write the PR description for this branch",
+    "should_trigger": false
+  },
+  {
+    "query": "commit this change",
+    "should_trigger": false
+  }
+]

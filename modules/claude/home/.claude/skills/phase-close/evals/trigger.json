@@ -1,0 +1,30 @@
+[
+  {
+    "query": "close the phase",
+    "should_trigger": true
+  },
+  {
+    "query": "let's wrap up this task and run all the closing checks",
+    "should_trigger": true
+  },
+  {
+    "query": "are we done with phase 7? run everything",
+    "should_trigger": true
+  },
+  {
+    "query": "add a test for the merge function",
+    "should_trigger": false
+  },
+  {
+    "query": "explain the phase plan",
+    "should_trigger": false
+  },
+  {
+    "query": "what did we decide yesterday?",
+    "should_trigger": false
+  },
+  {
+    "query": "review this colleague's PR",
+    "should_trigger": false
+  }
+]

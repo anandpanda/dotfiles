@@ -1,0 +1,30 @@
+[
+  {
+    "query": "draft my reply to this PR comment",
+    "should_trigger": true
+  },
+  {
+    "query": "write a Slack message to the team saying we should pin the version",
+    "should_trigger": true
+  },
+  {
+    "query": "help me word my answer to Ravi in the thread",
+    "should_trigger": true
+  },
+  {
+    "query": "write the PR description",
+    "should_trigger": false
+  },
+  {
+    "query": "explain what this comment means",
+    "should_trigger": false
+  },
+  {
+    "query": "review this PR",
+    "should_trigger": false
+  },
+  {
+    "query": "summarise the Slack thread for me",
+    "should_trigger": false
+  }
+]

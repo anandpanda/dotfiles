@@ -1,0 +1,30 @@
+[
+  {
+    "query": "what's the best way to manage secrets on a Mac?",
+    "should_trigger": true
+  },
+  {
+    "query": "research which terminal multiplexer fits my setup",
+    "should_trigger": true
+  },
+  {
+    "query": "compare pnpm and npm for this repo",
+    "should_trigger": true
+  },
+  {
+    "query": "fix the typo in README",
+    "should_trigger": false
+  },
+  {
+    "query": "explain this function",
+    "should_trigger": false
+  },
+  {
+    "query": "run the doctor script",
+    "should_trigger": false
+  },
+  {
+    "query": "find the session where we chose tmux",
+    "should_trigger": false
+  }
+]

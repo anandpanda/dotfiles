@@ -1,0 +1,30 @@
+[
+  {
+    "query": "write the PR description",
+    "should_trigger": true
+  },
+  {
+    "query": "update the PR body with the new approach",
+    "should_trigger": true
+  },
+  {
+    "query": "draft a summary for this pull request",
+    "should_trigger": true
+  },
+  {
+    "query": "review PR 42 from my teammate",
+    "should_trigger": false
+  },
+  {
+    "query": "reply to this PR comment",
+    "should_trigger": false
+  },
+  {
+    "query": "explain this diff to me",
+    "should_trigger": false
+  },
+  {
+    "query": "run the linter",
+    "should_trigger": false
+  }
+]
