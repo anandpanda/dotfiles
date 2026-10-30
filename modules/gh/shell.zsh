@@ -1,13 +1,16 @@
 # gh: the active GitHub account follows the directory, like git identity does.
-# Accounts are remembered by install (preflight) in ~/.config/dotfiles/gh_{personal,work}.
+# Accounts are remembered by install (preflight) in ~/.config/dotfiles/gh_{personal,work};
+# the context comes from the folder lists install collects in ~/.config/dotfiles/contexts.
 # A wrapper checks before every gh call (gh's active account is global, so a chpwd hook
 # would race between shells and miss shells that start inside a tree).
 gh() {
-  local ctx="" want cur f
-  case "$PWD/" in
-    "$HOME/work/"*) ctx=work ;;
-    "$HOME/personal/"*) ctx=personal ;;
-  esac
+  local ctx="" want cur f c d best=0
+  if [[ -r $HOME/.config/dotfiles/contexts ]]; then
+    while IFS=$'\t' read -r c d; do
+      [[ -n $d && "$PWD/" == "$d/"* && ${#d} -gt $best ]] || continue
+      ctx=$c best=${#d}
+    done <"$HOME/.config/dotfiles/contexts"
+  fi
   if [[ -n $ctx ]]; then
     f="$HOME/.config/dotfiles/gh_$ctx"
     if [[ -r $f ]]; then

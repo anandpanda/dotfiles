@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 # Generate ~/.local/state/git/allowed_signers from the identities and keys on this machine,
 # so `git log --show-signature` verifies locally. One line per identity whose key exists.
+# Also writes the context folder lists and the includeIf file that picks the identity.
 set -euo pipefail
-# shellcheck disable=SC1091
-source "$DOTFILES_DIR/lib/log.sh"
+for f in log os profile module contexts; do
+  # shellcheck disable=SC1090
+  source "$DOTFILES_DIR/lib/$f.sh"
+done
 cfg="$HOME/.config/git"
 # The commit-msg hook ships in config/template/hooks; git's init.templateDir copies it into
 # every new or cloned repo (git ignores a template whose hooks dir is a symlink).
@@ -28,11 +31,14 @@ else
   echo "wrote $out ($(grep -c . "$out") signer(s))"
 fi
 
-# Existing repos under ~/work and ~/personal predate the template: give them the hook
+contexts="$(contexts_collect)" || die "cannot collect context folders"
+contexts_write "$contexts" || exit 1
+
+# Existing repos under the context folders predate the template: give them the hook
 # unless they already have one of their own (never overwrite a repo's hook).
 hook="$cfg/template/hooks/commit-msg"
-for root in "$HOME/work" "$HOME/personal"; do
-  [ -d "$root" ] || continue
+while IFS= read -r root; do
+  if [ -z "$root" ] || [ ! -d "$root" ]; then continue; fi
   while IFS= read -r gitdir; do
     dst="$gitdir/hooks/commit-msg"
     [ -e "$dst" ] && continue
@@ -42,4 +48,4 @@ for root in "$HOME/work" "$HOME/personal"; do
       mkdir -p "$gitdir/hooks" && cp "$hook" "$dst" && chmod +x "$dst" && echo "hook -> $dst"
     fi
   done < <(find "$root" -maxdepth 4 -type d -name .git -not -path '*/node_modules/*' 2>/dev/null)
-done
+done < <(printf '%s\n' "$contexts" | cut -f2)

@@ -2,7 +2,7 @@ load helper
 G="modules/git"
 setup() {
   setup_home
-  for f in log os link module; do source "$DOTFILES_DIR/lib/$f.sh"; done
+  for f in log os link profile module contexts; do source "$DOTFILES_DIR/lib/$f.sh"; done
   # Copy the module config (not link) so tests never write into the repo. -L dereferences:
   # identity.work in the repo is itself a link into the overlay checkout, and a plain
   # copy of that link would let the write below land in the real overlay.
@@ -14,6 +14,7 @@ setup() {
   mkdir -p "$HOME/work/r" "$HOME/personal/r" "$HOME/elsewhere/r"
   for d in work personal elsewhere; do git -C "$HOME/$d/r" init -q; done
   export GIT_CONFIG_NOSYSTEM=1
+  contexts_write "$(contexts_collect)" >/dev/null
 }
 teardown() { teardown_home; }
 

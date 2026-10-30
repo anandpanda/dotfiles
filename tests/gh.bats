@@ -77,6 +77,7 @@ FAKE
 
 @test "gh wrapper switches account per directory before every command, across shells" {
   mkdir -p "$HOME/.config/dotfiles" "$HOME/.config/gh" "$HOME/personal/p" "$HOME/work/w"
+  printf 'personal\t%s\nwork\t%s\n' "$HOME/personal" "$HOME/work" > "$HOME/.config/dotfiles/contexts"
   echo me-personal > "$HOME/.config/dotfiles/gh_personal"; echo me-work > "$HOME/.config/dotfiles/gh_work"
   printf 'github.com:\n    user: me-personal\n' > "$HOME/.config/gh/hosts.yml"
   cat > "$HOME/bin/gh" <<'FAKE'
@@ -98,6 +99,7 @@ FAKE
 
 @test "gh wrapper does not call switch when already on the right account" {
   mkdir -p "$HOME/.config/dotfiles" "$HOME/.config/gh" "$HOME/work/w"
+  printf 'work\t%s\n' "$HOME/work" > "$HOME/.config/dotfiles/contexts"
   echo me-work > "$HOME/.config/dotfiles/gh_work"; printf 'github.com:\n    user: me-work\n' > "$HOME/.config/gh/hosts.yml"
   run zsh -c "source '$DOTFILES_DIR/$GH/shell.zsh'; cd '$HOME/work/w'; gh pr list; gh pr list"
   ! grep -q "auth switch" "$HOME/gh.log"
@@ -148,4 +150,21 @@ FAKE
   printf '1\n' > "$HOME/tty"
   DOTFILES_TTY="$HOME/tty" DOTFILES_PROFILE=personal run bash "$DOTFILES_DIR/$GH/preflight.sh"
   [ "$(cat "$HOME/.config/dotfiles/gh_personal")" = only-one ]
+}
+
+@test "gh wrapper takes the context from the collected folder lists, most specific folder first" {
+  mkdir -p "$HOME/.config/dotfiles" "$HOME/.config/gh" "$HOME/company/w/sub" "$HOME/company/mine" "$HOME/work/w"
+  echo me-personal > "$HOME/.config/dotfiles/gh_personal"; echo me-work > "$HOME/.config/dotfiles/gh_work"
+  printf 'work\t%s\nwork\t%s\npersonal\t%s\n' "$HOME/work" "$HOME/company" "$HOME/company/mine" > "$HOME/.config/dotfiles/contexts"
+  printf 'github.com:\n    user: me-personal\n' > "$HOME/.config/gh/hosts.yml"
+  cat > "$HOME/bin/gh" <<'FAKE'
+#!/usr/bin/env bash
+case "$1 $2" in
+  "auth switch") shift 2; while [ $# -gt 0 ]; do [ "$1" = --user ] && printf 'github.com:\n    user: %s\n' "$2" > "$HOME/.config/gh/hosts.yml"; shift; done ;;
+  "pr list") grep user: "$HOME/.config/gh/hosts.yml" ;;
+esac
+FAKE
+  chmod +x "$HOME/bin/gh"
+  run zsh -c "source '$DOTFILES_DIR/$GH/shell.zsh'; cd '$HOME/company/w/sub'; gh pr list; cd '$HOME/company/mine'; gh pr list"
+  [ "$status" -eq 0 ]; [[ "$output" == *"user: me-work"*"user: me-personal"* ]]
 }

@@ -8,7 +8,7 @@
 
 - Bash 3.2, `shellcheck -S info`, `shfmt -i 2 -ci`; hermetic bats tests (temp HOME, fakes); never touch the real `~/.claude`, `~/.config/git` or the overlay checkout from tests.
 - Public repo: no company names, folder names, profile names or emails (the `tests/claude.bats` company-name test enforces it).
-- Overlay checkout is `$(overlay_dir)` (default `~/.dotfiles-work`); it is fetched before public modules apply (install.sh "configuring" runs after `overlay_ensure`).
+- Overlay checkout is `$(overlay_dir)` (default `~/personal/dotfiles-work`, so it is a personal repo through the normal list); it is fetched before public modules apply (install.sh "configuring" runs after `overlay_ensure`).
 - No hooks; no code comments beyond one-line purpose headers; no AI attribution in commits.
 - Commits in the public repo use the existing identity; overlay commits use `git -c include.path=$HOME/.config/git/identity.personal` until Task 1 lands.
 
@@ -21,8 +21,8 @@
 **Interfaces:**
 - Any module (public or overlay) may ship `contexts/personal` and/or `contexts/work`: one folder per line, `~` allowed, `#` comments and blank lines ignored.
 - `contexts_collect` prints `context<TAB>absolute-folder` lines, unique, from every public module in the active profile plus every overlay module under `$(overlay_dir)/modules/*` when the overlay is present.
-- Public defaults: personal `~/personal` and the overlay checkout (`$(overlay_dir)`, it is a personal repo); work `~/work`.
-- Install writes `~/.local/state/dotfiles/contexts` (the collected lines) and `~/.local/state/git/contexts.inc` with one `[includeIf "gitdir:<folder>/"] path = ~/.config/git/identity.<context>` per line. `.gitconfig` replaces its two hardcoded includeIf blocks with `[include] path = ~/.local/state/git/contexts.inc` (keep `useConfigOnly`).
+- Public defaults: personal `~/personal`; work `~/work`. The overlay checkout moves to `~/personal/dotfiles-work`.
+- Install writes `~/.config/dotfiles/contexts` (`$(state_dir)`) (the collected lines) and `~/.local/state/git/contexts.inc` with one `[includeIf "gitdir:<folder>/"] path = ~/.config/git/identity.<context>` per line. `.gitconfig` replaces its two hardcoded includeIf blocks with `[include] path = ~/.local/state/git/contexts.inc` (keep `useConfigOnly`).
 - The gh context function, commit-hook install and git doctor read the state file instead of hardcoded `~/work`/`~/personal`.
 
 - [ ] Tests first: collect merges public + overlay lists and dedups; comments ignored; `~` expanded; generated include has one block per folder; a repo under an overlay-added work folder gets `identity.work` (real `git config user.email` in a temp HOME); a repo under the overlay checkout gets `identity.personal`; gh function picks `work` for an overlay folder; hook install covers an added folder; a folder that does not exist is harmless.
@@ -42,7 +42,7 @@
 
 ### Task 3: Overlay work layer (private repo)
 
-**Files (overlay):** `modules/claude-work/contexts/work` (`~/zamp`), `modules/claude-work/home/.claude/rules/work.md` (the four approved rules verbatim from the private spec), `modules/claude-work/claude-settings.json` (prod ask rules), delete `modules/claude-work/home/work/CLAUDE.md`, `modules/claude-work/doctor.sh` (team-skill clash check: names under each work folder's `*/.claude/skills/*` vs `~/.claude/skills/*`), `README.md`.
+**Files (overlay):** `modules/claude-work/contexts/work` (the company-named root), `modules/claude-work/home/.claude/rules/work.md` (the four approved rules verbatim from the private spec), `modules/claude-work/claude-settings.json` (prod ask rules), delete `modules/claude-work/home/work/CLAUDE.md`, `modules/claude-work/doctor.sh` (team-skill clash check: names under each work folder's `*/.claude/skills/*` vs `~/.claude/skills/*`), `README.md`.
 
 - [ ] Write the files; check the ask rules' syntax against code.claude.com/docs/en/permissions; shellcheck/shfmt the doctor script.
 - [ ] Commit with the personal identity: `feat: work rules, prod ask rules and work folders for the Claude harness`.

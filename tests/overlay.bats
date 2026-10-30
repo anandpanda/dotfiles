@@ -21,8 +21,8 @@ teardown() { teardown_home; }
 
 @test "overlay_apply clones, applies modules, remembers url" {
   overlay_apply "$REMOTE"
-  [ -d "$HOME/.dotfiles-work/.git" ]
-  [ "$(readlink "$HOME/.config/extra")" = "$HOME/.dotfiles-work/modules/extra/config" ]
+  [ -d "$HOME/personal/dotfiles-work/.git" ]
+  [ "$(readlink "$HOME/.config/extra")" = "$HOME/personal/dotfiles-work/modules/extra/config" ]
   [ -L "$HOME/.config/git" ]
   [ "$(recall overlay)" = "$REMOTE" ]
 }
@@ -31,7 +31,7 @@ teardown() { teardown_home; }
   module_apply "$DOTFILES_MODULES/git" >/dev/null
   overlay_apply "$REMOTE"
   [ "$(readlink "$HOME/.config/git")" = "$DOTFILES_MODULES/git/config" ]
-  [ "$(readlink "$HOME/.config/git/identity.work")" = "$HOME/.dotfiles-work/modules/git/config/identity.work" ]
+  [ "$(readlink "$HOME/.config/git/identity.work")" = "$HOME/personal/dotfiles-work/modules/git/config/identity.work" ]
 }
 
 @test "second apply pulls instead of cloning" {
@@ -49,7 +49,7 @@ teardown() { teardown_home; }
 
 @test "dry run does not clone" {
   DRY_RUN=1 run overlay_apply "$REMOTE"
-  [ ! -d "$HOME/.dotfiles-work" ]
+  [ ! -d "$HOME/personal/dotfiles-work" ]
 }
 
 @test "overlay url is cloned exactly as given: the ssh alias in it picks the key" {

@@ -8,7 +8,7 @@ module_enabled_for_os() {
   [ -z "$want" ] || [ "$want" = "$(os_name)" ]
 }
 
-overlay_dir() { echo "${DOTFILES_OVERLAY_DIR:-$HOME/.dotfiles-work}"; }
+overlay_dir() { echo "${DOTFILES_OVERLAY_DIR:-$HOME/personal/dotfiles-work}"; }
 modules_root() { echo "${DOTFILES_MODULES:-$DOTFILES_DIR/modules}"; }
 
 # True when PATH is inside the overlay checkout.

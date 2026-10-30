@@ -70,7 +70,7 @@ FAKE
 }
 
 @test "overlay extensions are installed too" {
-  fake_code; mkdir -p "$HOME/.dotfiles-work/modules/vscode"; echo "coder.coder-remote" > "$HOME/.dotfiles-work/modules/vscode/extensions.txt"
+  fake_code; mkdir -p "$HOME/personal/dotfiles-work/modules/vscode"; echo "coder.coder-remote" > "$HOME/personal/dotfiles-work/modules/vscode/extensions.txt"
   run bash "$V/install.sh"
   [[ "$output" == *"installed coder.coder-remote"* ]]
 }
@@ -108,7 +108,7 @@ FAKE
 }
 
 @test "vscode doctor: extra extension is info, overlay extension is not extra" {
-  fake_code; mkdir -p "$HOME/.dotfiles-work/modules/vscode"; echo "coder.coder-remote" > "$HOME/.dotfiles-work/modules/vscode/extensions.txt"
+  fake_code; mkdir -p "$HOME/personal/dotfiles-work/modules/vscode"; echo "coder.coder-remote" > "$HOME/personal/dotfiles-work/modules/vscode/extensions.txt"
   bash "$V/install.sh" >/dev/null; echo "some.leftover" >> "$HOME/installed.txt"
   run bash "$V/doctor.sh"
   [ "$status" -eq 0 ]

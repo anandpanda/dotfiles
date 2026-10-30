@@ -75,8 +75,8 @@ teardown() { teardown_home; }
   export DOTFILES_MODULES="$M"
   mkdir -p "$M/tool/config"; echo public > "$M/tool/config/shared"
   module_apply "$M/tool" >/dev/null
-  O="$HOME/.dotfiles-work/modules/tool/config"; mkdir -p "$O"; echo overlay > "$O/extra"; echo overlay > "$O/shared"
-  run module_apply "$HOME/.dotfiles-work/modules/tool"
+  O="$HOME/personal/dotfiles-work/modules/tool/config"; mkdir -p "$O"; echo overlay > "$O/extra"; echo overlay > "$O/shared"
+  run module_apply "$HOME/personal/dotfiles-work/modules/tool"
   [ "$status" -eq 0 ]
   [ "$(readlink "$HOME/.config/tool/extra")" = "$O/extra" ]
   [ "$(cat "$M/tool/config/shared")" = "public" ]
@@ -96,7 +96,7 @@ teardown() { teardown_home; }
 @test "overlay wins home file collisions and public reapply does not flip it back" {
   export DOTFILES_MODULES="$M"
   mkdir -p "$M/tool/home"; echo public > "$M/tool/home/.foo"
-  O="$HOME/.dotfiles-work/modules/tool"; mkdir -p "$O/home"; echo overlay > "$O/home/.foo"
+  O="$HOME/personal/dotfiles-work/modules/tool"; mkdir -p "$O/home"; echo overlay > "$O/home/.foo"
   module_apply "$M/tool" >/dev/null
   module_apply "$O" >/dev/null
   run module_apply "$M/tool"
@@ -117,11 +117,11 @@ teardown() { teardown_home; }
 }
 
 @test "overlay shell.zsh does not clobber public" {
-  mkdir -p "$M/tool" "$HOME/.dotfiles-work/modules/tool"
-  echo pub > "$M/tool/shell.zsh"; echo ovl > "$HOME/.dotfiles-work/modules/tool/shell.zsh"
-  module_apply "$M/tool"; module_apply "$HOME/.dotfiles-work/modules/tool"
+  mkdir -p "$M/tool" "$HOME/personal/dotfiles-work/modules/tool"
+  echo pub > "$M/tool/shell.zsh"; echo ovl > "$HOME/personal/dotfiles-work/modules/tool/shell.zsh"
+  module_apply "$M/tool"; module_apply "$HOME/personal/dotfiles-work/modules/tool"
   [ "$(readlink "$HOME/.config/zsh/rc.d/tool.zsh")" = "$M/tool/shell.zsh" ]
-  [ "$(readlink "$HOME/.config/zsh/rc.d/tool.overlay.zsh")" = "$HOME/.dotfiles-work/modules/tool/shell.zsh" ]
+  [ "$(readlink "$HOME/.config/zsh/rc.d/tool.overlay.zsh")" = "$HOME/personal/dotfiles-work/modules/tool/shell.zsh" ]
 }
 
 @test "os-specific checklist only prints on that os" {

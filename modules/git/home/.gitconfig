@@ -1,10 +1,8 @@
-# No [user] here on purpose. Identity comes from the directory:
-#   ~/personal/** -> identity.personal   ~/work/** -> identity.work
+# No [user] here on purpose. Identity comes from the directory: install generates one
+# includeIf per folder in the modules' contexts/{personal,work} lists (~/personal, ~/work, ...).
 # Committing elsewhere fails, which is the point.
-[includeIf "gitdir:~/personal/"]
-    path = ~/.config/git/identity.personal
-[includeIf "gitdir:~/work/"]
-    path = ~/.config/git/identity.work
+[include]
+    path = ~/.local/state/git/contexts.inc
 [user]
     useConfigOnly = true
 
