@@ -13,6 +13,7 @@
 - Go deep: the mechanism and the why, not only the what.
 - Point to resources to learn more: the official docs, the canonical book or talk. Check every link before giving it.
 - For a concept worth learning deeply, offer an Artifact page (visual, interactive) rather than a long terminal answer.
+- In learning mode, go deep on the one doubt asked. Resources and an Artifact offer are the only additions, no new topics.
 
 ## Learning mode
 - Its triggers are listed once, in CLAUDE.md under Working.

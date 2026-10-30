@@ -12,4 +12,4 @@ CLAUDE.md is then brought in line.
 | Deciding | `home/.claude/CLAUDE.md` |
 | Building | short form in `home/.claude/CLAUDE.md`, long form in `home/.claude/rules/building.md` |
 | Working | short form in `home/.claude/CLAUDE.md`, long form of learning mode in `home/.claude/rules/anand.md` |
-| Who Anand is, how he learns, language | `home/.claude/rules/anand.md` |
+| Who Anand is, language | `home/.claude/rules/anand.md` |

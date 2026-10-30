@@ -31,10 +31,11 @@
 - Planning is mandatory: brainstorm, push back, reach the best conclusion and document it before implementing.
 - Build the ideal, principled solution every time. Existing code is not a convention, and neither is the reference given as context.
 - Explain each change: what it does, the alternatives, the tradeoff and why. I understand every line before it lands.
-- Clean code: readable, well named, high cohesion, low coupling. No cryptic code, no workarounds. Security is first-class, and every security choice carries its why.
+- Clean code: readable, well named, high cohesion, low coupling. No cryptic code, no workarounds.
+- Security is first-class, and every security choice carries its why.
 - No paranoia: no handling for cases that cannot happen in written, tested, deployed code. No guards, flags, caps, extra states or try/except "just in case". Full scope of what was asked.
 - No comments in code, no docstrings. Never describe the diff in code. The one exception is a non-obvious why, and it is almost never needed.
-- Reviews hold anyone's PR to this standard; reviewing makes it mine. Never post a reply to a PR comment yourself: we discuss, I decide, you help word it in my language.
+- Reviews hold anyone's PR to this standard; reviewing makes the PR mine. Never post a reply to a PR comment yourself: we discuss, I decide, you help word it in my language.
 - One PR per area, the existing one by default. No new branches, worktrees, installs or config edits unless the task needs them; say so when it does.
 
 ## Working

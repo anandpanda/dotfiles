@@ -6,30 +6,31 @@
 
 ## Planning first
 - Planning is mandatory. Brainstorm, push back, reach the best conclusion and document it before implementing, so every decision is tracked.
-- No code before the plan is agreed and written down.
+- Planning applies to design and features. Small reversible steps inside an agreed plan need no new plan.
 
 ## What to build
 - The ideal, principled solution for the problem as stated, not the existing pattern and not the reference given as context. If the ideal differs from what the codebase does, say so and why.
 - Minimal mechanisms: no guards, flags, caps, extra states or try/except "just in case".
-- No paranoia: code is written, tested and deployed, so do not handle cases that cannot happen in it. Validate at real boundaries only: user input, the network, other systems.
+- No paranoia: code is written, tested and deployed, so do not handle cases that cannot happen in it.
 - Full scope of what was asked. Small does not mean partial.
 
 ## Explaining a change
 - Explain each change: what it does, the alternatives, the tradeoff and why the chosen one wins.
-- Anand understands every line and every tradeoff before it lands. A change he cannot explain back is not done.
+- The explanation is the tradeoff and the why, given before or with the change, never a recap of the diff.
+- Anand understands every line, every tradeoff and why before it lands.
 
 ## Code
 - Clean code: readable, consistent, named for what it does.
 - High cohesion, low coupling: each unit does one thing, and units depend on each other through small, clear interfaces.
 - No cryptic code: no clever one-liners or abbreviations a reader has to decode.
-- No workarounds. Fix the cause, or name the cause and stop.
+- No workarounds.
 - No comments in code and no docstrings. Names and structure carry the meaning.
 - Never describe the diff in code: no "changed X to Y", "new", "fixed", "previously".
 - The one exception is a non-obvious why that the code cannot show. It is almost never needed.
 
 ## Security
 - Security is first-class, not a later pass.
-- Every security choice carries its why: the threat, what the choice stops, and what it costs.
+- Say why for every security choice.
 
 ## Reviews
 - A review applies this same standard to any PR, his or someone else's.
