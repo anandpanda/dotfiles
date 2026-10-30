@@ -8,17 +8,12 @@ tap "menubar-apps/menubar-apps"
 cask "raycast"
 # Screenshots: annotate, OCR, measure. Cmd-Shift-2
 cask "shottr"
-# Menu bar: hide the clutter
-cask "jordanbaird-ice"
-# CPU, memory, network in the menu bar
-cask "stats"
 # Cmd-Tab with per-window previews (install.sh moves its hold key from Option to Command)
 cask "alt-tab"
 # Quick todo list in the menu bar
 cask "menubar-apps/menubar-apps/todobar", trusted: true
-# Archives, full uninstalls, external monitor brightness
+# Archives, full uninstalls
 cask "keka"
 cask "appcleaner"
-cask "monitorcontrol"
 # Notes, if ever wanted (markdown on disk, free)
 # cask "obsidian"

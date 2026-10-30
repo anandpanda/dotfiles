@@ -6,7 +6,7 @@ teardown() { teardown_home; }
 @test "apps module is macos only and its Brewfile lists every pick" {
   grep -q 'os = "macos"' "$DOTFILES_DIR/$A/module.toml"
   run brew_names "$DOTFILES_DIR/$A/Brewfile.macos"
-  for c in raycast shottr jordanbaird-ice stats alt-tab todobar keka appcleaner monitorcontrol; do
+  for c in raycast shottr alt-tab todobar keka appcleaner; do
     [[ "$output" == *"$c"* ]] || { echo "missing $c"; false; }
   done
   [[ "$output" != *obsidian* ]]; [[ "$output" != *brave* ]]; [[ "$output" != *chrome* ]]; [[ "$output" != *aerospace* ]]; [[ "$output" != *karabiner* ]]; grep -q '# cask "obsidian"' "$DOTFILES_DIR/$A/Brewfile.macos"
