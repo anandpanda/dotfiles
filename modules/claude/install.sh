@@ -9,8 +9,27 @@ owned="$DOTFILES_DIR/modules/claude/settings.owned.json"
 marketplace="claude-plugins-official"
 context7_url="https://mcp.context7.com/mcp"
 
+claude_installer="curl -fsSL https://claude.ai/install.sh | bash"
+
+# Install Claude Code with the official native installer when no claude binary exists yet.
+ensure_claude() {
+  [ -x "$HOME/.local/bin/claude" ] && case ":$PATH:" in *":$HOME/.local/bin:"*) ;; *) PATH="$HOME/.local/bin:$PATH" ;; esac
+  command -v claude >/dev/null 2>&1 && return 0
+  if [ "${DRY_RUN:-0}" = 1 ]; then
+    log_dry "$claude_installer"
+    return 1
+  fi
+  if ! bash -o pipefail -c "$claude_installer" >/dev/null 2>&1; then
+    log_warn "failed: $claude_installer"
+    return 1
+  fi
+  PATH="$HOME/.local/bin:$PATH"
+  echo "installed Claude Code"
+  command -v claude >/dev/null 2>&1
+}
+
 have_cli=1
-command -v claude >/dev/null 2>&1 || have_cli=0
+ensure_claude || have_cli=0
 
 # act DESCRIPTION CMD...: run the command, or print it when dry or there is no claude CLI.
 act() {

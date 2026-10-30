@@ -361,13 +361,62 @@ plugins() { jq -r '.enabledPlugins | keys[]' "$OWNED"; }
   [ "$status" -eq 1 ]
 }
 
-@test "no claude CLI prints the commands" {
-  rm "$HOME/bin/claude"
-  run env PATH="$(dirname "$(command -v jq)"):/usr/bin:/bin" bash "$DOTFILES_DIR/$C/install.sh"
+@test "no claude CLI and a failing installer prints the commands" {
+  rm "$HOME/bin/claude"; mkdir -p "$HOME/fakebin"
+  printf '#!/usr/bin/env bash\nexit 22\n' >"$HOME/fakebin/curl"; chmod +x "$HOME/fakebin/curl"
+  run env PATH="$HOME/fakebin:$(dirname "$(command -v jq)"):/usr/bin:/bin" bash "$DOTFILES_DIR/$C/install.sh"
   [ "$status" -eq 0 ]
+  [[ "$output" == *"failed: curl -fsSL https://claude.ai/install.sh | bash"* ]]
   [[ "$output" == *"run: claude plugin install superpowers@claude-plugins-official --scope user"* ]]
   [[ "$output" == *"run: claude mcp add --scope user --transport http context7"* ]]
   jq -e '.attribution=={"commit":"","pr":"","sessionUrl":false}' "$HOME/.claude/settings.json"
+}
+
+no_claude() {
+  mkdir -p "$HOME/stash" "$HOME/fakebin"
+  mv "$HOME/bin/claude" "$HOME/stash/claude"
+  cat >"$HOME/fakebin/curl" <<'FAKE'
+#!/usr/bin/env bash
+echo "$*" >>"$HOME/fake/curl"
+cat <<'SCRIPT'
+echo ran >>"$HOME/fake/installer"
+mkdir -p "$HOME/.local/bin"
+cp "$HOME/stash/claude" "$HOME/.local/bin/claude"
+SCRIPT
+FAKE
+  chmod +x "$HOME/fakebin/curl"
+  NOCLAUDE_PATH="$HOME/fakebin:$(dirname "$(command -v jq)"):/usr/bin:/bin"
+}
+
+@test "a missing claude is installed once with the official installer, then plugins use it" {
+  no_claude
+  run env PATH="$NOCLAUDE_PATH" bash "$DOTFILES_DIR/$C/install.sh"
+  [ "$status" -eq 0 ]
+  [ "$(grep -c ran "$HOME/fake/installer")" -eq 1 ]
+  grep -qxF -- "-fsSL https://claude.ai/install.sh" "$HOME/fake/curl"
+  [ -x "$HOME/.local/bin/claude" ]
+  grep -qxF "plugin install superpowers@claude-plugins-official --scope user" "$HOME/fake/calls"
+  [[ "$output" != *"run: claude"* ]]
+}
+
+@test "claude already in ~/.local/bin or on PATH does not run the installer" {
+  no_claude
+  mkdir -p "$HOME/.local/bin"; cp "$HOME/stash/claude" "$HOME/.local/bin/claude"
+  run env PATH="$NOCLAUDE_PATH" bash "$DOTFILES_DIR/$C/install.sh"
+  [ "$status" -eq 0 ]
+  [ ! -e "$HOME/fake/installer" ]
+  grep -qxF "plugin install superpowers@claude-plugins-official --scope user" "$HOME/fake/calls"
+  bash "$DOTFILES_DIR/$C/install.sh" >/dev/null
+  [ ! -e "$HOME/fake/installer" ]
+}
+
+@test "dry run prints the installer and does not run it" {
+  no_claude
+  DRY_RUN=1 run env PATH="$NOCLAUDE_PATH" bash "$DOTFILES_DIR/$C/install.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"curl -fsSL https://claude.ai/install.sh | bash"* ]]
+  [ ! -e "$HOME/fake/installer" ]; [ ! -e "$HOME/fake/curl" ]
+  [ ! -e "$HOME/.local/bin/claude" ]
 }
 
 @test "doctor names an enabled plugin that is not installed" {
