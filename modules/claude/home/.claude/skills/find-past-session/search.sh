@@ -2,8 +2,13 @@
 # Search past Claude Code transcripts for any of the given phrases and print session, date and the matching text.
 set -eu
 
+exclude=""
+if [ "${1:-}" = --exclude ]; then
+  exclude="$2"
+  shift 2
+fi
 [ "$#" -gt 0 ] || {
-  echo "usage: search.sh <phrase>..." >&2
+  echo "usage: search.sh [--exclude <session>] <phrase>..." >&2
   exit 2
 }
 
@@ -16,13 +21,19 @@ export PHRASES
   while IFS= read -r hit; do
     file="${hit%%.jsonl:*}.jsonl"
     session="$(basename "$file" .jsonl)"
+    [ "$session" != "$exclude" ] || continue
     printf '%s\n' "${hit#*.jsonl:}" |
       jq -r '
-        def flat: if type == "string" then .
-          elif type == "array" then map(if type == "object" then (.text // .content // .input // "") | flat else tostring end) | join(" ")
-          else tostring end;
         select(.type == "user" or .type == "assistant")
-        | [(.timestamp // "")[0:10], (.message.content | flat | gsub("\\s+"; " "))] | @tsv
+        | [
+            (.timestamp // "")[0:10],
+            (.message.content
+              | if type == "string" then .
+                else map(if .type == "text" then .text elif .type == "tool_use" then (.input.command // "") else "" end) | join(" ")
+                end
+              | gsub("\\s+"; " "))
+          ]
+        | @tsv
       ' |
       awk -F '\t' -v session="$session" '
         BEGIN { n = split(ENVIRON["PHRASES"], phrases, "\n") }

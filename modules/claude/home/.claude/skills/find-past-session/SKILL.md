@@ -9,8 +9,8 @@ Never say "we never did that" or "no record" from memory. Search first.
 
 ## Search
 1. Write three phrasings of what you are looking for: his likely words (Hinglish too), the technical terms, and a distinctive name, file or command.
-2. Run `~/.claude/skills/find-past-session/search.sh "<phrase 1>" "<phrase 2>" "<phrase 3>"`. It prints `session  date  matching text`, at most 30 lines.
-3. Ignore hits from the current session. If the hits are noisy, narrow the phrases and run again.
+2. Run `${CLAUDE_SKILL_DIR}/search.sh --exclude "${CLAUDE_SESSION_ID}" "<phrase 1>" "<phrase 2>" "<phrase 3>"`. It searches what was said and the commands run (not tool output), skips this session, and prints `session  date  matching text`, at most 30 lines.
+3. If the hits are noisy, narrow the phrases and run again.
 4. Read the matching transcript lines that matter (`~/.claude/projects/*/<session>.jsonl`) before quoting them.
 
 ## Answer

@@ -21,4 +21,3 @@ For the people who review it and for Anand later. Concise, in his voice (`rules/
 - No UNVERIFIED claim. Every statement is checked against the diff or a run.
 - No restating the diff file by file. No praise, no filler.
 - Updating an existing description: keep what is still true, replace what is not.
-- Show him the text. Create or edit the PR only on his go.

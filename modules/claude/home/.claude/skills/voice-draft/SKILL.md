@@ -1,7 +1,6 @@
 ---
 name: voice-draft
 description: Use when drafting any text that will be posted as Anand, such as a PR comment reply, review comment, Slack message, Linear or Notion comment, or email. Writes it short, in his voice, with only his points.
-disable-model-invocation: true
 ---
 
 # Voice draft

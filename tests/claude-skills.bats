@@ -1,7 +1,7 @@
 load helper
 C="modules/claude"
 SKILLS="explain grill phase-close pr-description voice-draft review-pr research find-past-session handoff retro scout"
-USER_ONLY="phase-close handoff voice-draft retro scout"
+USER_ONLY="phase-close handoff retro scout"
 setup() {
   setup_home
   S="$DOTFILES_DIR/$C/home/.claude/skills"
@@ -26,7 +26,10 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
   for s in $SKILLS; do
     v="$(field "$S/$s/SKILL.md" disable-model-invocation)"
     case " $USER_ONLY " in
-      *" $s "*) [ "$v" = true ] || { echo "model can invoke: $s"; return 1; } ;;
+      *" $s "*)
+        [ "$v" = true ] || { echo "model can invoke: $s"; return 1; }
+        [[ "$(field "$S/$s/SKILL.md" description)" == "/$s"* ]] || { echo "description not /usage: $s"; return 1; }
+        ;;
       *) [ -z "$v" ] || { echo "user-only by mistake: $s"; return 1; } ;;
     esac
   done
@@ -40,9 +43,12 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
   done
 }
 
-@test "each skill ships a trigger eval with at least half negatives" {
+@test "each model-invocable skill ships a trigger eval with at least half negatives" {
   for s in $SKILLS; do
     e="$S/$s/evals/trigger.json"
+    case " $USER_ONLY " in
+      *" $s "*) [ ! -e "$S/$s/evals" ] || { echo "user-only skill has trigger evals: $s"; return 1; }; continue ;;
+    esac
     jq -e 'type=="array" and length>=6
       and all(.[]; (.query|type)=="string" and (.query|length)>0 and (.should_trigger|type)=="boolean")
       and ((map(select(.should_trigger==false))|length)*2 >= length)
@@ -92,6 +98,41 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
   grep -qF "Merge risk" "$f"
   grep -qF "What did not change" "$f"
   grep -qF "No AI attribution" "$f"
+  run grep -F "only on his go" "$f"
+  [ "$status" -eq 1 ]
+}
+
+@test "voice-draft is model-invocable and sends only on his explicit go" {
+  [ -z "$(field "$S/voice-draft/SKILL.md" disable-model-invocation)" ]
+  grep -qF "explicit go" "$S/voice-draft/SKILL.md"
+}
+
+@test "skills hand the reviewer a diff file it can read" {
+  for s in phase-close review-pr; do
+    grep -qF "diff file" "$S/$s/SKILL.md" || { echo "$s passes no diff file"; return 1; }
+  done
+  grep -qF "gh pr diff" "$S/review-pr/SKILL.md"
+  grep -qF "git diff" "$S/phase-close/SKILL.md"
+}
+
+@test "phase-close runs the full suite and ends on a clean tree" {
+  f="$S/phase-close/SKILL.md"
+  grep -qF "full suite" "$f"
+  last=$(grep -E '^[0-9]+\. \*\*' "$f" | tail -1)
+  [[ "$last" == *"Clean tree"* ]]
+}
+
+@test "skills call bundled scripts through the skill dir and know their own session" {
+  grep -qF '${CLAUDE_SKILL_DIR}/pairs.sh' "$S/retro/SKILL.md"
+  grep -qF '${CLAUDE_SESSION_ID}.jsonl' "$S/retro/SKILL.md"
+  grep -qF '${CLAUDE_SKILL_DIR}/search.sh --exclude "${CLAUDE_SESSION_ID}"' "$S/find-past-session/SKILL.md"
+  run grep -rE '~/\.claude/skills/[a-z-]+/[a-z]+\.sh' "$S"
+  [ "$status" -eq 1 ]
+}
+
+@test "grill and scout limit their writes" {
+  grep -qF "the decisions ledger is the only write" "$S/grill/SKILL.md"
+  grep -qF "scratchpad" "$S/scout/SKILL.md"
 }
 
 @test "review-pr finds, refutes and drafts replies through voice-draft" {
@@ -188,6 +229,17 @@ transcript_line() { # type role ts text
   [ "${#lines[@]}" -eq 30 ]
   run bash "$S/find-past-session/search.sh" "never said"
   [ -z "$output" ]
+}
+
+@test "search.sh reads text and commands, never tool results, and skips an excluded session" {
+  d="$HOME/.claude/projects/-tmp-proj"
+  mkdir -p "$d"
+  jq -cn '{type:"user", timestamp:"2026-01-01T00:00:00Z", message:{role:"user", content:[{type:"tool_result", content:"secret harbor output"}]}}' >"$d/aaa.jsonl"
+  jq -cn '{type:"assistant", timestamp:"2026-01-02T00:00:00Z", message:{role:"assistant", content:[{type:"tool_use", name:"Bash", input:{command:"grep harbor notes.txt", description:"look"}}]}}' >>"$d/aaa.jsonl"
+  transcript_line user user 2026-01-03T00:00:00Z "harbor talk here" >"$d/self.jsonl"
+  run bash "$S/find-past-session/search.sh" --exclude self "harbor"
+  [ "$status" -eq 0 ]
+  [ "$output" = "aaa  2026-01-02  grep harbor notes.txt" ]
 }
 
 @test "pairs.sh prints only prompts and assistant text from a fixture transcript" {

@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: Use when Anand asks for a handoff, a status for the next session, or before he clears or ends a long session. Writes STATUS and the decisions ledger, and gives a five-line summary.
+description: /handoff writes STATUS and the decisions ledger before a session is cleared or ended, and gives a five-line summary for the next session.
 disable-model-invocation: true
 ---
 

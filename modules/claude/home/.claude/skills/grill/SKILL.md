@@ -24,5 +24,5 @@ Find the decisions a plan has not made yet, and get them made.
 
 ## Never
 - Questions with an obvious answer, or ones you could settle by reading.
-- Building, editing or committing during the grill.
+- Building or committing during the grill. No code or config edits; the decisions ledger is the only write.
 - Treating "ok" or a question back as an answer. Ask again for that number.

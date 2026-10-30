@@ -30,5 +30,13 @@
   {
     "query": "commit this change",
     "should_trigger": false
+  },
+  {
+    "query": "what is the status of the CI run?",
+    "should_trigger": false
+  },
+  {
+    "query": "what is a race condition, with an example from my code?",
+    "should_trigger": true
   }
 ]

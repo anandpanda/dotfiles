@@ -1,6 +1,6 @@
 ---
 name: retro
-description: Use when Anand runs /retro to review one session and improve the Claude Code harness. Reads the session (the current one by default, or one he names) and proposes rule, permission, skill, agent and plugin changes for him to pick.
+description: /retro reviews one session (the current one by default, or a named one) and proposes rule, permission, skill, agent and plugin changes to the Claude Code harness for Anand to pick.
 argument-hint: "[session-id or transcript path]"
 disable-model-invocation: true
 ---
@@ -10,7 +10,8 @@ disable-model-invocation: true
 One session in, harness proposals out. Edit nothing and commit nothing until Anand picks.
 
 ## 1. Read the session
-- `~/.claude/skills/retro/pairs.sh [transcript]` prints the conversation as JSON lines `{role, ts, text}`. With no argument it uses the newest transcript for the current directory, which is this session. For a session id, pass `~/.claude/projects/*/<id>.jsonl`.
+- `${CLAUDE_SKILL_DIR}/pairs.sh <transcript>` prints the conversation as JSON lines `{role, ts, text}`.
+- This session: `${CLAUDE_SKILL_DIR}/pairs.sh ~/.claude/projects/*/${CLAUDE_SESSION_ID}.jsonl`. A named session: the same with its id, or the transcript path he gives.
 - Read it all. Mark each place where he corrected, repeated, pushed back, re-asked, or where work was redone.
 
 ## 2. Read the harness
@@ -20,7 +21,7 @@ One session in, harness proposals out. Edit nothing and commit nothing until Ana
 For each marked moment: what went wrong, his exact words, and the cause: a rule missing, a rule unclear, a rule present but ignored, a missing guard rail, a missing skill, or a one-off. One-offs get no proposal.
 
 ## 4. Research
-Have the `researcher` agent cite current docs for every plugin or Claude Code feature you suggest, with a checked link and the version it needs. Give it a findings file.
+Have the `researcher` agent cite current docs for every plugin or Claude Code feature you suggest, with a checked link and the version it needs. Give it a findings file in the session scratchpad.
 
 ## 5. Propose
 Group the proposals, each with the evidence (session line), the exact change (file and text), and why:
