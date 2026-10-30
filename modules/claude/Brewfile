@@ -1,0 +1,3 @@
+brew "jq"                          # settings merge, statusline, doctor
+brew "pyright"                     # pyright-lsp plugin server
+brew "typescript-language-server"  # typescript-lsp plugin server

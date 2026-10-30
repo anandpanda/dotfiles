@@ -1,6 +1,28 @@
 load helper
 C="modules/claude"
-setup() { setup_home; for f in log os link module profile claude; do source "$DOTFILES_DIR/lib/$f.sh"; done; }
+setup() {
+  setup_home
+  for f in log os link module profile claude; do source "$DOTFILES_DIR/lib/$f.sh"; done
+  mkdir -p "$HOME/bin" "$HOME/fake"
+  : >"$HOME/fake/plugins"
+  cat >"$HOME/bin/claude" <<'FAKE'
+#!/usr/bin/env bash
+echo "$*" >>"$HOME/fake/calls"
+case "$1 $2 $3" in
+  "plugin list --json")
+    while IFS= read -r id; do printf '{"id":"%s","enabled":true,"scope":"user"}\n' "$id"; done <"$HOME/fake/plugins" | jq -s . ;;
+  "plugin marketplace list")
+    [ -e "$HOME/fake/marketplace" ] && echo '[{"name":"claude-plugins-official"}]' || echo '[]' ;;
+  "plugin marketplace add") touch "$HOME/fake/marketplace" ;;
+  "plugin install "*) echo "$3" >>"$HOME/fake/plugins" ;;
+  "plugin uninstall "*) grep -vxF "$3" "$HOME/fake/plugins" >"$HOME/fake/p.t" || true; mv "$HOME/fake/p.t" "$HOME/fake/plugins" ;;
+  "mcp get context7") [ -e "$HOME/fake/context7" ] || exit 1 ;;
+  "mcp add --scope") touch "$HOME/fake/context7" ;;
+esac
+FAKE
+  chmod +x "$HOME/bin/claude"
+  export PATH="$HOME/bin:$PATH"
+}
 teardown() { teardown_home; }
 
 @test "claude module links CLAUDE.md and rules" {
@@ -199,6 +221,7 @@ OWNED="$BATS_TEST_DIRNAME/../modules/claude/settings.owned.json"
   mkdir -p "$HOME/.claude"
   echo '{}' >"$live"
   claude_settings_merge "$OWNED" "$live" >/dev/null
+  jq -r '.enabledPlugins | to_entries[] | select(.value) | .key' "$OWNED" >"$HOME/fake/plugins"
   jq '.model="sonnet"' "$live" >"$live.t" && mv "$live.t" "$live"
   run bash "$DOTFILES_DIR/$C/doctor.sh"
   [ "$status" -eq 0 ]
@@ -214,6 +237,134 @@ OWNED="$BATS_TEST_DIRNAME/../modules/claude/settings.owned.json"
   [ "$status" -eq 0 ]
   [ ! -e "$HOME/.claude/settings.json" ]
   run bash "$DOTFILES_DIR/$C/install.sh"
-  [ "$output" = "merged settings" ]
+  [ "${lines[0]}" = "merged settings" ]
   jq -e '.attribution==false' "$HOME/.claude/settings.json"
+}
+
+enabled() { jq -r '.enabledPlugins | to_entries[] | select(.value) | .key' "$OWNED"; }
+
+@test "owned file enables the agreed plugins and sets the review model" {
+  run jq -e '.enabledPlugins["superpowers@claude-plugins-official"]==true
+    and .enabledPlugins["security-guidance@claude-plugins-official"]==true
+    and .enabledPlugins["pyright-lsp@claude-plugins-official"]==true
+    and .enabledPlugins["typescript-lsp@claude-plugins-official"]==true
+    and .enabledPlugins["learning-output-style@claude-plugins-official"]==false
+    and .enabledPlugins["code-review@claude-plugins-official"]==false
+    and .enabledPlugins["code-simplifier@claude-plugins-official"]==false
+    and .env.SECURITY_REVIEW_MODEL=="claude-sonnet-5-5"' "$OWNED"
+  [ "$status" -eq 0 ]
+}
+
+@test "brewfile carries jq and the language servers" {
+  for t in jq pyright typescript-language-server; do grep -q "^brew \"$t\"" "$DOTFILES_DIR/$C/Brewfile"; done
+}
+
+@test "installs missing plugins once" {
+  run bash "$DOTFILES_DIR/$C/install.sh"
+  [ "$status" -eq 0 ]
+  while IFS= read -r id; do
+    [ "$(grep -cxF "plugin install $id --scope user" "$HOME/fake/calls")" -eq 1 ] || { echo "not once: $id"; return 1; }
+  done < <(enabled)
+  grep -qxF "plugin marketplace add anthropics/claude-plugins-official" "$HOME/fake/calls"
+  ! grep -q "install learning-output-style" "$HOME/fake/calls"
+}
+
+@test "second run calls nothing" {
+  bash "$DOTFILES_DIR/$C/install.sh" >/dev/null
+  : >"$HOME/fake/calls"
+  run bash "$DOTFILES_DIR/$C/install.sh"
+  [ "$status" -eq 0 ]
+  ! grep -qE "install|uninstall|marketplace add|mcp add" "$HOME/fake/calls"
+}
+
+@test "removes the duplicated review plugins" {
+  printf '%s\n' code-review@claude-plugins-official code-simplifier@claude-plugins-official >"$HOME/fake/plugins"
+  run bash "$DOTFILES_DIR/$C/install.sh"
+  grep -qxF "plugin uninstall code-review@claude-plugins-official" "$HOME/fake/calls"
+  grep -qxF "plugin uninstall code-simplifier@claude-plugins-official" "$HOME/fake/calls"
+}
+
+@test "adds context7 once" {
+  bash "$DOTFILES_DIR/$C/install.sh" >/dev/null
+  bash "$DOTFILES_DIR/$C/install.sh" >/dev/null
+  [ "$(grep -c "^mcp add --scope user --transport http context7 https://mcp.context7.com/mcp$" "$HOME/fake/calls")" -eq 1 ]
+}
+
+@test "dry run changes nothing and prints the plan" {
+  DRY_RUN=1 run bash "$DOTFILES_DIR/$C/install.sh"
+  [ "$status" -eq 0 ]
+  ! grep -qE "install|uninstall|marketplace add|mcp add" "$HOME/fake/calls"
+  [[ "$output" == *"claude mcp add"* ]]
+}
+
+@test "no claude CLI prints the commands" {
+  rm "$HOME/bin/claude"
+  run env PATH="$(dirname "$(command -v jq)"):/usr/bin:/bin" bash "$DOTFILES_DIR/$C/install.sh"
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"run: claude plugin install superpowers@claude-plugins-official --scope user"* ]]
+  [[ "$output" == *"run: claude mcp add --scope user --transport http context7"* ]]
+  jq -e '.attribution==false' "$HOME/.claude/settings.json"
+}
+
+@test "doctor names an enabled plugin that is not installed" {
+  claude_settings_merge "$OWNED" "$HOME/.claude/settings.json" >/dev/null
+  run bash "$DOTFILES_DIR/$C/doctor.sh"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"plugin not installed: superpowers@claude-plugins-official"* ]]
+}
+
+@test "doctor fails when jq is missing" {
+  rm "$HOME/bin/claude"
+  run env PATH="$HOME/nothing" /bin/bash "$DOTFILES_DIR/$C/doctor.sh"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"brew install jq"* ]]
+}
+
+STATUS="$BATS_TEST_DIRNAME/../modules/claude/home/.claude/statusline.sh"
+
+mkrepo() {
+  repo="$HOME/proj"
+  git init -q -b main "$repo"
+  git -C "$repo" -c user.name=t -c user.email=t@t commit -q --allow-empty -m init
+}
+sl() { printf '{"model":{"display_name":"Opus"},"context_window":{"used_percentage":%s},"workspace":{"current_dir":"%s"}}' "$1" "$2" | bash "$STATUS"; }
+
+@test "statusline shows model, context percent, repo and branch" {
+  mkrepo
+  run sl 23.7 "$repo"
+  [ "$output" = "Opus · 23% · proj main" ]
+}
+
+@test "statusline marks a dirty tree with *" {
+  mkrepo
+  touch "$repo/new"
+  run sl 5 "$repo"
+  [ "$output" = "Opus · 5% · proj main*" ]
+}
+
+@test "statusline outside a repo shows only model and context" {
+  mkdir "$HOME/plain"
+  run sl 40 "$HOME/plain"
+  [ "$output" = "Opus · 40%" ]
+}
+
+@test "statusline survives null context" {
+  mkdir "$HOME/plain"
+  run bash -c "printf '%s' '{\"model\":{\"display_name\":\"Opus\"},\"context_window\":{\"used_percentage\":null},\"workspace\":{\"current_dir\":\"$HOME/plain\"}}' | bash '$STATUS'"
+  [ "$output" = "Opus · 0%" ]
+}
+
+@test "statusline makes one jq call" {
+  mkrepo
+  real="$(command -v jq)"
+  printf '#!/bin/sh\necho x >>"%s/jqcalls"\nexec %s "$@"\n' "$HOME" "$real" >"$HOME/bin/jq"
+  chmod +x "$HOME/bin/jq"
+  run sl 10 "$repo"
+  [ "$(wc -l <"$HOME/jqcalls" | tr -d ' ')" -eq 1 ]
+}
+
+@test "owned file wires the statusline" {
+  run jq -e '.statusLine=={"type":"command","command":"$HOME/.claude/statusline.sh"}' "$OWNED"
+  [ "$status" -eq 0 ]
+  [ -x "$DOTFILES_DIR/$C/home/.claude/statusline.sh" ]
 }
