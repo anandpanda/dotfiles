@@ -77,3 +77,23 @@ FAKE
   run zsh -c "source '$DOTFILES_DIR/$S/shell.zsh'; print -r -- \${SOPS_AGE_RECIPIENTS:-unset}"
   [ "$output" = "unset" ]
 }
+
+@test "with-secrets is a script that works from any shell and sets the age key itself" {
+  f="$DOTFILES_DIR/$S/home/.local/bin/with-secrets"
+  [ -x "$f" ]
+  cat > "$HOME/bin/sops" <<'FAKE'
+#!/bin/sh
+printf 'key=%s\nargs=%s\n' "$SOPS_AGE_KEY_FILE" "$*" > "$HOME/sops.call"
+FAKE
+  chmod +x "$HOME/bin/sops"
+  run env -i HOME="$HOME" PATH="$HOME/bin:/usr/bin:/bin" /bin/bash -c "'$f' 'psql -c \"select 1\"'"
+  [ "$status" -eq 0 ]
+  grep -qx "key=$HOME/.secrets/age.key" "$HOME/sops.call"
+  grep -qx "args=exec-env $HOME/.secrets/secrets.yaml psql -c \"select 1\"" "$HOME/sops.call"
+}
+
+@test "zsh no longer defines a with-secrets function" {
+  grep -q 'SOPS_AGE_KEY_FILE' "$DOTFILES_DIR/$S/shell.zsh"
+  run grep -q 'with-secrets()' "$DOTFILES_DIR/$S/shell.zsh"
+  [ "$status" -eq 1 ]
+}

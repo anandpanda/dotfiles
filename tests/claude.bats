@@ -573,3 +573,7 @@ sl() { printf '{"model":{"display_name":"Opus"},"context_window":{"used_percenta
 @test "dictated formats are returned exactly" {
   grep -qF "When I dictate a format or bullets, return exactly that shape" "$DOTFILES_DIR/$C/home/.claude/rules/anand.md"
 }
+
+@test "machine rules say how to use secrets" {
+  grep -qF 'with-secrets' "$DOTFILES_DIR/$C/home/.claude/rules/machine.md"
+}

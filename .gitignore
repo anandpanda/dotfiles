@@ -1,4 +1,5 @@
 .DS_Store
 *.local
+!modules/*/home/.local/
 .superpowers/
 modules/*/config/identity.work
