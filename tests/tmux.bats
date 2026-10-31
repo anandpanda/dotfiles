@@ -61,3 +61,8 @@ teardown() { teardown_home; }
   run bash "$DOTFILES_DIR/modules/tmux/install.sh"
   [[ "$output" != *"moved tmux-continuum"* ]]
 }
+
+@test "status bar shows window names, not the shell's pane title" {
+  grep -qx 'set -g @catppuccin_window_text " #W"' "$DOTFILES_DIR/modules/tmux/home/.config/tmux/tmux.conf"
+  grep -qx 'set -g @catppuccin_window_current_text " #W"' "$DOTFILES_DIR/modules/tmux/home/.config/tmux/tmux.conf"
+}
