@@ -265,3 +265,7 @@ transcript_line() { # type role ts text
   [ "$status" -eq 0 ]
   [ "$output" = '{"role":"user","ts":"T2","text":"new session"}' ]
 }
+
+@test "voice-draft warns about the Slack connector byline" {
+  grep -qF "Sent using @Claude" "$DOTFILES_DIR/modules/claude/home/.claude/skills/voice-draft/SKILL.md"
+}

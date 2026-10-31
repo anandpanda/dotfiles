@@ -569,3 +569,7 @@ sl() { printf '{"model":{"display_name":"Opus"},"context_window":{"used_percenta
 @test "writing rules forbid AI attribution anywhere" {
   grep -qF "No AI attribution anywhere" "$DOTFILES_DIR/$C/home/.claude/rules/writing.md"
 }
+
+@test "dictated formats are returned exactly" {
+  grep -qF "When I dictate a format or bullets, return exactly that shape" "$DOTFILES_DIR/$C/home/.claude/rules/anand.md"
+}

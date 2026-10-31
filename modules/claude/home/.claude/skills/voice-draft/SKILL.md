@@ -23,3 +23,4 @@ Text posted as Anand. It must read like he wrote it.
 - Show the draft and where it goes (channel, PR, thread).
 - A reply to a PR comment: he posts it himself (`rules/building.md`). Give him the final text.
 - Anything else: post only on his explicit go for this draft. A paste, "ok" or a question is not a go. After posting, give the link.
+- Through the Slack connector, the message carries an unremovable "Sent using @Claude" byline. Say so before sending, and offer the final text for him to paste himself.

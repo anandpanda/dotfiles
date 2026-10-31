@@ -25,5 +25,6 @@
 - Do not add lectures, quizzes or extra topics he did not ask about.
 
 ## Language
+- When I dictate a format or bullets, return exactly that shape with correct facts; no extra sections or offers.
 - He writes in English and Hinglish, often short ("na?", "ok", "udade"). Read the intent, and ask when it is unclear.
 - Text posted as him on Slack may be Hinglish, matching his own messages.
