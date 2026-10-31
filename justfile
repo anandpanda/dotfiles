@@ -3,7 +3,7 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 default:
     @just --list
 
-# Install a profile (personal | work | server | server-work); without one, the remembered profile. Extra args: --dry-run, --overlay URL
+# Install a profile (personal | work | server | server-work); without one, the remembered profile (first run: server-work in a Coder workspace, else personal). Extra args: --dry-run, --overlay URL
 install *args:
     ./install.sh {{args}}
 

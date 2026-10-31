@@ -214,3 +214,13 @@ teardown() { teardown_home; }
   [ "$status" -eq 0 ]
   [[ "$output" == *"./install.sh work --dry-run"* ]]
 }
+
+@test "a Coder workspace with no profile given or remembered installs server-work; given or remembered still win" {
+  printf 'modules = ["one"]\n' > "$DOTFILES_PROFILES/server-work.toml"
+  CODER_WORKSPACE_ID=w run "$DOTFILES_DIR/install.sh"
+  [ "$status" -eq 0 ]; [[ "$output" == *"profile: server-work"* ]]
+  CODER_WORKSPACE_ID=w run "$DOTFILES_DIR/install.sh" test
+  [[ "$output" == *"profile: test"* ]]
+  CODER_WORKSPACE_ID=w run "$DOTFILES_DIR/install.sh"
+  [[ "$output" == *"profile: test"* ]]
+}

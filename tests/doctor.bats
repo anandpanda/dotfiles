@@ -130,3 +130,10 @@ teardown() { teardown_home; }
   run "$DOTFILES_DIR/doctor.sh"
   [ "$status" -ne 0 ]; [[ "$output" == *"dangling link $HOME/.d"* ]]
 }
+
+@test "with no remembered profile doctor checks the machine's default profile" {
+  printf 'modules = ["one"]\n' > "$DOTFILES_PROFILES/server-work.toml"
+  rm "$HOME/.config/dotfiles/profile"
+  CODER_WORKSPACE_ID=w run "$DOTFILES_DIR/doctor.sh"
+  [[ "$output" == *"profile: server-work"* ]]
+}

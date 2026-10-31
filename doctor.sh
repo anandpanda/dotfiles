@@ -14,7 +14,7 @@ problem() {
   problems=$((problems + 1))
 }
 
-profile="$(recall profile || echo personal)"
+profile="$(profile_default)"
 log_info "profile: $profile"
 
 dirs="$(profile_module_dirs "$profile")" || die "cannot resolve profile: $profile"

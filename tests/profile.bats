@@ -79,3 +79,11 @@ teardown() { teardown_home; }
   run profile_has_overlay server-work; [ "$status" -eq 0 ]
   run profile_modules server-work; [[ "$output" == *zsh* ]]
 }
+
+@test "default profile: the remembered one wins, else server-work in a Coder workspace, else personal" {
+  run profile_default; [ "$output" = personal ]
+  CODER_WORKSPACE_ID=w run profile_default; [ "$output" = server-work ]
+  CODER=true CODER_PORT=tcp://10.0.0.1:80 run profile_default; [ "$output" = personal ]
+  remember profile base
+  CODER_WORKSPACE_ID=w run profile_default; [ "$output" = base ]
+}

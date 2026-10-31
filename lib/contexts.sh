@@ -23,7 +23,7 @@ _contexts_read() { # CONTEXT FILE -> context<TAB>folder per usable line
   done <"$2"
 }
 
-contexts_profile() { echo "${DOTFILES_PROFILE:-$(recall profile || echo personal)}"; }
+contexts_profile() { echo "${DOTFILES_PROFILE:-$(profile_default)}"; }
 
 # Unique context<TAB>folder lines, shortest folder first so a nested folder's include wins in git.
 contexts_collect() {

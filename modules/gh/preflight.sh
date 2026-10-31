@@ -10,7 +10,7 @@ command -v gh >/dev/null 2>&1 || {
   log_warn "gh not installed yet; GitHub login happens on the next install"
   exit 0
 }
-profile="${DOTFILES_PROFILE:-$(recall profile 2>/dev/null || echo personal)}"
+profile="${DOTFILES_PROFILE:-$(profile_default)}"
 ctxs="personal"
 profile_has_overlay "$profile" 2>/dev/null && ctxs="personal work"
 # "✓ Logged in to github.com account NAME (keyring)" then "- Active account: true"; the

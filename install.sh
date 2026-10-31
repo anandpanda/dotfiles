@@ -30,8 +30,7 @@ while [ $# -gt 0 ]; do
   shift
 done
 export DRY_RUN
-[ -n "$PROFILE" ] || PROFILE="$(recall profile || true)"
-[ -n "$PROFILE" ] || PROFILE=personal
+[ -n "$PROFILE" ] || PROFILE="$(profile_default)"
 export DOTFILES_PROFILE="$PROFILE"
 [ -n "$OVERLAY_URL" ] || OVERLAY_URL="$(recall overlay || true)"
 

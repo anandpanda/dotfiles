@@ -75,3 +75,9 @@ remember() {
   printf '%s\n' "$2" >"$(state_dir)/$1"
 }
 recall() { [ -f "$(state_dir)/$1" ] && cat "$(state_dir)/$1"; }
+
+# The profile when none is named: the remembered one, else server-work inside a Coder workspace, else personal.
+profile_default() {
+  recall profile && return 0
+  if [ -n "${CODER_WORKSPACE_ID:-}" ]; then echo server-work; else echo personal; fi
+}
