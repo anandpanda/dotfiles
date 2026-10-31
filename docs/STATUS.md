@@ -110,7 +110,7 @@ Keka, AppCleaner (Stats, Ice and MonitorControl removed 2026-10-30, unused); Obs
 hand-installed because their updaters lock the bundles; the todobar tap cask
 declared `trusted: true` for Homebrew 7; install.sh moves AltTab's hold key to
 Command), raycast (script commands dir; `dots doctor` as a command; window
-snapping on Cmd-Opt-arrows). AeroSpace tiling and the Karabiner Caps Lock remap
+snapping on Ctrl-Opt-arrows). AeroSpace tiling and the Karabiner Caps Lock remap
 were built, tried for a day and removed at Anand's request: not worth their
 complexity. Removed from this Mac: Maccy, iTerm2, Cursor, CodexBar, AeroSpace,
 Karabiner, Homebrew runtimes and services, 19 GB of caches and leftovers.
