@@ -84,6 +84,7 @@ FAKE
 }
 
 @test "no code on PATH warns and exits 0" {
+  stub_externals
   DOTFILES_CODE= run bash "$V/install.sh"
   [ "$status" -eq 0 ]
   [[ "$output" == *"code"*"not"* ]]

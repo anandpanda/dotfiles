@@ -32,6 +32,16 @@ stub_externals() {
     printf '#!/bin/sh\necho "$*" >> "%s/calls/%s"\nexit 0\n' "$HOME" "$t" > "$HOME/stubs/$t"
     chmod +x "$HOME/stubs/$t"
   done
+  # curl and wget write their -o/-O target like the real tools, so a download that is
+  # then extracted (the Linux font zip) finds a valid archive.
+  for t in curl wget; do
+    printf '#!/bin/sh\necho "$*" >> "%s/calls/%s"\nwhile [ $# -gt 0 ]; do\n  case "$1" in -o | -O) cp "%s/fixtures/stub.zip" "$2" ;; esac\n  shift\ndone\nexit 0\n' "$HOME" "$t" "$BATS_TEST_DIRNAME" > "$HOME/stubs/$t"
+    chmod +x "$HOME/stubs/$t"
+  done
+  # sudo is a pipe sink in the installers (curl | sudo gpg, echo | sudo tee): drain
+  # stdin like the real consumer, or the writer dies of SIGPIPE under pipefail.
+  printf '#!/bin/sh\necho "$*" >> "%s/calls/sudo"\n[ -p /dev/stdin ] && cat > /dev/null\nexit 0\n' "$HOME" > "$HOME/stubs/sudo"
+  chmod +x "$HOME/stubs/sudo"
   export PATH="$HOME/stubs:$PATH"
   local r="$HOME/tpm-remote"
   if [ ! -d "$r/.git" ]; then
