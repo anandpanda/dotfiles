@@ -6,10 +6,10 @@ setup() {
   # Copy the module config (not link) so tests never write into the repo. -L dereferences:
   # identity.work in the repo is itself a link into the overlay checkout, and a plain
   # copy of that link would let the write below land in the real overlay.
-  link_tree "$DOTFILES_DIR/$G/home" "$HOME" >/dev/null
   mkdir -p "$HOME/.config/git"; cp -RL "$DOTFILES_DIR/$G/config/." "$HOME/.config/git/"
   [ ! -L "$HOME/.config/git/identity.work" ] || { echo "identity.work is still a link"; return 1; }
   export XDG_STATE_HOME="$HOME/.local/state"
+  printf '[include] path = ~/.config/git/base.gitconfig\n' > "$HOME/.gitconfig"
   printf '[user]\n  name = W\n  email = w@work\n  signingkey = ~/.ssh/id_ed25519_work.pub\n' > "$HOME/.config/git/identity.work"
   mkdir -p "$HOME/work/r" "$HOME/personal/r" "$HOME/elsewhere/r"
   for d in work personal elsewhere; do git -C "$HOME/$d/r" init -q; done
@@ -41,7 +41,7 @@ teardown() { teardown_home; }
 
 # ---- phase 4 ----
 @test "gitconfig parses and carries the modern defaults" {
-  run git config --global --list
+  run git config --global --includes --list
   [ "$status" -eq 0 ]
   for k in branch.sort=-committerdate column.ui=auto diff.algorithm=histogram push.autosetupremote=true fetch.prune=true rerere.enabled=true rebase.updaterefs=true merge.conflictstyle=zdiff3 pull.rebase=true core.pager=delta gpg.format=ssh init.templatedir=; do
     [[ "$output" == *"$k"* ]] || { echo "missing $k"; false; }
@@ -50,10 +50,10 @@ teardown() { teardown_home; }
 
 @test "every alias resolves and pushf is force-with-lease" {
   for a in st co sw br ci amend undo wip lg lga pushf dft rank; do
-    v="$(git config --global --get "alias.$a")"; [ -n "$v" ] || { echo "no alias $a"; false; }
+    v="$(git config --global --includes --get "alias.$a")"; [ -n "$v" ] || { echo "no alias $a"; false; }
   done
-  [[ "$(git config --global --get alias.pushf)" == *force-with-lease* ]]
-  [[ "$(git config --global --get alias.pushf)" != *"--force "* ]]
+  [[ "$(git config --global --includes --get alias.pushf)" == *force-with-lease* ]]
+  [[ "$(git config --global --includes --get alias.pushf)" != *"--force "* ]]
 }
 
 @test "commit-msg hook accepts conventional, merge, fixup, revert, multi-line" {
@@ -137,8 +137,8 @@ teardown() { teardown_home; }
   cd "$HOME/elsewhere/r" && touch f && git add f
   run git -c user.email=x@y -c user.name=x commit -qm "feat: outside"
   [ "$status" -eq 0 ]
-  [ "$(git config --global --get commit.gpgsign || true)" = "" ]
-  [ "$(git config --global --get tag.gpgsign || true)" = "" ]
+  [ "$(git config --global --includes --get commit.gpgsign || true)" = "" ]
+  [ "$(git config --global --includes --get tag.gpgsign || true)" = "" ]
   grep -q "gpgsign = true" "$HOME/.config/git/identity.personal"
 }
 
@@ -149,8 +149,8 @@ teardown() { teardown_home; }
 }
 
 @test "repo hooks still run: no global hooksPath; commit-msg comes from the template dir" {
-  [ "$(git config --global --get core.hooksPath || true)" = "" ]
-  [ -n "$(git config --global --get init.templateDir)" ]
+  [ "$(git config --global --includes --get core.hooksPath || true)" = "" ]
+  [ -n "$(git config --global --includes --get init.templateDir)" ]
   mkdir -p "$HOME/personal/new" && git -C "$HOME/personal/new" init -q
   [ -x "$HOME/personal/new/.git/hooks/commit-msg" ]
   cd "$HOME/personal/new" && touch f && git add f
@@ -160,7 +160,7 @@ teardown() { teardown_home; }
 }
 
 @test "pushf is force-with-lease and force-if-includes" {
-  v="$(git config --global --get alias.pushf)"
+  v="$(git config --global --includes --get alias.pushf)"
   [[ "$v" == *force-with-lease* ]] && [[ "$v" == *force-if-includes* ]]
 }
 
@@ -190,8 +190,8 @@ teardown() { teardown_home; }
 }
 
 @test "pruneTags is off and fetch.all is off" {
-  [ "$(git config --global --get fetch.pruneTags || true)" = "" ]
-  [ "$(git config --global --get fetch.all || true)" = "" ]
+  [ "$(git config --global --includes --get fetch.pruneTags || true)" = "" ]
+  [ "$(git config --global --includes --get fetch.all || true)" = "" ]
 }
 
 @test "install puts the hook into existing repos under ~/work and ~/personal; doctor reports ones without it" {
@@ -224,4 +224,64 @@ teardown() { teardown_home; }
       grep -qF "insteadOf = $form" "$f" || { echo "$f lacks $form"; false; }
     done
   done
+}
+
+# ---- phase 9: ~/.gitconfig is the machine's file ----
+coder_template_block() {
+  mkdir -p "$HOME/.ssh/git-commit-signing"; ssh-keygen -q -t ed25519 -N "" -C coder -f "$HOME/.ssh/git-commit-signing/coder"
+  printf '[url "https://github.com/"]\n    insteadOf = git@github.com:\n    insteadOf = ssh://git@github.com/\n[credential "https://github.com"]\n    helper = /tmp/coder-askpass\n[user]\n    signingkey = %s/.ssh/git-commit-signing/coder.pub\n[gpg]\n    format = ssh\n[commit]\n    gpgsign = true\n' "$HOME"
+}
+work_identity() {
+  printf '[user]\n  name = W\n  email = w@work\n  signingkey = ~/.ssh/id_ed25519_work.pub\n[commit]\n  gpgsign = true\n[url "git@github.com-work:"]\n  insteadOf = git@github.com:\n  insteadOf = https://github.com/\n  insteadOf = ssh://git@github.com/\n' > "$HOME/.config/git/identity.work"
+}
+
+@test "install creates ~/.gitconfig as a plain file whose first line includes the repo config" {
+  rm "$HOME/.gitconfig"
+  run bash "$DOTFILES_DIR/$G/install.sh"
+  [ "$status" -eq 0 ]; [[ "$output" == *"wrote $HOME/.gitconfig"* ]]
+  [ -f "$HOME/.gitconfig" ] && [ ! -L "$HOME/.gitconfig" ]
+  [ "$(cat "$HOME/.gitconfig")" = "[include] path = ~/.config/git/base.gitconfig" ]
+  [ "$(git config --get alias.pushf)" = "push --force-with-lease --force-if-includes" ]
+  run bash "$DOTFILES_DIR/$G/install.sh"
+  [[ "$output" == *"skip $HOME/.gitconfig"* ]]
+}
+
+@test "install puts the include above lines other tools wrote and keeps them" {
+  coder_template_block > "$HOME/.gitconfig"
+  cp "$HOME/.gitconfig" "$HOME/template-only"
+  bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
+  [ "$(head -1 "$HOME/.gitconfig")" = "[include] path = ~/.config/git/base.gitconfig" ]
+  [ "$(tail -n +2 "$HOME/.gitconfig")" = "$(cat "$HOME/template-only")" ]
+  bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
+  [ "$(grep -c 'base.gitconfig' "$HOME/.gitconfig")" = 1 ]
+}
+
+@test "install replaces a ~/.gitconfig link with the plain file and backs the link up" {
+  rm "$HOME/.gitconfig"; ln -s "$HOME/.config/git/base.gitconfig" "$HOME/.gitconfig"
+  run bash "$DOTFILES_DIR/$G/install.sh"
+  [ "$status" -eq 0 ]; [[ "$output" == *"backup $HOME/.gitconfig"* ]]
+  [ ! -L "$HOME/.gitconfig" ]; [ "$(cat "$HOME/.gitconfig")" = "[include] path = ~/.config/git/base.gitconfig" ]
+  [ "$(git config --get alias.st)" = "status -sb" ]
+}
+
+@test "git config --global writes land in the machine file, never in the repo config" {
+  git config --global credential.helper store
+  grep -q "helper = store" "$HOME/.gitconfig"
+  ! grep -q "helper" "$HOME/.config/git/base.gitconfig"
+}
+
+@test "with a Coder-like block appended, our url rewrite wins and the appended signing key wins" {
+  work_identity
+  { printf '[include] path = ~/.config/git/base.gitconfig\n'; coder_template_block; } > "$HOME/.gitconfig"
+  for form in git@github.com:o/r.git https://github.com/o/r.git ssh://git@github.com/o/r.git; do
+    [ "$(git -C "$HOME/work/r" ls-remote --get-url "$form")" = "git@github.com-work:o/r.git" ]
+  done
+  [ "$(git -C "$HOME/work/r" config user.signingkey)" = "$HOME/.ssh/git-commit-signing/coder.pub" ]
+  [ "$(git -C "$HOME/work/r" config user.email)" = "w@work" ]
+}
+
+@test "doctor reports a ~/.gitconfig without the include first" {
+  coder_template_block > "$HOME/.gitconfig"
+  run bash "$DOTFILES_DIR/$G/doctor.sh"
+  [ "$status" -ne 0 ]; [[ "$output" == *"missing or stale: $HOME/.gitconfig"* ]]
 }

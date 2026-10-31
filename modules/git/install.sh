@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Generate ~/.local/state/git/allowed_signers from the identities and keys on this machine,
 # so `git log --show-signature` verifies locally. One line per identity whose key exists.
-# Also writes the context folder lists and the includeIf file that picks the identity.
+# Also writes the context folder lists, the includeIf file that picks the identity, and
+# the machine's ~/.gitconfig whose first line includes the repo config.
 set -euo pipefail
-for f in log os link profile module contexts; do
+for f in log os link profile module contexts git; do
   # shellcheck disable=SC1090
   source "$DOTFILES_DIR/lib/$f.sh"
 done
@@ -11,7 +12,7 @@ cfg="$HOME/.config/git"
 # The commit-msg hook ships in config/template/hooks; git's init.templateDir copies it into
 # every new or cloned repo (git ignores a template whose hooks dir is a symlink).
 # Generated signers live in state, never in the (linked) config dir.
-out="$HOME/.local/state/git/allowed_signers" # matches gpg.ssh.allowedSignersFile in .gitconfig
+out="$HOME/.local/state/git/allowed_signers" # matches gpg.ssh.allowedSignersFile in base.gitconfig
 want=""
 for id in "$cfg"/identity.*; do
   [ -f "$id" ] || continue
@@ -22,6 +23,7 @@ for id in "$cfg"/identity.*; do
   want="${want}${email} namespaces=\"git\" $(cut -d' ' -f1,2 "$key")"$'\n'
 done
 put_file "$out" "${want%$'\n'}"
+gitconfig_ensure_include
 
 contexts="$(contexts_collect)" || die "cannot collect context folders"
 contexts_write "$contexts" || exit 1

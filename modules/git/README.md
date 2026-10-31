@@ -1,6 +1,12 @@
 # git
 
-~/.gitconfig with no identity: install generates ~/.local/state/git/contexts.inc,
+~/.gitconfig is a plain file per machine whose first line includes
+config/base.gitconfig, so tools that run `git config --global` (a Coder
+template) append to the machine's file, never to the repo. Git takes the first
+matching url rewrite and the last value of a single-valued key: our rewrites
+win, and single values appended below ours win.
+
+No identity in the base config: install generates ~/.local/state/git/contexts.inc,
 one includeIf per folder in the modules' contexts/ lists, picking identity.personal
 or identity.work by directory (identity.work comes from the private overlay). Each identity has
 its own SSH signing key; install.sh generates ~/.local/state/git/allowed_signers so

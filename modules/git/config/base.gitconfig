@@ -1,5 +1,7 @@
-# No [user] here on purpose. Identity comes from the directory: install generates one
-# includeIf per folder in the modules' contexts/{personal,work} lists (~/personal, ~/work, ...).
+# Included by the first line of each machine's ~/.gitconfig, so `git config --global`
+# writes land in that file, never here. No [user] here on purpose. Identity comes from
+# the directory: install generates one includeIf per folder in the modules'
+# contexts/{personal,work} lists (~/personal, ~/work, ...).
 # Committing elsewhere fails, which is the point.
 [include]
     path = ~/.local/state/git/contexts.inc
