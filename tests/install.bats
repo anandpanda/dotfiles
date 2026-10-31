@@ -80,12 +80,7 @@ teardown() { teardown_home; }
 @test "checkout path with spaces works" {
   SP="$HOME/with space"; mkdir -p "$SP"; cp -R "$DOTFILES_DIR"/. "$SP/"
   export DOTFILES_MODULES="$SP/modules" DOTFILES_PROFILES="$SP/profiles"
-  # The real mise would download every global runtime into the temp home. The stub
-  # answers the one call the hook makes (nothing missing) and fails on anything else.
-  mkdir -p "$HOME/bin"
-  printf '#!/bin/sh\n[ "$*" = "ls --global --missing" ] || { echo "unexpected mise $*" >&2; exit 1; }\n' > "$HOME/bin/mise"
-  chmod +x "$HOME/bin/mise"
-  export PATH="$HOME/bin:$PATH"
+  stub_externals
   run "$SP/install.sh" personal
   [ "$status" -eq 0 ]
   [ "$(readlink "$HOME/.config/git")" = "$SP/modules/git/config" ]

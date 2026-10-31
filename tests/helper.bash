@@ -19,3 +19,24 @@ teardown_home() {
   esac
   unset _TEST_HOME
 }
+
+# Hermetic full installs: puts logging fakes for every external tool a module can
+# reach (network, package managers, editors, Claude, containers, system settings)
+# first on PATH. Each fake appends "args" to $HOME/calls/<tool> and exits 0 silently.
+# Also points the tmux module at a local tpm repo so no clone leaves the machine.
+# A test that needs different behaviour puts its own fake earlier on PATH.
+stub_externals() {
+  local t
+  mkdir -p "$HOME/stubs" "$HOME/calls"
+  for t in code claude curl wget brew mise gh docker sudo apt-get apt-cache snap defaults chsh; do
+    printf '#!/bin/sh\necho "$*" >> "%s/calls/%s"\nexit 0\n' "$HOME" "$t" > "$HOME/stubs/$t"
+    chmod +x "$HOME/stubs/$t"
+  done
+  export PATH="$HOME/stubs:$PATH"
+  local r="$HOME/tpm-remote"
+  if [ ! -d "$r/.git" ]; then
+    git init -q "$r"; echo a > "$r/tpm"; git -C "$r" add -A
+    git -C "$r" -c user.name=t -c user.email=t@t commit -qm one; git -C "$r" tag v3.1.0
+  fi
+  export TPM_REPO="$r"
+}

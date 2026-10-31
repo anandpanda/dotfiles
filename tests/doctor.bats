@@ -82,6 +82,7 @@ teardown() { teardown_home; }
 
 @test "login shell not homebrew zsh is reported when zsh module enabled" {
   unset DOTFILES_MODULES
+  stub_externals
   printf 'modules = ["zsh"]\n' > "$DOTFILES_PROFILES/z.toml"
   DOTFILES_SKIP_BREW=1 "$DOTFILES_DIR/install.sh" z >/dev/null 2>&1 || true
   run "$DOTFILES_DIR/doctor.sh"

@@ -181,6 +181,7 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
 }
 
 @test "the module links skills, their scripts and agents" {
+  stub_externals
   for f in log os link module; do source "$DOTFILES_DIR/lib/$f.sh"; done
   module_apply "$DOTFILES_DIR/$C" >/dev/null
   [ "$(readlink "$HOME/.claude/skills/retro/SKILL.md")" = "$DOTFILES_DIR/$C/home/.claude/skills/retro/SKILL.md" ]
