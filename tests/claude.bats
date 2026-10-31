@@ -565,3 +565,7 @@ sl() { printf '{"model":{"display_name":"Opus"},"context_window":{"used_percenta
     grep -qF "$p" "$f" || { echo "missing: $p"; return 1; }
   done
 }
+
+@test "writing rules forbid AI attribution anywhere" {
+  grep -qF "No AI attribution anywhere" "$DOTFILES_DIR/$C/home/.claude/rules/writing.md"
+}

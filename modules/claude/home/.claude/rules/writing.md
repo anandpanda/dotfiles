@@ -16,3 +16,4 @@
 ## Text posted for others
 - Short, in his voice, only his points.
 - PR descriptions follow the `pr-description` skill: what changed, before and after, a diagram, merge risk, no testing section.
+- No AI attribution anywhere: no `Co-Authored-By` trailer, no "Generated with" footer, in commits, PRs or comments.
