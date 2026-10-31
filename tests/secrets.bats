@@ -78,18 +78,36 @@ FAKE
   [ "$output" = "unset" ]
 }
 
-@test "with-secrets is a script that works from any shell and sets the age key itself" {
+@test "with-secrets passes only the named secrets, from any shell" {
   f="$DOTFILES_DIR/$S/home/.local/bin/with-secrets"
   [ -x "$f" ]
   cat > "$HOME/bin/sops" <<'FAKE'
 #!/bin/sh
-printf 'key=%s\nargs=%s\n' "$SOPS_AGE_KEY_FILE" "$*" > "$HOME/sops.call"
+[ "$SOPS_AGE_KEY_FILE" = "$HOME/.secrets/age.key" ] || exit 9
+case "$*" in
+  *'["DEV_A"]'*) printf 'alpha' ;;
+  *'["DEV_B"]'*) printf 'bravo' ;;
+  *) exit 1 ;;
+esac
 FAKE
   chmod +x "$HOME/bin/sops"
-  run env -i HOME="$HOME" PATH="$HOME/bin:/usr/bin:/bin" /bin/bash -c "'$f' 'psql -c \"select 1\"'"
+  run env -i HOME="$HOME" PATH="$HOME/bin:/usr/bin:/bin" /bin/bash -c "'$f' DEV_A -- 'echo \"a=\${DEV_A:-} b=\${DEV_B:-}\"'"
   [ "$status" -eq 0 ]
-  grep -qx "key=$HOME/.secrets/age.key" "$HOME/sops.call"
-  grep -qx "args=exec-env $HOME/.secrets/secrets.yaml psql -c \"select 1\"" "$HOME/sops.call"
+  [ "$output" = "a=alpha b=" ]
+}
+
+@test "with-secrets fails on an unknown name and without a separator" {
+  f="$DOTFILES_DIR/$S/home/.local/bin/with-secrets"
+  printf '#!/bin/sh\nexit 1\n' > "$HOME/bin/sops"; chmod +x "$HOME/bin/sops"
+  run "$f" NOPE -- true
+  [ "$status" -ne 0 ]
+  case "$output" in *NOPE*) ;; *) false ;; esac
+  run "$f" 'echo hi'
+  [ "$status" -ne 0 ]
+  case "$output" in *usage*) ;; *) false ;; esac
+  run env -i HOME="$HOME" PATH="$HOME/bin:/usr/bin:/bin" /bin/bash "$f" -- true
+  [ "$status" -eq 2 ]
+  case "$output" in *usage*) ;; *) false ;; esac
 }
 
 @test "zsh no longer defines a with-secrets function" {
