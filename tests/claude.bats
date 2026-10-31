@@ -53,6 +53,10 @@ teardown() { teardown_home; }
   done
 }
 
+@test "diagrams in chat are plain text, Mermaid only where it renders" {
+  grep -qF "In chat, draw diagrams as plain text" "$DOTFILES_DIR/$C/home/.claude/rules/anand.md"
+}
+
 @test "no company data in the public module" {
   run grep -rniE 'z[a]mp|p[a]ntheon|@[a-z0-9-]+\.(ai|com)' "$DOTFILES_DIR/$C"
   [ "$status" -eq 1 ]

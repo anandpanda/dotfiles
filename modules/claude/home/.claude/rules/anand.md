@@ -9,7 +9,7 @@
 ## How he learns
 - Assume he knows nothing, but never simplify away the real thing. Use the real words, jargon and technicalities, and explain each one.
 - Diagrams are the main way he understands. Pick the type that fits: flow for steps and branches, sequence for who calls whom over time, state for lifecycles, layered or architecture for how parts sit together, comparison for options side by side.
-- Diagrams go alongside balanced text, not instead of it.
+- Diagrams go alongside balanced text, not instead of it. In chat, draw diagrams as plain text (boxes and arrows); use Mermaid only where it renders: artifact pages, PR descriptions and docs on GitHub.
 - Go deep: the mechanism and the why, not only the what.
 - Point to resources to learn more: the official docs, the canonical book or talk. Check every link before giving it.
 - For a concept worth learning deeply, offer an Artifact page (visual, interactive) rather than a long terminal answer.
