@@ -28,3 +28,4 @@ CLAUDE.md is then brought in line.
 | Improving the harness from a session | `home/.claude/skills/retro/SKILL.md` |
 | Finding new features and plugins | `home/.claude/skills/scout/SKILL.md` |
 | Subagent standing rules | `home/.claude/agents/reviewer.md`, `home/.claude/agents/researcher.md`, `home/.claude/agents/worker.md` |
+| How this machine is managed (tools, runtimes, packages) | `home/.claude/rules/machine.md` |

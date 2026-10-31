@@ -558,3 +558,10 @@ sl() { printf '{"model":{"display_name":"Opus"},"context_window":{"used_percenta
   [ "$status" -eq 0 ]
   [ -x "$DOTFILES_DIR/$C/home/.claude/statusline.sh" ]
 }
+
+@test "machine rules: tools through the dotfiles, runtimes through mise, packages through uv" {
+  f="$DOTFILES_DIR/$C/home/.claude/rules/machine.md"
+  for p in "never a one-off \`brew install\`" "Runtimes (node, python, go) come from mise" "never bare \`pip install\`" "dots doctor"; do
+    grep -qF "$p" "$f" || { echo "missing: $p"; return 1; }
+  done
+}
