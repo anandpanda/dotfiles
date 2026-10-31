@@ -7,10 +7,10 @@ machine, tested in CI on both.
 
 Day to day:
 
-    just install [personal|work] [--overlay url] [--dry-run]
-    just update        # pull and reinstall with remembered profile
-    just doctor        # what drifted
-    just lint / unit / test
+    dots install [profile] [--overlay url] [--dry-run]   # no profile: the remembered one
+    dots update        # pull and reinstall with the remembered profile
+    dots doctor        # what drifted
+    dots lint / unit / test
 
 ## How it is built
 

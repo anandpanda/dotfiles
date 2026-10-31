@@ -16,3 +16,7 @@ for _p in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew; do
   break
 done
 unset _p
+
+# Per-user programs (the official Claude installer, uv, pipx) win over Homebrew copies.
+typeset -U path
+path=("$HOME/.local/bin" $path)

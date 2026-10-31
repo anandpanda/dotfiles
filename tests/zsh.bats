@@ -163,3 +163,9 @@ print(int(min(t) * 1000))')
   [ ! -e "$HOME/.zshrc" ]; [ ! -e "$HOME/.zprofile" ]
   [ "$(find "$HOME/.dotfiles-backup" -name .zshrc | wc -l | tr -d ' ')" = 1 ]
 }
+
+@test "zshenv puts ~/.local/bin first on PATH" {
+  run env -i HOME="$HOME" PATH=/usr/bin:/bin zsh -fc "source '$DOTFILES_DIR/$Z/home/.zshenv'; print -l \$path"
+  [ "$status" -eq 0 ]
+  [ "${lines[0]}" = "$HOME/.local/bin" ]
+}

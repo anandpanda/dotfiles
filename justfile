@@ -3,9 +3,9 @@ set shell := ["bash", "-euo", "pipefail", "-c"]
 default:
     @just --list
 
-# Full install with a profile (personal | work). Extra args: --dry-run, --overlay URL
-install profile="personal" *args="":
-    ./install.sh {{profile}} {{args}}
+# Install a profile (personal | work | server | server-work); without one, the remembered profile. Extra args: --dry-run, --overlay URL
+install *args:
+    ./install.sh {{args}}
 
 # Pull latest and reinstall with the remembered profile
 update:

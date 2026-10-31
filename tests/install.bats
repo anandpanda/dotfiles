@@ -201,3 +201,16 @@ teardown() { teardown_home; }
   [ "$status" -eq 0 ]; [[ "$output" == *"no overlay url"* ]]
   [ -L "$HOME/.ovl" ]; cmp "$HOME/.config/dotfiles/links" "$HOME/record-before"
 }
+
+@test "dots install without a profile leaves the choice to install.sh" {
+  run just --justfile "$DOTFILES_DIR/justfile" --dry-run install
+  [ "$status" -eq 0 ]
+  case "$output" in *"./install.sh"*) ;; *) false ;; esac
+  case "$output" in *personal*) false ;; esac
+}
+
+@test "dots install passes a named profile and flags through" {
+  run just --justfile "$DOTFILES_DIR/justfile" --dry-run install work --dry-run
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"./install.sh work --dry-run"* ]]
+}
