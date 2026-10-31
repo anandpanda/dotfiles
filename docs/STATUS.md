@@ -191,8 +191,10 @@ private half lives in the overlay's `docs/08-work-layer.md`.
   `~/.gitconfig` becomes a plain file that includes the repo config, because
   the template's commit-signing module runs `git config --global` and would
   write into the linked repo file; (2) `install.sh` detects a Coder workspace
-  (CODER env) and defaults to the `server-work` profile; (3) the overlay's work
-  module gets an install.sh that clones the standard repo set when missing.
+  (CODER env) and defaults to the `server-work` profile; (3) the workspace can
+  clone the private overlay (key or access to decide). Extra team repos the
+  template does not clone are cloned by hand once per workspace (Anand,
+  2026-10-31: "cloning repo is one time, i can do it").
   The template's own noise: extra clones, a company CLI, and a Claude bootstrap
   that writes ~/.claude/settings.json only if absent (Phase 7 writes it first).
   A fresh workspace prints a new work SSH key to register once.
