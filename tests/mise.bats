@@ -23,7 +23,7 @@ FAKE
 @test "config lists the global tools and the settings" {
   c="$DOTFILES_DIR/$M/config/config.toml"
   grep -qE '^node = "lts"' "$c"; grep -qE '^python = ' "$c"; grep -qE '^go = ' "$c"; grep -qE '^uv = ' "$c"; grep -qE '^pnpm = ' "$c"
-  grep -q 'idiomatic_version_file_enable_tools' "$c"; grep -q 'not_found_auto_install = true' "$c"; grep -q 'uv_venv_auto = ' "$c"
+  grep -q 'idiomatic_version_file_enable_tools' "$c"; grep -q 'not_found_auto_install = false' "$c"; grep -q 'uv_venv_auto = ' "$c"
   command -v mise >/dev/null || skip "mise missing"
   run env HOME="$HOME" MISE_GLOBAL_CONFIG_FILE="$c" mise config ls
   [ "$status" -eq 0 ]

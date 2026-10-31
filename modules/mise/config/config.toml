@@ -10,8 +10,8 @@ pnpm = "latest"
 [settings]
 # Honour the files work repos already use.
 idiomatic_version_file_enable_tools = ["node", "python", "go"]
-# A pinned version that is not installed gets installed the first time its command runs.
-not_found_auto_install = true
+# Installs only when asked (`mise install`): a missing pin must never install as a side effect of a prompt or tool.
+not_found_auto_install = false
 experimental = false
 
 [settings.python]
