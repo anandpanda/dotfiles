@@ -214,13 +214,14 @@ private half lives in the overlay's `docs/08-work-layer.md`.
 7. Claude harness: done (above). Secrets are guarded by the native deny rules
    in `modules/claude/settings.owned.json` (use `with-secrets`).
 8. Work layer: done (above).
-Next, in Anand's order (2026-10-31):
-1. Hands-on end-to-end walkthrough of the Mac setup, one step at a time with
-   his go: terminal, git and identities, secrets, AWS and kube, VS Code, apps,
-   the Claude harness. Fix anything that does not feel right on the spot.
-2. `/retro` on the Phase 7-8 session: first real run of the self-improving loop.
-3. Coder, at the very end (reuse the team's template and its dotfiles hook;
-   first question: how a workspace reaches the private overlay).
+Next, in Anand's order (updated 2026-11-01):
+1. The hands-on walkthrough of the Mac setup: done 2026-11-01.
+2. Coder: reuse the team's stable template with the Dotfiles URL field. First
+   decide how a workspace reaches the private overlay (Coder's own SSH key is
+   already on GitHub), then build Coder detection (server-work profile), a plain
+   ~/.gitconfig that includes the repo config, and overlay access; clone the
+   extra team repos by hand; copy ~/.claude/projects/ from the old workspace.
+3. `/retro` on the Phase 7-8 session (transcript kept 365 days).
 The learning-layer idea is folded into the explain, grill, retro and scout
 skills; revisit only if real use shows a gap.
 
