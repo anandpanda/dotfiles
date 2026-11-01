@@ -137,3 +137,9 @@ teardown() { teardown_home; }
   CODER_WORKSPACE_ID=w run "$DOTFILES_DIR/doctor.sh"
   [[ "$output" == *"profile: server-work"* ]]
 }
+
+@test "doctor runs module checks without the git identity and ssh command variables an environment injects" {
+  printf '#!/usr/bin/env bash\necho "ENV:$(env | grep -cE "^GIT_(AUTHOR|COMMITTER)_|^GIT_SSH_COMMAND=")"\n' > "$DOTFILES_MODULES/one/doctor.sh"
+  run env GIT_AUTHOR_NAME=a GIT_AUTHOR_EMAIL=b GIT_COMMITTER_NAME=c GIT_COMMITTER_EMAIL=d GIT_SSH_COMMAND=e "$DOTFILES_DIR/doctor.sh"
+  [[ "$output" == *"ENV:0"* ]]
+}

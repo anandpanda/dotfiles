@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 # ~/.gitconfig is the machine's own file; its first line includes the repo's git config.
+# Identity comes from the folder and keys from the ssh config, never from the environment.
+
+git_env_clear() { unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL GIT_SSH_COMMAND; }
 
 gitconfig_include_line() { echo '[include] path = ~/.config/git/base.gitconfig'; }
 

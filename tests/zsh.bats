@@ -169,3 +169,11 @@ print(int(min(t) * 1000))')
   [ "$status" -eq 0 ]
   [ "${lines[0]}" = "$HOME/.local/bin" ]
 }
+
+@test "zshenv clears the git identity and ssh command variables an environment injects" {
+  vars="GIT_AUTHOR_NAME=a GIT_AUTHOR_EMAIL=b GIT_COMMITTER_NAME=c GIT_COMMITTER_EMAIL=d GIT_SSH_COMMAND=e"
+  run env $vars zsh -fc "env | grep -cE '^GIT_(AUTHOR|COMMITTER)_|^GIT_SSH_COMMAND='"
+  [ "$output" = 5 ]
+  run env $vars zsh -fc "source '$DOTFILES_DIR/$Z/home/.zshenv'; env | grep -cE '^GIT_(AUTHOR|COMMITTER)_|^GIT_SSH_COMMAND='"
+  [ "$output" = 0 ]
+}

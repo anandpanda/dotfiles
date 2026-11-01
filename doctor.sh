@@ -3,10 +3,11 @@
 set -euo pipefail
 DOTFILES_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export DOTFILES_DIR
-for f in log os link profile module brew secrets overlay; do
+for f in log os link profile module brew secrets overlay git; do
   # shellcheck disable=SC1090
   source "$DOTFILES_DIR/lib/$f.sh"
 done
+git_env_clear
 
 problems=0
 problem() {
