@@ -95,3 +95,13 @@ teardown() { teardown_home; }
   run overlay_apply "$REMOTE"
   [ "$status" -eq 0 ]; [ -d "$HOME/personal/dotfiles-work/.git" ]
 }
+
+@test "an existing checkout's origin is set to the resolved url before pulling" {
+  overlay_apply "$REMOTE" >/dev/null
+  git -C "$HOME/personal/dotfiles-work" remote set-url origin git@github.com:o/r.git
+  mkdir -p "$HOME/bin"; printf '#!/bin/sh\necho "$@" > "$HOME/ssh-args"\nexit 1\n' > "$HOME/bin/ssh"; chmod +x "$HOME/bin/ssh"
+  PATH="$HOME/bin:$PATH" run overlay_ensure "git@github.com-personal:o/r.git"
+  [ "$status" -ne 0 ]
+  grep -qF "github.com-personal" "$HOME/ssh-args"
+  [ "$(git -C "$HOME/personal/dotfiles-work" remote get-url origin)" = "git@github.com-personal:o/r.git" ]
+}

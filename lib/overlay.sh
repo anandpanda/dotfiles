@@ -29,6 +29,7 @@ overlay_ensure() {
   fi
   if [ -d "$dir/.git" ]; then
     log_info "overlay pull"
+    _overlay_git -C "$dir" remote set-url origin "$url"
     _overlay_git -C "$dir" pull --ff-only -q
   else
     log_info "overlay clone"
