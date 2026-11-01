@@ -17,7 +17,18 @@ teardown() { teardown_home; }
   remember overlay "u2"
   [ "$(overlay_resolve_url "")" = "u2" ]
   rm "$HOME/.config/dotfiles/overlay"
-  [ "$(overlay_resolve_url "")" = "git@github.com-personal:anandpanda/dotfiles-work.git" ]
+  [ "$(overlay_resolve_url "")" = "$(overlay_default_url)" ]
+}
+
+@test "the default overlay url takes its owner from this repo's origin, in any GitHub url form" {
+  real="$DOTFILES_DIR"
+  DOTFILES_DIR="$HOME/fake-repo"; git init -q "$DOTFILES_DIR"
+  for origin in git@github.com:someone/dotfiles.git https://github.com/someone/dotfiles ssh://git@github.com/someone/dotfiles.git git@github.com-personal:someone/dotfiles.git; do
+    git -C "$DOTFILES_DIR" remote remove origin 2>/dev/null || true
+    git -C "$DOTFILES_DIR" remote add origin "$origin"
+    [ "$(overlay_default_url)" = "git@github.com-personal:someone/dotfiles-work.git" ] || { echo "$origin -> $(overlay_default_url)"; false; }
+  done
+  DOTFILES_DIR="$real"
 }
 
 @test "overlay_apply clones, applies modules, remembers url" {

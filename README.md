@@ -19,7 +19,8 @@ Day to day:
 - `profiles/<name>.toml`: which modules. `work` extends `personal` and adds the overlay.
 - overlay: a private repo with the same `modules/` shape for work-only config,
   checked out at `~/personal/dotfiles-work`. Its url is `--overlay`, else the
-  remembered one, else the default ssh alias url in `lib/overlay.sh`.
+  remembered one, else `git@github.com-personal:<owner>/dotfiles-work.git` with
+  the owner taken from this repo's origin (no overlay url is written here).
 - A Coder workspace (`CODER_WORKSPACE_ID` set) installs `server-work` when no
   profile is given or remembered. `~/.gitconfig` is a plain machine file whose
   first line includes the repo config, so tools that append to it never write

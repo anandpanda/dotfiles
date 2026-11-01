@@ -1,7 +1,12 @@
 #!/usr/bin/env bash
 # Private overlay: a second repo with modules/, applied after public modules.
 
-overlay_default_url() { echo "git@github.com-personal:anandpanda/dotfiles-work.git"; }
+# The overlay lives beside this repo on the same GitHub account: the owner comes from our origin.
+overlay_default_url() {
+  local owner
+  owner="$(_overlay_git -C "$DOTFILES_DIR" remote get-url origin | sed -E 's#^.*github\.com[^:/]*[:/]##; s#/.*##')"
+  echo "git@github.com-personal:$owner/dotfiles-work.git"
+}
 
 overlay_resolve_url() {
   local url="$1"

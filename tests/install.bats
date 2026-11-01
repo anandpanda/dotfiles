@@ -57,7 +57,8 @@ teardown() { teardown_home; }
   printf 'extends = "test"\noverlay = true\n' > "$DOTFILES_PROFILES/w.toml"
   PATH="$HOME/bin:$PATH" run "$DOTFILES_DIR/install.sh" w
   [ "$status" -ne 0 ]; [[ "$output" == *"overlay fetch failed"* ]]
-  grep -qF "github.com-personal" "$HOME/ssh-args"; grep -qF "anandpanda/dotfiles-work.git" "$HOME/ssh-args"
+  owner="$(git -C "$DOTFILES_DIR" remote get-url origin | sed -E 's#^.*github\.com[^:/]*[:/]##; s#/.*##')"
+  grep -qF "github.com-personal" "$HOME/ssh-args"; grep -qF "$owner/dotfiles-work.git" "$HOME/ssh-args"
 }
 
 @test "unknown profile fails and remembers nothing" {
