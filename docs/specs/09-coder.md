@@ -31,6 +31,10 @@ personal work there).
   VS Code server's own git, a non-zsh login shell where chsh is not possible)
   still see the template's `GIT_AUTHOR_*`, `GIT_COMMITTER_*` and
   `GIT_SSH_COMMAND`; the shell rule covers zsh and the dotfiles scripts only.
+- To verify on the real workspace: the coder agent processes themselves do not
+  carry `CODER_WORKSPACE_ID` (observed 2026-11-01; only workspace shells do).
+  Confirm the dotfiles startup script sees it; if not, the first boot needs one
+  `dots install server-work`, which is then remembered.
 - Home is a persistent volume; Claude history lives in `~/.claude/projects`
   (about 1,200 transcripts, 65 memory notes on the current workspace).
 

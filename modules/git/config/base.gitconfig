@@ -67,7 +67,9 @@
     cmd = difft "$LOCAL" "$REMOTE"
 
 # ---- Signing: SSH. signingkey and commit.gpgsign live in each identity file, so signing
-# is on exactly where a key exists. Tags: `git tag -s` when you want one signed.
+# is on in every identity folder; a key appended to ~/.gitconfig (a Coder template's)
+# wins as the last value, and doctor checks it is one of the identity's ssh keys.
+# Tags: `git tag -s` when you want one signed.
 [gpg]
     format = ssh
 [gpg "ssh"]
