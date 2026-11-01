@@ -44,7 +44,7 @@ teardown() { teardown_home; }
 
 @test "workspace and secrets modules create dirs and report manifest" {
   unset DOTFILES_MODULES
-  printf 'modules = ["workspace", "secrets"]\n' > "$DOTFILES_PROFILES/ws.toml"
+  printf 'identities = ["personal", "work"]\nmodules = ["workspace", "secrets"]\n' > "$DOTFILES_PROFILES/ws.toml"
   run "$DOTFILES_DIR/install.sh" ws
   [ "$status" -eq 0 ]
   [ -d "$HOME/work" ] && [ -d "$HOME/personal" ]

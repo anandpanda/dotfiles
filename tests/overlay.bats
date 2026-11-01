@@ -89,3 +89,9 @@ teardown() { teardown_home; }
   grep -qF -- "-F $DOTFILES_DIR/modules/ssh/home/.ssh/conf.d/github.conf" "$HOME/ssh-args"
   grep -qF "github.com-personal" "$HOME/ssh-args"; grep -qF "o/r.git" "$HOME/ssh-args"
 }
+
+@test "the overlay checkout creates its own parent folder" {
+  [ ! -e "$HOME/personal" ]
+  run overlay_apply "$REMOTE"
+  [ "$status" -eq 0 ]; [ -d "$HOME/personal/dotfiles-work/.git" ]
+}
