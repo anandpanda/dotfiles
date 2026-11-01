@@ -4,7 +4,9 @@
 config/base.gitconfig, so tools that run `git config --global` (a Coder
 template) append to the machine's file, never to the repo. Git takes the first
 matching url rewrite and the last value of a single-valued key: our rewrites
-win, and single values appended below ours win.
+win, and single values appended below ours win. `dots doctor` checks the
+effective result in each work folder (GitHub urls resolve to github.com-work,
+the work email, signing on), so a template change that diverges is reported.
 
 No identity in the base config: install generates ~/.local/state/git/contexts.inc,
 one includeIf per folder in the modules' contexts/ lists, picking identity.personal

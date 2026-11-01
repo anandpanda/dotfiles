@@ -285,3 +285,46 @@ work_identity() {
   run bash "$DOTFILES_DIR/$G/doctor.sh"
   [ "$status" -ne 0 ]; [[ "$output" == *"missing or stale: $HOME/.gitconfig"* ]]
 }
+
+# ---- phase 9: doctor checks the effective result in work folders ----
+coder_machine() { # extra lines appended after the template block
+  work_identity
+  { printf '[include] path = ~/.config/git/base.gitconfig\n'; coder_template_block; printf '%b' "${1:-}"; } > "$HOME/.gitconfig"
+  export DOTFILES_PROFILE=work
+  bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
+}
+
+@test "doctor is clean on a Coder-like machine whose work folders resolve to the work identity" {
+  coder_machine
+  run bash "$DOTFILES_DIR/$G/doctor.sh"
+  [ "$status" -eq 0 ]
+  [ -z "$(find "$HOME/work" -maxdepth 1 -name '.dots-doctor*')" ]
+}
+
+@test "doctor reports a work folder whose appended config overrides the email" {
+  coder_machine '[user]\n    email = other@x\n'
+  run bash "$DOTFILES_DIR/$G/doctor.sh"
+  [ "$status" -ne 0 ]; [[ "$output" == *"$HOME/work: user.email is other@x, want w@work"* ]]
+}
+
+@test "doctor reports a work folder where commit signing is off" {
+  coder_machine '[commit]\n    gpgsign = false\n'
+  run bash "$DOTFILES_DIR/$G/doctor.sh"
+  [ "$status" -ne 0 ]; [[ "$output" == *"$HOME/work: commit.gpgsign is false, want true"* ]]
+}
+
+@test "doctor reports a work folder whose GitHub url does not resolve to the work alias" {
+  coder_machine
+  { tail -n +2 "$HOME/.gitconfig"; head -1 "$HOME/.gitconfig"; } > "$HOME/.gitconfig.new"
+  mv "$HOME/.gitconfig.new" "$HOME/.gitconfig"
+  run bash "$DOTFILES_DIR/$G/doctor.sh"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"$HOME/work: git@github.com:o/r.git resolves to https://github.com/o/r.git, want git@github.com-work:o/r.git"* ]]
+}
+
+@test "a profile without the work identity has no work folder checks" {
+  bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
+  printf '[commit]\n    gpgsign = false\n' >> "$HOME/.gitconfig"
+  run bash "$DOTFILES_DIR/$G/doctor.sh"
+  [[ "$output" != *"$HOME/work:"* ]]
+}
