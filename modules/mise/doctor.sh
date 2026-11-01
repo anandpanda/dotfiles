@@ -4,16 +4,17 @@
 set -euo pipefail
 rc=0
 if command -v mise >/dev/null 2>&1; then
-  report="$(mise doctor --json 2>/dev/null || echo '{}')"
+  # mise doctor exits non-zero when it has problems; its JSON still lists them.
+  report="$(mise doctor --json 2>/dev/null)" || true
   python3 - "$report" <<'PY' || rc=1
 import json, sys
 d = json.loads(sys.argv[1] or "{}")
 if not d.get("activated", True):
     print("warn: mise not activated in this shell (fine from a script; open a new terminal)")
-probs = d.get("problems") or []
-for p in probs:
-    print("mise problem: %s" % p)
-sys.exit(1 if probs else 0)
+errors = d.get("errors") or []
+for e in errors:
+    print("mise problem: %s" % e)
+sys.exit(1 if errors else 0)
 PY
   missing="$(mise ls --global --missing 2>/dev/null | grep -v '^$' || true)"
   [ -z "$missing" ] || echo "mise tools missing: $(echo "$missing" | tr '\n' ' ') (dots install)"

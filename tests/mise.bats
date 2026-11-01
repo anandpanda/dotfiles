@@ -14,7 +14,7 @@ echo "\$*" >> "\$HOME/mise.log"
 case "\$1 \$2" in
   "ls --global") printf '%s\n' "$1" ;;
   "install ") ;;
-  "doctor ") echo '{"activated": true, "problems": []}' ;;
+  "doctor ") echo '{"activated": true, "errors": []}' ;;
 esac
 FAKE
   chmod +x "$HOME/bin/mise"
@@ -68,9 +68,14 @@ FAKE
 }
 
 @test "doctor fails when mise doctor reports problems" {
-  printf '#!/usr/bin/env bash\n[ "$1" = doctor ] && echo "{\"activated\": true, \"problems\": [\"x\"]}"; exit 0\n' > "$HOME/bin/mise"; chmod +x "$HOME/bin/mise"
+  cat > "$HOME/bin/mise" <<'FAKE'
+#!/usr/bin/env bash
+case "$1" in doctor) echo '{"activated": true, "errors": ["x"]}' ;; esac
+FAKE
+  chmod +x "$HOME/bin/mise"
   printf '#!/usr/bin/env bash\nexit 0\n' > "$HOME/bin/brew"; chmod +x "$HOME/bin/brew"
   run bash "$DOTFILES_DIR/$M/doctor.sh"; [ "$status" -ne 0 ]
+  [[ "$output" == *"mise problem: x"* ]]
 }
 
 @test "a project .nvmrc is honoured through mise" {
@@ -96,7 +101,7 @@ FAKE
   cat > "$HOME/bin/mise" <<'FAKE'
 #!/usr/bin/env bash
 case "$1" in
-  doctor) echo '{"activated": false, "problems": []}' ;;
+  doctor) echo '{"activated": false, "errors": []}' ;;
   ls) ;;
 esac
 FAKE
@@ -104,13 +109,13 @@ FAKE
   run bash "$DOTFILES_DIR/$M/doctor.sh"; [ "$status" -eq 0 ]; [[ "$output" == *"not activated"* ]]
   cat > "$HOME/bin/mise" <<'FAKE'
 #!/usr/bin/env bash
-case "$1" in doctor) echo '{"activated": true, "problems": ["bad thing"]}' ;; esac
+case "$1" in doctor) echo '{"activated": true, "errors": ["bad thing"]}' ;; esac
 FAKE
   run bash "$DOTFILES_DIR/$M/doctor.sh"; [ "$status" -ne 0 ]; [[ "$output" == *"bad thing"* ]]
 }
 
 @test "doctor flags brew-owned uv, pnpm, node@, go@ and a go.dev install" {
-  printf '#!/usr/bin/env bash\ncase "$1" in doctor) echo "{\\"activated\\": true, \\"problems\\": []}";; esac\n' > "$HOME/bin/mise"; chmod +x "$HOME/bin/mise"
+  printf '#!/usr/bin/env bash\ncase "$1" in doctor) echo "{\\"activated\\": true, \\"errors\\": []}";; esac\n' > "$HOME/bin/mise"; chmod +x "$HOME/bin/mise"
   cat > "$HOME/bin/brew" <<'FAKE'
 #!/usr/bin/env bash
 case "$1 $2" in "list --formula") printf 'uv\npnpm\nnode@22\ngo@1.22\njq\n' ;; esac
@@ -156,8 +161,16 @@ FAKE
 }
 
 @test "doctor lists /etc/paths.d entries whose directories do not exist" {
-  printf '#!/usr/bin/env bash\ncase "$1" in doctor) echo "{\\"activated\\": true, \\"problems\\": []}";; esac\n' > "$HOME/bin/mise"; printf '#!/usr/bin/env bash\nexit 0\n' > "$HOME/bin/brew"; chmod +x "$HOME/bin/mise" "$HOME/bin/brew"
+  printf '#!/usr/bin/env bash\ncase "$1" in doctor) echo "{\\"activated\\": true, \\"errors\\": []}";; esac\n' > "$HOME/bin/mise"; printf '#!/usr/bin/env bash\nexit 0\n' > "$HOME/bin/brew"; chmod +x "$HOME/bin/mise" "$HOME/bin/brew"
   mkdir -p "$HOME/paths.d" "$HOME/exists"; echo "/does/not/exist/bin" > "$HOME/paths.d/10-stale"; echo "$HOME/exists" > "$HOME/paths.d/20-ok"; echo "/var/run/nope" > "$HOME/paths.d/10-cryptex"
   DOTFILES_PATHS_D="$HOME/paths.d" DOTFILES_GO_DEV="$HOME/no-go" run bash "$DOTFILES_DIR/$M/doctor.sh"
   [ "$status" -eq 0 ]; [[ "$output" == *"/does/not/exist/bin"* ]]; [[ "$output" == *"10-stale"* ]]; [[ "$output" != *"20-ok"* ]]; [[ "$output" != *cryptex* ]]
+}
+
+@test "doctor shows the problems mise reports when mise doctor exits non-zero" {
+  mkdir -p "$HOME/bin"
+  printf '#!/bin/sh\nif [ "$1" = doctor ]; then echo "{\\"activated\\": true, \\"errors\\": [\\"broken thing\\"]}"; exit 1; fi\nexit 0\n' > "$HOME/bin/mise"; chmod +x "$HOME/bin/mise"
+  PATH="$HOME/bin:/usr/bin:/bin" run bash "$DOTFILES_DIR/modules/mise/doctor.sh"
+  [[ "$output" == *"mise problem: broken thing"* ]] || false
+  [[ "$output" != *"Traceback"* ]]
 }
