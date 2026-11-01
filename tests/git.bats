@@ -229,7 +229,7 @@ teardown() { teardown_home; }
 # ---- phase 9: ~/.gitconfig is the machine's file ----
 coder_template_block() {
   mkdir -p "$HOME/.ssh/git-commit-signing"; ssh-keygen -q -t ed25519 -N "" -C coder -f "$HOME/.ssh/git-commit-signing/coder"
-  printf '[url "https://github.com/"]\n    insteadOf = git@github.com:\n    insteadOf = ssh://git@github.com/\n[credential "https://github.com"]\n    helper = /tmp/coder-askpass\n[user]\n    signingkey = %s/.ssh/git-commit-signing/coder.pub\n[gpg]\n    format = ssh\n[commit]\n    gpgsign = true\n' "$HOME"
+  printf '[url "https://github.com/"]\n    insteadOf = git@github.com:\n    insteadOf = ssh://git@github.com/\n[credential "https://github.com"]\n    helper = /tmp/coder-askpass\n[user]\n    signingkey = %s/.ssh/git-commit-signing/coder\n[gpg]\n    format = ssh\n[commit]\n    gpgsign = true\n' "$HOME"
 }
 work_identity() {
   printf '[user]\n  name = W\n  email = w@work\n  signingkey = ~/.ssh/id_ed25519_work.pub\n[commit]\n  gpgsign = true\n[url "git@github.com-work:"]\n  insteadOf = git@github.com:\n  insteadOf = https://github.com/\n  insteadOf = ssh://git@github.com/\n' > "$HOME/.config/git/identity.work"
@@ -276,7 +276,7 @@ work_identity() {
   for form in git@github.com:o/r.git https://github.com/o/r.git ssh://git@github.com/o/r.git; do
     [ "$(git -C "$HOME/work/r" ls-remote --get-url "$form")" = "git@github.com-work:o/r.git" ]
   done
-  [ "$(git -C "$HOME/work/r" config user.signingkey)" = "$HOME/.ssh/git-commit-signing/coder.pub" ]
+  [ "$(git -C "$HOME/work/r" config user.signingkey)" = "$HOME/.ssh/git-commit-signing/coder" ]
   [ "$(git -C "$HOME/work/r" config user.email)" = "w@work" ]
 }
 
@@ -298,7 +298,7 @@ coder_machine() { # extra lines appended after the template block
   coder_machine
   run bash "$DOTFILES_DIR/$G/doctor.sh"
   [ "$status" -eq 0 ]
-  [ -z "$(find "$HOME/work" -maxdepth 1 -name '.dots-doctor*')" ]
+  [ -z "$(find "$HOME/work" -maxdepth 1 -name '.dots-probe*')" ]
 }
 
 @test "doctor reports a work folder whose appended config overrides the email" {
@@ -327,4 +327,28 @@ coder_machine() { # extra lines appended after the template block
   printf '[commit]\n    gpgsign = false\n' >> "$HOME/.gitconfig"
   run bash "$DOTFILES_DIR/$G/doctor.sh"
   [[ "$output" != *"$HOME/work:"* ]]
+}
+
+# ---- phase 9: signing follows the effective key ----
+@test "on a Coder-like machine allowed_signers holds the work email with the Coder key, and a work commit verifies" {
+  coder_machine
+  f="$HOME/.local/state/git/allowed_signers"
+  grep -qxF "w@work namespaces=\"git\" $(ssh-keygen -y -f "$HOME/.ssh/git-commit-signing/coder" | cut -d' ' -f1,2)" "$f"
+  cd "$HOME/work/r" && touch f && git add f && git commit -qm "feat: signed on coder"
+  run git log -1 --show-signature
+  [[ "$output" == *"Good \"git\" signature for w@work"* ]]
+  [ -z "$(find "$HOME/work" "$HOME/personal" -maxdepth 1 -name '.dots-probe*')" ]
+}
+
+@test "doctor warns about a missing signing key only where the effective key is missing" {
+  coder_machine
+  run bash "$DOTFILES_DIR/$G/doctor.sh"
+  [ ! -e "$HOME/.ssh/id_ed25519_work.pub" ]
+  [[ "$output" != *"signing key missing"* ]]
+}
+
+@test "allowed_signers takes a .pub signing key as it is, whatever its type" {
+  mkdir -p "$HOME/.ssh"; ssh-keygen -q -t ecdsa -N "" -C w -f "$HOME/.ssh/id_ed25519_work"
+  bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
+  grep -qxF "w@work namespaces=\"git\" $(cut -d' ' -f1,2 "$HOME/.ssh/id_ed25519_work.pub")" "$HOME/.local/state/git/allowed_signers"
 }

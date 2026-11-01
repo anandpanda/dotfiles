@@ -28,3 +28,30 @@ gitconfig_ensure_include() {
   cat "$tmp" >"$cfg" && rm -f "$tmp"
   echo "wrote $cfg"
 }
+
+# Runs git ARGS in a throwaway repo inside FOLDER, so that folder's includeIf rules apply.
+git_in_folder() { # FOLDER ARGS...
+  local probe rc=0
+  probe="$(mktemp -d "$1/.dots-probe.XXXXXX")"
+  shift
+  git -C "$probe" init -q
+  git -C "$probe" "$@" || rc=$?
+  rm -rf "$probe"
+  return "$rc"
+}
+
+# The effective signing key file in FOLDER, with ~ expanded; empty when none is set.
+git_signing_key_in() { # FOLDER
+  local key
+  key="$(git_in_folder "$1" config user.signingkey || true)"
+  echo "${key/#\~/$HOME}"
+}
+
+# "type base64" of a signing key file, whether it names the public or the private key.
+git_public_key() { # KEY_FILE
+  if head -1 "$1" | grep -q '^-----BEGIN'; then
+    ssh-keygen -y -f "$1" | cut -d' ' -f1,2
+  else
+    cut -d' ' -f1,2 "$1"
+  fi
+}

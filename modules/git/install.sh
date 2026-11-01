@@ -13,20 +13,22 @@ cfg="$HOME/.config/git"
 # every new or cloned repo (git ignores a template whose hooks dir is a symlink).
 # Generated signers live in state, never in the (linked) config dir.
 out="$HOME/.local/state/git/allowed_signers" # matches gpg.ssh.allowedSignersFile in base.gitconfig
-want=""
-for id in "$cfg"/identity.*; do
-  [ -f "$id" ] || continue
-  email="$(git config --file "$id" user.email || true)"
-  key="$(git config --file "$id" user.signingkey || true)"
-  key="${key/#\~/$HOME}"
-  if [ -z "$email" ] || [ -z "$key" ] || [ ! -f "$key" ]; then continue; fi
-  want="${want}${email} namespaces=\"git\" $(cut -d' ' -f1,2 "$key")"$'\n'
-done
-put_file "$out" "${want%$'\n'}"
 gitconfig_ensure_include
 
 contexts="$(contexts_collect)" || die "cannot collect context folders"
 contexts_write "$contexts" || exit 1
+
+# Each identity signs with whatever key is effective in its folders (a template may
+# append its own), so the signer line comes from a probe there, not the identity file.
+want=""
+for ctx in personal work; do
+  folder="$(printf '%s\n' "$contexts" | contexts_first_folder "$ctx")" || continue
+  email="$(git_in_folder "$folder" config user.email || true)"
+  key="$(git_signing_key_in "$folder")"
+  if [ -z "$email" ] || [ -z "$key" ] || [ ! -f "$key" ]; then continue; fi
+  want="${want}${email} namespaces=\"git\" $(git_public_key "$key")"$'\n'
+done
+put_file "$out" "${want%$'\n'}"
 
 # Existing repos under the context folders predate the template: give them the hook
 # unless they already have one of their own (never overwrite a repo's hook).

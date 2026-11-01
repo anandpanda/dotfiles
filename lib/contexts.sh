@@ -58,3 +58,15 @@ contexts_write() { # LINES (from contexts_collect)
   put_file "$(contexts_file)" "$1"
   put_file "$(contexts_include_file)" "$(printf '%s\n' "$1" | contexts_render_include)"
 }
+
+# The first existing folder of CONTEXT. stdin: collected lines.
+contexts_first_folder() { # CONTEXT
+  local c d
+  while IFS=$'\t' read -r c d; do
+    if [ "$c" = "$1" ] && [ -d "$d" ]; then
+      echo "$d"
+      return 0
+    fi
+  done
+  return 1
+}
