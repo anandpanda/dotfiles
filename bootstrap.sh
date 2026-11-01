@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Blank machine to installed dotfiles. Safe to pipe to bash.
 #   curl -fsSL https://raw.githubusercontent.com/anandpanda/dotfiles/main/bootstrap.sh | bash -s -- [profile] [overlay-url]
+# Without a profile, install.sh picks the machine's default (server-work in a Coder workspace, else personal).
 set -euo pipefail
-profile="${1:-personal}"
+profile="${1:-}"
 overlay="${2:-}"
 repo="https://github.com/anandpanda/dotfiles.git"
 dest="$HOME/.dotfiles"
@@ -48,11 +49,10 @@ brew install -q git just
 if [ -d "$dest/.git" ]; then git -C "$dest" pull --ff-only -q; else git clone -q "$repo" "$dest"; fi
 cd "$dest"
 # When piped from curl, stdin is the pipe; reattach the terminal so the
-# guided ssh key and overlay prompts can run.
+# guided ssh key and GitHub login prompts can run.
 in=/dev/stdin
 [ -t 0 ] || { [ -r /dev/tty ] && in=/dev/tty; }
-if [ -n "$overlay" ]; then
-  ./install.sh "$profile" --overlay "$overlay" <"$in"
-else
-  ./install.sh "$profile" <"$in"
-fi
+set --
+[ -z "$profile" ] || set -- "$profile"
+[ -z "$overlay" ] || set -- "$@" --overlay "$overlay"
+./install.sh "$@" <"$in"
