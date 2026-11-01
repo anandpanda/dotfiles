@@ -87,3 +87,12 @@ teardown() { teardown_home; }
   remember profile base
   CODER_WORKSPACE_ID=w run profile_default; [ "$output" = base ]
 }
+
+@test "identities: the nearest profile that declares them wins" {
+  printf 'identities = ["p"]\nmodules = ["a"]\n' > "$PROFILES/ib.toml"
+  printf 'extends = "ib"\n' > "$PROFILES/ic.toml"
+  printf 'extends = "ib"\nidentities = ["w"]\n' > "$PROFILES/id.toml"
+  run profile_identities ib; [ "$output" = p ]
+  run profile_identities ic; [ "$output" = p ]
+  run profile_identities id; [ "$output" = w ]
+}

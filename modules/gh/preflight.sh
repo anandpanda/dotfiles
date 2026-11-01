@@ -11,8 +11,7 @@ command -v gh >/dev/null 2>&1 || {
   exit 0
 }
 profile="${DOTFILES_PROFILE:-$(profile_default)}"
-ctxs="personal"
-profile_has_overlay "$profile" 2>/dev/null && ctxs="personal work"
+ctxs="$(profile_identities "$profile")"
 # "✓ Logged in to github.com account NAME (keyring)" then "- Active account: true"; the
 # glyph shifts columns, so take the word after "account".
 active_account() {

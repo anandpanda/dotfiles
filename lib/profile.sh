@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Profile files are a TOML subset: modules = [...], extends = "name", overlay = true.
+# Profile files are a TOML subset: modules = [...], identities = [...], extends = "name", overlay = true.
 
 profiles_dir() { echo "${DOTFILES_PROFILES:-$DOTFILES_DIR/profiles}"; }
 
@@ -67,6 +67,17 @@ profile_has_overlay() {
     _toml_bool_true "$(profile_file "$p")" overlay && return 0
   done
   return 1
+}
+
+# The git identities a machine on PROFILE carries: the nearest profile in the chain that declares them wins.
+profile_identities() {
+  local chain p file ids=""
+  chain="$(_profile_chain "$1")" || return 1
+  for p in $chain; do
+    file="$(profile_file "$p")"
+    grep -Eq "^[[:space:]]*identities[[:space:]]*=" "$file" && ids="$(_toml_list "$file" identities)"
+  done
+  printf '%s\n' "$ids"
 }
 
 state_dir() { echo "$HOME/.config/dotfiles"; }

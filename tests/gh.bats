@@ -168,3 +168,8 @@ FAKE
   run zsh -c "source '$DOTFILES_DIR/$GH/shell.zsh'; cd '$HOME/company/w/sub'; gh pr list; cd '$HOME/company/mine'; gh pr list"
   [ "$status" -eq 0 ]; [[ "$output" == *"user: me-work"*"user: me-personal"* ]]
 }
+
+@test "preflight for server-work handles only the work account" {
+  DOTFILES_PROFILE=server-work run bash "$DOTFILES_DIR/$GH/preflight.sh"
+  [ "$status" -eq 0 ]; [[ "$output" == *"work GitHub account"* ]]; [[ "$output" != *personal* ]]
+}

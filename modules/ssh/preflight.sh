@@ -6,7 +6,7 @@ for f in log profile ssh; do
   source "$DOTFILES_DIR/lib/$f.sh"
 done
 profile="${DOTFILES_PROFILE:-$(profile_default)}"
-for ctx in $(ssh_contexts_for_profile "$profile"); do
+for ctx in $(profile_identities "$profile"); do
   email="${DOTFILES_EMAIL_PERSONAL:-}"
   [ "$ctx" = work ] && email="${DOTFILES_EMAIL_WORK:-}"
   ssh_ensure_key "$ctx" "${email:-$ctx@$(hostname -s)}"

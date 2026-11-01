@@ -1,4 +1,5 @@
 # Modules applied on every machine. Order matters: earlier first.
+identities = ["personal"]
 modules = [
   "workspace", "secrets", "git", "ssh", "macos",
   "fonts", "cli", "zsh", "starship", "atuin", "tmux", "ghostty",
