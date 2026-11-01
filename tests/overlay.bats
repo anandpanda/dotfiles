@@ -90,8 +90,9 @@ teardown() { teardown_home; }
   grep -qF "github.com-personal" "$HOME/ssh-args"; grep -qF "o/r.git" "$HOME/ssh-args"
 }
 
-@test "the overlay checkout creates its own parent folder" {
-  [ ! -e "$HOME/personal" ]
+@test "on server-work the workspace makes no personal folder and the overlay checkout creates its own" {
+  env -u DOTFILES_PROFILES -u DOTFILES_MODULES DOTFILES_PROFILE=server-work bash "$DOTFILES_DIR/modules/workspace/install.sh" >/dev/null
+  [ -d "$HOME/work" ]; [ ! -e "$HOME/personal" ]
   run overlay_apply "$REMOTE"
   [ "$status" -eq 0 ]; [ -d "$HOME/personal/dotfiles-work/.git" ]
 }

@@ -264,15 +264,20 @@ work_identity() {
   [ "$(git config --get alias.st)" = "status -sb" ]
 }
 
-@test "git config --global writes land in the machine file, never in the repo config" {
+@test "after install, git config --global writes land in the machine file, never in the repo config" {
+  rm "$HOME/.gitconfig"
+  bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
   git config --global credential.helper store
+  [ "$(head -1 "$HOME/.gitconfig")" = "[include] path = ~/.config/git/base.gitconfig" ]
   grep -q "helper = store" "$HOME/.gitconfig"
   ! grep -q "helper" "$HOME/.config/git/base.gitconfig"
+  [ "$(git config --get alias.st)" = "status -sb" ]
 }
 
-@test "with a Coder-like block appended, our url rewrite wins and the appended signing key wins" {
+@test "install on a Coder-like ~/.gitconfig: our url rewrite wins and the template's signing key wins" {
   work_identity
-  { printf '[include] path = ~/.config/git/base.gitconfig\n'; coder_template_block; } > "$HOME/.gitconfig"
+  coder_template_block > "$HOME/.gitconfig"
+  bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
   for form in git@github.com:o/r.git https://github.com/o/r.git ssh://git@github.com/o/r.git; do
     [ "$(git -C "$HOME/work/r" ls-remote --get-url "$form")" = "git@github.com-work:o/r.git" ]
   done
