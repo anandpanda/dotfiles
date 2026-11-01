@@ -28,7 +28,13 @@ if [ "${DRY_RUN:-0}" = 1 ]; then
 else
   mkdir -p "$udir/snippets"
 fi
-for f in settings.json keybindings.json tasks.json; do link_file "$here/files/$f" "$udir/$f"; done
+# Settings: the repo owns its keys, the machine owns the file, so VS Code's own writes never reach the repo.
+if [ "${DRY_RUN:-0}" = 1 ]; then
+  echo "[dry] merge settings into $udir/settings.json"
+else
+  vscode_settings_merge "$here/files/settings.json" "$udir/settings.json"
+fi
+for f in keybindings.json tasks.json; do link_file "$here/files/$f" "$udir/$f"; done
 for f in "$here"/files/snippets/*.json; do link_file "$f" "$udir/snippets/$(basename "$f")"; done
 # GCC's bits/stdc++.h is missing on Apple clang; a shim makes contest code portable.
 link_file "$here/files/include/bits/stdc++.h" "$HOME/.local/include/bits/stdc++.h"

@@ -52,7 +52,7 @@ FAKE
   fake_code
   bash "$V/install.sh" >/dev/null
   u="$(vscode_user_dir)"
-  [ -L "$u/settings.json" ] && [ -L "$u/keybindings.json" ] && [ -L "$u/tasks.json" ] && [ -L "$u/snippets/cpp.json" ]
+  [ -f "$u/settings.json" ] && [ ! -L "$u/settings.json" ] && [ -L "$u/keybindings.json" ] && [ -L "$u/tasks.json" ] && [ -L "$u/snippets/cpp.json" ] || false
   [ ! -L "$u" ]
 }
 
@@ -88,7 +88,7 @@ FAKE
   DOTFILES_CODE= run bash "$V/install.sh"
   [ "$status" -eq 0 ]
   [[ "$output" == *"code"*"not"* ]]
-  [ -L "$(vscode_user_dir)/settings.json" ]
+  [ -f "$(vscode_user_dir)/settings.json" ]
 }
 
 # ---- doctor.sh and prune ----
@@ -212,4 +212,48 @@ FAKE
   ! grep -qi "some.pack" "$HOME/installed.txt"
   grep -qi "ms-vscode.cpptools" "$HOME/installed.txt"
   [[ "$output" == *"restored ms-vscode.cpptools"* ]]
+}
+
+@test "settings merge writes owned keys into a JSONC live file and keeps the machine's own keys" {
+  printf '{\n  // why\n  "editor.fontSize": 14,\n}\n' > "$HOME/owned.json"
+  printf '{\n  "editor.fontSize": 12,\n  "remote.SSH.remotePlatform": {"host": "linux"},\n}\n' > "$HOME/live.json"
+  run vscode_settings_merge "$HOME/owned.json" "$HOME/live.json"
+  [ "$output" = "merged settings" ]
+  [ "$(python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); print(d["editor.fontSize"], d["remote.SSH.remotePlatform"]["host"])' "$HOME/live.json")" = "14 linux" ]
+  run vscode_settings_merge "$HOME/owned.json" "$HOME/live.json"
+  [ "$output" = "skip settings" ]
+}
+
+@test "install replaces a settings link into the repo with a real file and never writes the repo file" {
+  fake_code
+  u="$(vscode_user_dir)"; mkdir -p "$u"; ln -s "$V/files/settings.json" "$u/settings.json"
+  before="$(cksum < "$V/files/settings.json")"
+  bash "$V/install.sh" >/dev/null
+  [ -f "$u/settings.json" ] && [ ! -L "$u/settings.json" ] || false
+  [ "$(cksum < "$V/files/settings.json")" = "$before" ] || false
+  grep -q '"workbench.colorTheme": "Catppuccin Mocha"' "$u/settings.json"
+}
+
+@test "doctor reports a drifted owned setting and a settings link, and ignores the machine's own keys" {
+  fake_code
+  bash "$V/install.sh" >/dev/null
+  u="$(vscode_user_dir)"
+  python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); d["remote.SSH.remotePlatform"]={"h":"linux"}; json.dump(d,open(sys.argv[1],"w"))' "$u/settings.json"
+  run bash "$V/doctor.sh"
+  [[ "$output" != *"remote.SSH.remotePlatform"* ]] || false
+  python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); d["workbench.colorTheme"]="Other"; json.dump(d,open(sys.argv[1],"w"))' "$u/settings.json"
+  run bash "$V/doctor.sh"
+  [[ "$output" == *"setting drifted: workbench.colorTheme"* ]] || false
+  rm "$u/settings.json"; ln -s "$V/files/settings.json" "$u/settings.json"
+  run bash "$V/doctor.sh"
+  [[ "$output" == *"settings.json is a link into the repo"* ]]
+}
+
+@test "a settings link becomes plain JSON holding none of the repo's comments" {
+  printf '{\n  // why\n  "editor.fontSize": 14,\n}\n' > "$HOME/owned.json"
+  ln -s "$HOME/owned.json" "$HOME/live.json"
+  run vscode_settings_merge "$HOME/owned.json" "$HOME/live.json"
+  [ "$output" = "merged settings" ] || false
+  [ ! -L "$HOME/live.json" ] || false
+  python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$HOME/live.json"
 }

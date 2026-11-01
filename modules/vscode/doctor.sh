@@ -17,7 +17,17 @@ check() { # SRC DST
     rc=1
   fi
 }
-for f in settings.json keybindings.json tasks.json; do check "$here/files/$f" "$udir/$f"; done
+if [ -L "$udir/settings.json" ]; then
+  echo "settings.json is a link into the repo (rerun install)"
+  rc=1
+elif [ ! -f "$udir/settings.json" ]; then
+  echo "missing $udir/settings.json"
+  rc=1
+elif ! drifted="$(vscode_settings_drift "$here/files/settings.json" "$udir/settings.json")"; then
+  while IFS= read -r k; do echo "setting drifted: $k"; done <<<"$drifted"
+  rc=1
+fi
+for f in keybindings.json tasks.json; do check "$here/files/$f" "$udir/$f"; done
 for f in "$here"/files/snippets/*.json; do check "$f" "$udir/snippets/$(basename "$f")"; done
 check "$here/files/include/bits/stdc++.h" "$HOME/.local/include/bits/stdc++.h"
 

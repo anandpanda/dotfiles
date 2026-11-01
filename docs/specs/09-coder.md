@@ -134,6 +134,50 @@ pouring from the surviving cache; later starts find everything installed.
 `just test` and `just test-server` run the full Linux install in a container
 before push.
 
+## Addendum: the repo owns VS Code settings keys, not the file (2026-11-02)
+
+Status: approved ("yes", 2026-11-02)
+
+**Found.** `settings.json` is symlinked from the repo into VS Code's user
+folder, so everything VS Code and its extensions write lands in the public
+repo. Connecting to the new workspace, Remote SSH wrote
+`remote.SSH.remotePlatform` keyed by the internal Coder hostname; the
+company-name test caught it before a commit.
+
+**Decision.** The repo's `settings.json` lists the settings Anand chose (the
+owned keys). The live file in VS Code's user folder is a plain file the
+machine owns. Install merges the owned keys into it; doctor checks only them.
+This is the mechanism `~/.claude/settings.json` already uses.
+
+- Merge: each owned top-level key replaces the live value; every other live key
+  stays. Live is written as JSON with four-space indent (VS Code's own style).
+- Both files are JSONC (comments, trailing commas); they are read with the
+  existing `_jsonc_to_json` in `lib/vscode.sh`. The repo file keeps its
+  comments; the live file holds none of ours.
+- The repo file is never written by install or VS Code.
+- A key removed from the repo stays in the live file (as for Claude settings);
+  removing it there is a manual step.
+- Migration: when the live path is still a symlink into the repo, install
+  replaces it with a real file holding the merged result, so VS Code's own
+  keys move to the machine. The leaked line is then reverted in the repo.
+- Doctor reports an owned key whose live value differs, and a live file that is
+  still a symlink.
+
+**Unchanged.** `keybindings.json`, `tasks.json` and snippets stay linked:
+VS Code writes them only when Anand edits them, so those writes are his
+choices, not machine state.
+
+**Rejected.** Discarding VS Code's writes by hand (keeps happening; the
+company-name test is the only guard); copying the whole file (every VS Code
+write becomes drift and repo changes need a reinstall); Settings Sync (an
+external account holding the source of truth).
+
+**Tests first.** Merge writes owned keys into a JSONC live file with a trailing
+comma and keeps a VS Code-written key; a second merge prints "skip settings";
+install replaces a symlink into the repo with a real file and leaves the repo
+file byte-identical; doctor flags a drifted owned key, ignores extra live keys,
+and flags a live symlink.
+
 ## Out of scope
 
 `/retro` (after this phase). Retiring old workspaces is Anand's call.

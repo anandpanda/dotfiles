@@ -51,6 +51,40 @@ jsonc_valid() {
   _jsonc_to_json "$1" | python3 -c 'import json,sys; json.load(sys.stdin)' 2>/dev/null
 }
 
+# Writes each top-level key of OWNED into LIVE; the machine's other keys stay. A LIVE
+# that is a link (the old layout) becomes a real file. Prints "skip settings" or "merged settings".
+vscode_settings_merge() { # OWNED LIVE
+  local owned="$1" live="$2" tmp
+  tmp="$(mktemp "$live.XXXXXX")"
+  python3 - <(_jsonc_to_json "$owned") <(if [ -e "$live" ]; then _jsonc_to_json "$live"; else echo '{}'; fi) "$tmp" "$([ -L "$live" ] && echo link)" <<'PY'
+import json, sys
+owned, live = json.load(open(sys.argv[1])), json.load(open(sys.argv[2]))
+merged = {**live, **owned}
+if merged != live or sys.argv[4] == "link":
+    with open(sys.argv[3], "w") as f:
+        json.dump(merged, f, indent=4)
+        f.write("\n")
+PY
+  if [ -s "$tmp" ]; then
+    mv "$tmp" "$live"
+    echo "merged settings"
+  else
+    rm -f "$tmp"
+    echo "skip settings"
+  fi
+}
+
+# Prints each owned key whose live value differs; exit 1 if any.
+vscode_settings_drift() { # OWNED LIVE
+  python3 - <(_jsonc_to_json "$1") <(_jsonc_to_json "$2") <<'PY'
+import json, sys
+owned, live = json.load(open(sys.argv[1])), json.load(open(sys.argv[2]))
+drifted = [k for k in owned if live.get(k) != owned[k]]
+print("\n".join(drifted), end="\n" if drifted else "")
+sys.exit(1 if drifted else 0)
+PY
+}
+
 # Top-level keys of a JSONC object, one per line.
 jsonc_keys() {
   _jsonc_to_json "$1" | python3 -c 'import json,sys; [print(k) for k in json.load(sys.stdin)]'
