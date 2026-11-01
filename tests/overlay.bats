@@ -2,7 +2,7 @@ load helper
 bats_require_minimum_version 1.5.0
 setup() {
   setup_home
-  for f in log os link profile module brew preflight overlay; do source "$DOTFILES_DIR/lib/$f.sh"; done
+  for f in log os link profile module brew preflight ssh overlay; do source "$DOTFILES_DIR/lib/$f.sh"; done
   export DOTFILES_SKIP_BREW=1
   export DOTFILES_MODULES="$HOME/mods"; mkdir -p "$DOTFILES_MODULES"; cp -R "$DOTFILES_DIR/modules/git" "$DOTFILES_MODULES/git"
   export DOTFILES_PROFILES="$HOME/profiles" DOTFILES_PROFILE=g; mkdir -p "$DOTFILES_PROFILES"; printf 'modules = ["git"]\n' > "$DOTFILES_PROFILES/g.toml"
@@ -12,12 +12,12 @@ setup() {
 }
 teardown() { teardown_home; }
 
-@test "overlay_resolve_url prefers argument, then recall, else empty without tty" {
+@test "overlay_resolve_url prefers argument, then recall, else the default ssh alias url" {
   [ "$(overlay_resolve_url "u1")" = "u1" ]
   remember overlay "u2"
   [ "$(overlay_resolve_url "")" = "u2" ]
   rm "$HOME/.config/dotfiles/overlay"
-  [ -z "$(overlay_resolve_url "")" ]
+  [ "$(overlay_resolve_url "")" = "git@github.com-personal:anandpanda/dotfiles-work.git" ]
 }
 
 @test "overlay_apply clones, applies modules, remembers url" {
@@ -42,28 +42,9 @@ teardown() { teardown_home; }
   [[ "$output" == *"pull"* ]]
 }
 
-@test "no url and no tty warns and returns 0" {
-  run overlay_apply ""
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"no overlay url"* ]]
-}
-
 @test "dry run does not clone" {
   DRY_RUN=1 run overlay_apply "$REMOTE"
   [ ! -d "$HOME/personal/dotfiles-work" ]
-}
-
-@test "overlay url is cloned exactly as given: the ssh alias in it picks the key" {
-  ! grep -q "overlay_clone_url\|github.com-work" "$DOTFILES_DIR/lib/overlay.sh"
-  grep -q 'git clone -q "$url"' "$DOTFILES_DIR/lib/overlay.sh"
-}
-
-@test "overlay url prompt goes to stderr and reads from the terminal" {
-  is_tty() { return 0; }
-  echo "git@github.com:o/r.git" > "$HOME/tty"
-  DOTFILES_TTY="$HOME/tty" run --separate-stderr overlay_resolve_url ""
-  [ "$output" = "git@github.com:o/r.git" ]
-  [[ "$stderr" == *"overlay"* ]]
 }
 
 @test "overlay preflight scripts run" {
@@ -78,4 +59,22 @@ teardown() { teardown_home; }
   [ "$status" -eq 0 ]
   [ "$(git -C "$HOME/ov" log --format=%s -1)" = "chore: overlay skeleton" ]
   [ -x "$HOME/ov/.git/hooks/commit-msg" ]
+}
+
+@test "overlay clone and pull ignore the machine's global git config" {
+  printf '[url "%s/nowhere"]\n    insteadOf = %s\n' "$HOME" "$REMOTE" > "$HOME/.gitconfig"
+  run git clone -q "$REMOTE" "$HOME/control"
+  [ "$status" -ne 0 ]
+  run overlay_apply "$REMOTE"
+  [ "$status" -eq 0 ]; [ -d "$HOME/personal/dotfiles-work/.git" ]
+  run overlay_apply "$REMOTE"
+  [ "$status" -eq 0 ]; [[ "$output" == *"pull"* ]]
+}
+
+@test "overlay fetch reaches GitHub through the repo's own ssh config, with the url's alias" {
+  mkdir -p "$HOME/bin"; printf '#!/bin/sh\necho "$@" > "$HOME/ssh-args"\nexit 1\n' > "$HOME/bin/ssh"; chmod +x "$HOME/bin/ssh"
+  PATH="$HOME/bin:$PATH" run overlay_ensure "git@github.com-personal:o/r.git"
+  [ "$status" -ne 0 ]
+  grep -qF -- "-F $DOTFILES_DIR/modules/ssh/home/.ssh/conf.d/github.conf" "$HOME/ssh-args"
+  grep -qF "github.com-personal" "$HOME/ssh-args"; grep -qF "o/r.git" "$HOME/ssh-args"
 }

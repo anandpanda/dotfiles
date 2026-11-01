@@ -52,11 +52,12 @@ teardown() { teardown_home; }
   [[ "$output" != *"missing secrets"* ]]
 }
 
-@test "non-tty skips guided steps" {
+@test "an overlay profile with no url given or remembered fetches the default overlay url" {
+  mkdir -p "$HOME/bin"; printf '#!/bin/sh\necho "$@" > "$HOME/ssh-args"\nexit 1\n' > "$HOME/bin/ssh"; chmod +x "$HOME/bin/ssh"
   printf 'extends = "test"\noverlay = true\n' > "$DOTFILES_PROFILES/w.toml"
-  run "$DOTFILES_DIR/install.sh" w
-  [ "$status" -eq 0 ]
-  [[ "$output" == *"no overlay url"* ]]
+  PATH="$HOME/bin:$PATH" run "$DOTFILES_DIR/install.sh" w
+  [ "$status" -ne 0 ]; [[ "$output" == *"overlay fetch failed"* ]]
+  grep -qF "github.com-personal" "$HOME/ssh-args"; grep -qF "anandpanda/dotfiles-work.git" "$HOME/ssh-args"
 }
 
 @test "unknown profile fails and remembers nothing" {
@@ -186,20 +187,6 @@ teardown() { teardown_home; }
   run "$DOTFILES_DIR/install.sh" test
   [[ "$output" != *"removed stale"* ]]; [ -L "$HOME/elsewhere/f" ]
   grep -qxF "$HOME/elsewhere/f" "$HOME/.config/dotfiles/links"
-}
-
-@test "link record: a work run that skips the overlay removes no overlay link and keeps the record" {
-  REMOTE="$HOME/remote"; "$DOTFILES_DIR/scripts/overlay-init.sh" "$REMOTE" >/dev/null
-  mkdir -p "$REMOTE/modules/extra/home"; touch "$REMOTE/modules/extra/home/.ovl"
-  git -C "$REMOTE" add -A; git -C "$REMOTE" -c user.name=t -c user.email=t@t commit -qm m
-  printf 'extends = "test"\noverlay = true\n' > "$DOTFILES_PROFILES/w.toml"
-  "$DOTFILES_DIR/install.sh" w --overlay "$REMOTE" >/dev/null
-  [ -L "$HOME/.ovl" ]
-  cp "$HOME/.config/dotfiles/links" "$HOME/record-before"
-  rm "$HOME/.config/dotfiles/overlay"
-  run "$DOTFILES_DIR/install.sh" w
-  [ "$status" -eq 0 ]; [[ "$output" == *"no overlay url"* ]]
-  [ -L "$HOME/.ovl" ]; cmp "$HOME/.config/dotfiles/links" "$HOME/record-before"
 }
 
 @test "dots install without a profile leaves the choice to install.sh" {

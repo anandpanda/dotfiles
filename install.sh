@@ -33,7 +33,6 @@ done
 export DRY_RUN
 [ -n "$PROFILE" ] || PROFILE="$(profile_default)"
 export DOTFILES_PROFILE="$PROFILE"
-[ -n "$OVERLAY_URL" ] || OVERLAY_URL="$(recall overlay || true)"
 
 os="$(os_name)" || die "unsupported OS: $(uname -s)"
 log_info "profile: $PROFILE ($os/$(os_arch))"
@@ -61,7 +60,7 @@ OVERLAY_FETCHED=0
 if profile_has_overlay "$PROFILE"; then
   OVERLAY_URL="$(overlay_resolve_url "$OVERLAY_URL")"
   # Fetch now so public modules (vscode extension lists, ...) can read the overlay.
-  if [ -n "$OVERLAY_URL" ] && [ "$DRY_RUN" != 1 ]; then
+  if [ "$DRY_RUN" != 1 ]; then
     overlay_ensure "$OVERLAY_URL" || die "overlay fetch failed"
     OVERLAY_FETCHED=1
   fi
@@ -82,11 +81,7 @@ if profile_has_overlay "$PROFILE"; then
     DOTFILES_DIR="$DOTFILES_DIR" HOME="$HOME" DRY_RUN="$DRY_RUN" bash "$(modules_root)/git/install.sh"
   fi
 fi
-if profile_has_overlay "$PROFILE" && [ -z "$OVERLAY_URL" ]; then
-  log_warn "overlay not applied: link record kept until a full run"
-else
-  links_prune "$DOTFILES_LINK_RUN"
-fi
+links_prune "$DOTFILES_LINK_RUN"
 
 if [ "$DRY_RUN" != 1 ]; then
   remember profile "$PROFILE"
