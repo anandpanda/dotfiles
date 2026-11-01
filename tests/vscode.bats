@@ -104,7 +104,7 @@ FAKE
   grep -v ruff "$HOME/installed.txt" > "$HOME/i.tmp"; mv "$HOME/i.tmp" "$HOME/installed.txt"
   run bash "$V/doctor.sh"
   [ "$status" -eq 1 ]
-  [[ "$output" == *"missing link"*"settings.json"* ]]
+  [[ "$output" == *"missing $(vscode_user_dir)/settings.json"* ]] || false
   [[ "$output" == *"missing extension charliermarsh.ruff"* ]]
 }
 
