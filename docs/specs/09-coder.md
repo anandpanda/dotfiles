@@ -178,6 +178,31 @@ install replaces a symlink into the repo with a real file and leaves the repo
 file byte-identical; doctor flags a drifted owned key, ignores extra live keys,
 and flags a live symlink.
 
+## Addendum: the working agreement lives in rules/ (2026-11-02)
+
+Status: approved ("yess", 2026-11-02)
+
+**Found.** The team template's claude-code module writes its system prompt
+into `$CODER_MCP_CLAUDE_MD_PATH`, which is `~/.claude/CLAUDE.md`, at every
+workspace start. That path was a link into the dotfiles checkout, so the write
+landed in the repo file.
+
+**Decision.** The working agreement moves to
+`modules/claude/home/.claude/rules/working-agreement.md`. User-level rules load
+in every project ("Personal rules in `~/.claude/rules/` apply to every project
+on your machine", code.claude.com/docs/en/memory#user-level-rules), so sessions
+read the same instructions. `~/.claude/CLAUDE.md` becomes a machine file the
+dotfiles never create: absent on the Mac, the template's prompt on Coder.
+
+- The repo owns only files no other tool writes, as for VS Code settings.
+- Migration is the existing link record: the old `~/.claude/CLAUDE.md` link
+  is removed on the next full install (tests/install.bats "a file dropped from
+  a module loses its link").
+- On the current workspace, the template's write is discarded from the checkout
+  once by hand, so the next start can pull.
+- Out of scope: the template's prompt still loads on Coder; removing it is the
+  team's template.
+
 ## Out of scope
 
 `/retro` (after this phase). Retiring old workspaces is Anand's call.

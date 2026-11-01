@@ -10,7 +10,7 @@ disable-model-invocation: true
 Look outward for what would make this harness better. Edit nothing and commit nothing until Anand picks.
 
 ## 1. Read the installed harness
-`~/.claude/CLAUDE.md`, `~/.claude/rules/*.md`, `~/.claude/skills/*/SKILL.md`, `~/.claude/agents/*.md`, the permission rules and `enabledPlugins` in `~/.claude/settings.json`. Know what is already installed before searching, so nothing already installed is reported.
+`~/.claude/rules/*.md`, `~/.claude/CLAUDE.md` when a tool wrote one, `~/.claude/skills/*/SKILL.md`, `~/.claude/agents/*.md`, the permission rules and `enabledPlugins` in `~/.claude/settings.json`. Know what is already installed before searching, so nothing already installed is reported.
 
 ## 2. Research by kind of source
 Window: the last 30 days, or the window given as the argument ($ARGUMENTS). Dispatch the `researcher` agent, one per kind or in parallel, each with the window, the harness summary and a findings file in the session scratchpad directory. The agent discovers the specific places; the starting points are examples, not a list.

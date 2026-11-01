@@ -16,7 +16,7 @@
 - In learning mode, go deep on the one doubt asked. Resources and an Artifact offer are the only additions, no new topics.
 
 ## Learning mode
-- Its triggers are listed once, in CLAUDE.md under Working.
+- Its triggers are listed once, in working-agreement.md under Working.
 - Map the whole thing first in a few lines, then take one step: what it does and why.
 - Wait for his go before the next step. Do not run ahead and finish the task.
 

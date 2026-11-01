@@ -15,7 +15,7 @@ One session in, harness proposals out. Edit nothing and commit nothing until Ana
 - Read it all. Mark each place where he corrected, repeated, pushed back, re-asked, or where work was redone.
 
 ## 2. Read the harness
-`~/.claude/CLAUDE.md`, `~/.claude/rules/*.md`, `~/.claude/skills/*/SKILL.md`, `~/.claude/agents/*.md`, the permission rules and `enabledPlugins` in `~/.claude/settings.json`. In the dotfiles repo, `modules/claude/RESOLVER.md` says which file owns each rule.
+`~/.claude/rules/*.md`, `~/.claude/CLAUDE.md` when a tool wrote one, `~/.claude/skills/*/SKILL.md`, `~/.claude/agents/*.md`, the permission rules and `enabledPlugins` in `~/.claude/settings.json`. In the dotfiles repo, `modules/claude/RESOLVER.md` says which file owns each rule.
 
 ## 3. Diagnose
 For each marked moment: what went wrong, his exact words, and the cause: a rule missing, a rule unclear, a rule present but ignored, a missing guard rail, a missing skill, or a one-off. One-offs get no proposal.
@@ -25,7 +25,7 @@ Have the `researcher` agent cite current docs for every plugin or Claude Code fe
 
 ## 5. Propose
 Group the proposals, each with the evidence (session line), the exact change (file and text), and why:
-1. **rule add / update / delete** (prefer update or delete over add; respect the 200-line cap on CLAUDE.md plus rules);
+1. **rule add / update / delete** (prefer update or delete over add; respect the 200-line cap on the rules);
 2. **permission rule** (ask or deny, as in `settings.owned.json`);
 3. **skill or agent**;
 4. **plugin or feature**, with the doc link.

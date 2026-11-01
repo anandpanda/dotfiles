@@ -29,21 +29,21 @@ FAKE
 }
 teardown() { teardown_home; }
 
-@test "claude module links CLAUDE.md and rules" {
+@test "claude module links the working agreement and rules, and leaves ~/.claude/CLAUDE.md to the machine" {
   module_apply "$DOTFILES_DIR/$C" >/dev/null
-  [ "$(readlink "$HOME/.claude/CLAUDE.md")" = "$DOTFILES_DIR/$C/home/.claude/CLAUDE.md" ]
-  for r in anand writing evidence building; do
+  [ ! -e "$HOME/.claude/CLAUDE.md" ] || false
+  for r in working-agreement anand writing evidence building; do
     [ "$(readlink "$HOME/.claude/rules/$r.md")" = "$DOTFILES_DIR/$C/home/.claude/rules/$r.md" ]
   done
 }
 
 @test "always-loaded instructions stay under 200 lines" {
-  n=$(cat "$DOTFILES_DIR/$C/home/.claude/CLAUDE.md" "$DOTFILES_DIR/$C"/home/.claude/rules/*.md | wc -l)
+  n=$(cat "$DOTFILES_DIR/$C"/home/.claude/rules/*.md | wc -l)
   [ "$n" -lt 200 ]
 }
 
 @test "working agreement carries the agreed rules" {
-  f="$DOTFILES_DIR/$C/home/.claude/CLAUDE.md"
+  f="$DOTFILES_DIR/$C/home/.claude/rules/working-agreement.md"
   for p in "literal question" "UNVERIFIED" "stands because" "not a go" "small reversible" \
     "No comments in code" "AI slop" "Do not overcorrect" "outrank plugin skills" \
     "senior principal engineer" "the tradeoff and why" "No paranoia" "Planning is mandatory" \
@@ -69,7 +69,7 @@ teardown() { teardown_home; }
 }
 
 @test "resolver names an existing owner file for every rule heading" {
-  f="$DOTFILES_DIR/$C/home/.claude/CLAUDE.md"
+  f="$DOTFILES_DIR/$C/home/.claude/rules/working-agreement.md"
   n=$(grep -c '^## ' "$f"); [ "$n" -ge 6 ]
   while IFS= read -r h; do
     row=$(grep -F "| ${h#\#\# } |" "$DOTFILES_DIR/$C/RESOLVER.md") || { echo "no owner: $h"; return 1; }
@@ -92,7 +92,7 @@ teardown() { teardown_home; }
 }
 
 @test "learning mode triggers have one home" {
-  grep -qF '"teach", "with me", "guide me" or "together"' "$DOTFILES_DIR/$C/home/.claude/CLAUDE.md"
+  grep -qF '"teach", "with me", "guide me" or "together"' "$DOTFILES_DIR/$C/home/.claude/rules/working-agreement.md"
   run grep -nE '"teach"|"guide me"|"explain"' "$DOTFILES_DIR/$C/home/.claude/rules/anand.md"
   [ "$status" -eq 1 ]
 }
