@@ -49,3 +49,34 @@ teardown() { teardown_home; }
   run env PATH="$HOME/minimal" bash -c "source '$DOTFILES_DIR/lib/log.sh'; source '$DOTFILES_DIR/lib/os.sh'; source '$DOTFILES_DIR/lib/brew.sh'; brew_prefix() { echo '$HOME/nobrew'; }; os_name() { echo linux; }; brew_ensure"
   [ "$status" -ne 0 ]; [[ "$output" == *"sudo is not available"* ]]
 }
+
+@test "brew_ensure installs Homebrew at brew_prefix through the installer's --path" {
+  mkdir -p "$HOME/bin"
+  for c in git gcc make; do printf '#!/usr/bin/env bash\nexit 0\n' > "$HOME/bin/$c"; done
+  cat > "$HOME/installer" <<'SH'
+echo "$@" > "$HOME/installer-args"
+p="${1#--path=}"; mkdir -p "$p/bin"; printf '#!/usr/bin/env bash\ncase "$1" in shellenv) echo "export PATH=\\"%s/bin:\\$PATH\\"" ;; --version) echo "Homebrew 9.9.9" ;; esac\n' "$p" > "$p/bin/brew"; chmod +x "$p/bin/brew"
+SH
+  printf '#!/usr/bin/env bash\ncat "%s/installer"\n' "$HOME" > "$HOME/bin/curl"; chmod +x "$HOME/bin/"*
+  run env PATH="$HOME/bin:/usr/bin:/bin" bash -c "source '$DOTFILES_DIR/lib/log.sh'; source '$DOTFILES_DIR/lib/os.sh'; source '$DOTFILES_DIR/lib/brew.sh'; os_name() { echo linux; }; brew_ensure"
+  [ "$status" -eq 0 ]
+  [ "$(cat "$HOME/installer-args")" = "--path=$HOME/.brew" ]
+  [[ "$output" == *"Homebrew 9.9.9"* ]]
+}
+
+@test "brew_missing on linux leaves out casks that depend on macOS, on macos reports them" {
+  brew() {
+    case "$1 $2" in
+      "list --formula") echo jq ;;
+      "list --cask") : ;;
+      "info --cask") echo '{"casks":[{"token":"mac-app","depends_on":{"macos":{}}},{"token":"some-font","depends_on":{}}]}' ;;
+    esac
+  }
+  printf 'brew "jq"\ncask "mac-app"\ncask "some-font"\n' > "$HOME/a"
+  os_name() { echo linux; }
+  run brew_missing "$HOME/a"
+  [ "$output" = "some-font" ] || false
+  os_name() { echo macos; }
+  run brew_missing "$HOME/a"
+  [ "$output" = $'mac-app\nsome-font' ]
+}

@@ -25,7 +25,7 @@ brew_ensure() {
       fi
     fi
     log_info "installing Homebrew"
-    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" || die "homebrew install failed"
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" install.sh --path="$(brew_prefix)" || die "homebrew install failed"
     [ -x "$(brew_prefix)/bin/brew" ] || die "homebrew install finished but $(brew_prefix)/bin/brew is missing"
     eval "$("$(brew_prefix)/bin/brew" shellenv)"
   fi
@@ -64,14 +64,26 @@ brew_bundle_stdin() {
   brew_bundle "${files[@]}"
 }
 
-# Names from the Brewfiles that brew does not report as installed.
+# Casks from the Brewfiles that Homebrew's own data marks as macOS-only.
+brew_macos_casks() {
+  local casks
+  casks="$(brew_concat "$@" | sed -E -n 's/^cask "([^"]*)".*/\1/p' | sed 's|.*/||')"
+  [ -n "$casks" ] || return 0
+  # shellcheck disable=SC2086
+  brew info --cask --json=v2 $casks | jq -r '.casks[] | select(.depends_on.macos) | .token'
+}
+
+# Names from the Brewfiles that brew does not report as installed. Linux skips
+# macOS-only casks, as brew bundle does.
 brew_missing() {
-  local installed n
+  local installed n unsupported=""
   installed="$(
     brew list --formula -1 2>/dev/null
     brew list --cask -1 2>/dev/null
   )"
+  [ "$(os_name)" != linux ] || unsupported="$(brew_macos_casks "$@")"
   for n in $(brew_names "$@"); do
+    grep -qxF "$n" <<<"$unsupported" && continue
     grep -qxF "$n" <<<"$installed" || echo "$n"
   done
 }

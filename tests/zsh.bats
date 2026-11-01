@@ -50,7 +50,8 @@ Z="modules/zsh"
 }
 
 @test "antidote moves an existing clone to the pinned commit" {
-  [ -r /opt/homebrew/opt/antidote/share/antidote/antidote.zsh ] || skip "antidote missing"
+  link_real_brew
+  [ -r /opt/homebrew/opt/antidote/share/antidote/antidote.zsh ] || [ -r "$HOME/.brew/opt/antidote/share/antidote/antidote.zsh" ] || skip "antidote missing"
   # Real files, not links, so nothing here can touch the repo.
   mkdir -p "$HOME/.config"; cp -R "$DOTFILES_DIR/$Z/home/.config/zsh" "$HOME/.config/zsh"; cp "$DOTFILES_DIR/$Z/home/.zshenv" "$HOME/.zshenv"
   env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" zsh -i -c true 2>/dev/null
@@ -66,7 +67,8 @@ Z="modules/zsh"
 
 @test "interactive startup under 80ms" {
   if [ "$(uname -s)" = Darwin ] && pmset -g 2>/dev/null | grep -q "lowpowermode *1"; then skip "Low Power Mode throttles the CPU; measure on full power"; fi
-  [ -r /opt/homebrew/opt/antidote/share/antidote/antidote.zsh ] || [ -r /home/linuxbrew/.linuxbrew/opt/antidote/share/antidote/antidote.zsh ] || skip "antidote missing"
+  link_real_brew
+  [ -r /opt/homebrew/opt/antidote/share/antidote/antidote.zsh ] || [ -r "$HOME/.brew/opt/antidote/share/antidote/antidote.zsh" ] || skip "antidote missing"
   module_apply "$DOTFILES_DIR/$Z" >/dev/null
   env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" zsh -i -c true 2>/dev/null
   ms=$(HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" python3 -c '
@@ -143,7 +145,8 @@ print(int(min(t) * 1000))')
 }
 
 @test "login shell preflight: a declined switch is remembered and a failed chsh does not abort" {
-  [ -x /opt/homebrew/bin/zsh ] || [ -x /home/linuxbrew/.linuxbrew/bin/zsh ] || skip "homebrew zsh not installed"
+  link_real_brew
+  [ -x /opt/homebrew/bin/zsh ] || [ -x "$HOME/.brew/bin/zsh" ] || skip "homebrew zsh not installed"
   mkdir -p "$HOME/bin"; printf '#!/bin/sh\nexit 1\n' > "$HOME/bin/chsh"
   printf '#!/bin/sh\necho "UserShell: /bin/zsh"\n' > "$HOME/bin/dscl"
   printf '#!/bin/sh\necho "u:x:1:1::/home/u:/bin/bash"\n' > "$HOME/bin/getent"
@@ -176,4 +179,11 @@ print(int(min(t) * 1000))')
   [ "$output" = 5 ]
   run env $vars zsh -fc "source '$DOTFILES_DIR/$Z/home/.zshenv'; env | grep -cE '^GIT_(AUTHOR|COMMITTER)_|^GIT_SSH_COMMAND='"
   [ "$output" = 0 ]
+}
+
+@test "zshenv puts a Homebrew in the home on PATH with its repository under Homebrew/" {
+  mkdir -p "$HOME/.brew/bin" "$HOME/.brew/Homebrew"; printf '#!/bin/sh\n' > "$HOME/.brew/bin/brew"; chmod +x "$HOME/.brew/bin/brew"
+  run env -i HOME="$HOME" PATH=/usr/bin:/bin zsh -fc "source '$DOTFILES_DIR/$Z/home/.zshenv'; echo \$HOMEBREW_PREFIX \$HOMEBREW_REPOSITORY; print -l \$path"
+  [ "${lines[0]}" = "$HOME/.brew $HOME/.brew/Homebrew" ]
+  [[ "$output" == *$'\n'"$HOME/.brew/bin"$'\n'* ]]
 }

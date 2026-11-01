@@ -8,6 +8,8 @@ for f in log os link profile module brew secrets ssh overlay git; do
   source "$DOTFILES_DIR/lib/$f.sh"
 done
 git_env_clear
+if [ -x "$(brew_prefix)/bin/brew" ]; then eval "$("$(brew_prefix)/bin/brew" shellenv)"; fi
+PATH="$HOME/.local/bin:$PATH"
 
 problems=0
 problem() {
@@ -119,6 +121,7 @@ fi
 
 # Brew
 if [ "${DOTFILES_SKIP_BREW:-0}" != 1 ] && command -v brew >/dev/null; then
+  [ "$(brew --prefix)" = "$(brew_prefix)" ] || problem "homebrew prefix is $(brew --prefix), expected $(brew_prefix)"
   brewfiles="$(printf '%s\n' "$dirs" | module_brewfiles_stdin)"
   missing=""
   [ -z "$brewfiles" ] || missing="$(brew_missing_stdin <<<"$brewfiles")"
@@ -135,16 +138,13 @@ done <<<"$dirs"
 
 # Login shell (only when the zsh module is enabled)
 case "$managed_names" in *" zsh "*)
-  want=""
-  for p in /opt/homebrew/bin/zsh /usr/local/bin/zsh /home/linuxbrew/.linuxbrew/bin/zsh; do
-    [ -x "$p" ] && want="$p" && break
-  done
+  want="$(brew_prefix)/bin/zsh"
   if [ "$(uname -s)" = Darwin ]; then
     cur="$(dscl . -read "/Users/$(id -un)" UserShell 2>/dev/null | awk '{print $2}')"
   else
     cur="$(getent passwd "$(id -un)" | cut -d: -f7)"
   fi
-  if [ -z "$want" ]; then
+  if [ ! -x "$want" ]; then
     problem "login shell: homebrew zsh not installed"
   elif [ "$cur" != "$want" ]; then
     # Without sudo the switch is impossible (chsh needs the shell in /etc/shells): warn and point at the alternative.

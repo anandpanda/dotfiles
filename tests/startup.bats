@@ -11,7 +11,8 @@ teardown() { teardown_home; }
 @test "full stack interactive startup under 80ms" {
   if [ "$(uname -s)" = Darwin ] && pmset -g 2>/dev/null | grep -q "lowpowermode *1"; then skip "Low Power Mode throttles the CPU; measure on full power"; fi
   for t in starship atuin fzf zoxide eza bat; do command -v $t >/dev/null || skip "$t missing"; done
-  [ -r /opt/homebrew/opt/antidote/share/antidote/antidote.zsh ] || [ -r /home/linuxbrew/.linuxbrew/opt/antidote/share/antidote/antidote.zsh ] || skip "antidote missing"
+  link_real_brew
+  [ -r /opt/homebrew/opt/antidote/share/antidote/antidote.zsh ] || [ -r "$HOME/.brew/opt/antidote/share/antidote/antidote.zsh" ] || skip "antidote missing"
   for m in cli zsh starship atuin; do module_apply "$DOTFILES_DIR/modules/$m" >/dev/null; done
   env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" zsh -i -c true 2>/dev/null
   run env HOME="$HOME" ZDOTDIR="$HOME/.config/zsh" zsh -i -c 'echo "${PROMPT:+S}${+functions[_atuin_search]}${+functions[__zoxide_z]}${+functions[fzf-file-widget]}"; [[ $PROMPT == *starship* ]] && echo PROMPT-OK'

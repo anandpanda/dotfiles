@@ -32,7 +32,7 @@ case "$(uname -s)" in
         exit 1
       fi
     fi
-    prefix=/home/linuxbrew/.linuxbrew
+    prefix="$HOME/.brew"
     ;;
   *)
     echo "unsupported OS" >&2
@@ -41,7 +41,7 @@ case "$(uname -s)" in
 esac
 
 if [ ! -x "$prefix/bin/brew" ]; then
-  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+  NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)" install.sh --path="$prefix"
 fi
 eval "$("$prefix/bin/brew" shellenv)"
 brew install -q git just

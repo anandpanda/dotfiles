@@ -21,6 +21,6 @@ brew_prefix() {
   case "$(os_name)/$(os_arch)" in
     macos/arm64) echo /opt/homebrew ;;
     macos/x86_64) echo /usr/local ;;
-    linux/*) echo /home/linuxbrew/.linuxbrew ;;
+    linux/*) echo "$HOME/.brew" ;;
   esac
 }

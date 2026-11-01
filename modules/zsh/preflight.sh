@@ -3,11 +3,9 @@
 set -euo pipefail
 source "$DOTFILES_DIR/lib/log.sh"
 source "$DOTFILES_DIR/lib/profile.sh"
-want=""
-for p in /opt/homebrew/bin/zsh /usr/local/bin/zsh /home/linuxbrew/.linuxbrew/bin/zsh; do
-  [ -x "$p" ] && want="$p" && break
-done
-[ -n "$want" ] || {
+source "$DOTFILES_DIR/lib/os.sh"
+want="$(brew_prefix)/bin/zsh"
+[ -x "$want" ] || {
   log_warn "login shell: homebrew zsh not installed yet (rerun install after packages)"
   exit 0
 }

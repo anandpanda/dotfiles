@@ -78,6 +78,62 @@ plain file (`~/.ssh/git-commit-signing/coder`) and authenticates as the work
 account from an SSH config block without `coder gitssh`, so Coder uses the
 same mechanism as the Mac: an SSH config entry naming a key file.
 
+## Addendum: Homebrew lives in home on Linux (2026-11-01)
+
+Status: approved ("yes", 2026-11-01)
+
+**Found on the real workspace.** Homebrew's Linux default prefix,
+`/home/linuxbrew/.linuxbrew`, is on the container's root filesystem (overlay),
+which the image rebuilds on every workspace start. Only the home volume
+(`/home/coder`, ext4) persists. So every start reinstalls Homebrew and every
+formula (1.6 GB; about 30 packages including zsh, mise and gh), VS Code waits
+for that startup script, and the tools are missing until it ends. Only the
+download cache survives (`~/.cache/Homebrew`, 792 MB).
+
+**Decision.** On Linux, Homebrew's prefix is `~/.brew`, on the user's own
+volume. macOS keeps its default prefix.
+
+- Homebrew supports a custom prefix with prebuilt bottles (Tier 1) when it is
+  no longer in bytes than the default (26 on Linux): docs.brew.sh/Support-Tiers.
+  `/home/coder/.brew` is 17 bytes. The same page says this support "is new and
+  may not yet be fully stable".
+- The official installer takes `--path=PATH` for the prefix and itself aborts
+  when the path is longer than the default, so the dotfiles add no length
+  check (installer source, `install.sh` usage and the length abort).
+- On Linux the installer puts the repository at `<prefix>/Homebrew`, as for the
+  default prefix, so the shell rule for `HOMEBREW_REPOSITORY` is unchanged.
+- No sudo: the prefix is in a folder the user owns.
+- General rule, not a Coder branch: every Linux machine gets the same prefix.
+  The only Linux machines are Coder workspaces and CI, so there is nothing to
+  migrate.
+
+**Rejected.** The template keeping `/home/linuxbrew` on a volume or baking the
+tools into its image (right owner, but the team's shared template); a symlink
+from `/home/linuxbrew` into home recreated with sudo at every start (rewrites
+the layer the image owns); accepting the reinstall (minutes and a blocked VS
+Code connection at every start).
+
+**Changes.**
+
+- `lib/os.sh` `brew_prefix`: Linux prints `$HOME/.brew`.
+- `lib/brew.sh`: the installer runs with `--path="$(brew_prefix)"`.
+- `bootstrap.sh`: its Linux prefix is `$HOME/.brew` and it passes the same
+  `--path` (it runs before the repo, so it cannot source `lib/os.sh`).
+- `.zshenv`, `doctor.sh`, the zsh preflight, `justfile` container checks, CI
+  and tests: `/home/linuxbrew/.linuxbrew` becomes `$HOME/.brew`.
+- Doctor reports when `brew --prefix` differs from `brew_prefix`.
+
+**Tests first.** `brew_prefix` on Linux is `$HOME/.brew`; the Homebrew install
+passes `--path` with that prefix (fake curl serving a fake installer that
+records its arguments); `.zshenv` with a fake `$HOME/.brew/bin/brew` puts it on
+`PATH` with `HOMEBREW_REPOSITORY=$HOME/.brew/Homebrew`; doctor flags a
+mismatched `brew --prefix`.
+
+**Rollout.** After push, the next workspace start installs into `~/.brew`,
+pouring from the surviving cache; later starts find everything installed.
+`just test` and `just test-server` run the full Linux install in a container
+before push.
+
 ## Out of scope
 
 `/retro` (after this phase). Retiring old workspaces is Anand's call.

@@ -1,6 +1,6 @@
 # Shared setup for all bats files. Sources lib and isolates HOME.
 setup_home() {
-  export HOME
+  export REAL_HOME="${REAL_HOME:-$HOME}" HOME
   HOME="$(mktemp -d)"
   export _TEST_HOME="$HOME"
   export DOTFILES_DIR="${BATS_TEST_DIRNAME}/.."
@@ -19,6 +19,11 @@ teardown_home() {
     /tmp/* | /var/folders/* | /private/var/folders/*) rm -rf "$_TEST_HOME" ;;
   esac
   unset _TEST_HOME
+}
+
+# Tests that start a real zsh need the real Homebrew, which on Linux lives in the real home.
+link_real_brew() {
+  [ ! -d "$REAL_HOME/.brew" ] || ln -s "$REAL_HOME/.brew" "$HOME/.brew"
 }
 
 # Hermetic full installs: puts logging fakes for every external tool a module can

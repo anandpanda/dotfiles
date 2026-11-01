@@ -15,5 +15,12 @@ teardown() { teardown_home; }
 
 @test "brew_prefix is a known path" {
   run brew_prefix
-  [[ "$output" == "/opt/homebrew" || "$output" == "/usr/local" || "$output" == "/home/linuxbrew/.linuxbrew" ]]
+  [[ "$output" == "/opt/homebrew" || "$output" == "/usr/local" || "$output" == "$HOME/.brew" ]]
+}
+
+@test "brew_prefix is the default on macos and the user's home on linux" {
+  os_name() { echo macos; }; os_arch() { echo arm64; }
+  [ "$(brew_prefix)" = /opt/homebrew ]
+  os_name() { echo linux; }; os_arch() { echo x86_64; }
+  [ "$(brew_prefix)" = "$HOME/.brew" ]
 }

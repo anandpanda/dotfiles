@@ -8,10 +8,10 @@ export DOTFILES_DIR="${DOTFILES_DIR:-${${(%):-%x}:A:h:h:h:h}}"
 
 # Homebrew on PATH for every zsh, login or script. Static instead of `brew shellenv`:
 # same result, no process spawn.
-for _p in /opt/homebrew /usr/local /home/linuxbrew/.linuxbrew; do
+for _p in "$HOME/.brew" /opt/homebrew /usr/local; do
   [[ -x $_p/bin/brew ]] || continue
   export HOMEBREW_PREFIX="$_p" HOMEBREW_CELLAR="$_p/Cellar" HOMEBREW_REPOSITORY="$_p"
-  [[ $_p == /home/linuxbrew/.linuxbrew ]] && HOMEBREW_REPOSITORY="$_p/Homebrew"
+  [[ -d $_p/Homebrew ]] && HOMEBREW_REPOSITORY="$_p/Homebrew"
   typeset -U path fpath
   path=("$_p/bin" "$_p/sbin" $path)
   fpath=("$_p/share/zsh/site-functions" $fpath)

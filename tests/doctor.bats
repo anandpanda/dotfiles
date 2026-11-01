@@ -143,3 +143,30 @@ teardown() { teardown_home; }
   run env GIT_AUTHOR_NAME=a GIT_AUTHOR_EMAIL=b GIT_COMMITTER_NAME=c GIT_COMMITTER_EMAIL=d GIT_SSH_COMMAND=e "$DOTFILES_DIR/doctor.sh"
   [[ "$output" == *"ENV:0"* ]]
 }
+
+@test "a Homebrew outside brew_prefix is reported" {
+  unset DOTFILES_SKIP_BREW
+  mkdir -p "$HOME/bin"; printf '#!/bin/sh\n[ "$1" = --prefix ] && echo /elsewhere\nexit 0\n' > "$HOME/bin/brew"
+  printf '#!/bin/sh\ncase "$1" in -s) echo Linux ;; -m) echo x86_64 ;; esac\n' > "$HOME/bin/uname"; chmod +x "$HOME/bin/brew" "$HOME/bin/uname"
+  PATH="$HOME/bin:/usr/bin:/bin" run "$DOTFILES_DIR/doctor.sh"
+  [ "$status" -eq 1 ]
+  [[ "$output" == *"homebrew prefix is /elsewhere"* ]]
+}
+
+@test "doctor finds Homebrew at brew_prefix when the caller's PATH lacks it" {
+  unset DOTFILES_SKIP_BREW
+  mkdir -p "$HOME/bin" "$HOME/.brew/bin"
+  printf '#!/bin/sh\ncase "$1" in -s) echo Linux ;; -m) echo x86_64 ;; esac\n' > "$HOME/bin/uname"
+  printf '#!/bin/sh\ncase "$1" in shellenv) echo "export PATH=\\"%s/.brew/bin:\\$PATH\\"" ;; --prefix) echo "%s/.brew" ;; esac\n' "$HOME" "$HOME" > "$HOME/.brew/bin/brew"
+  chmod +x "$HOME/bin/uname" "$HOME/.brew/bin/brew"
+  PATH="$HOME/bin:/usr/bin:/bin" run "$DOTFILES_DIR/doctor.sh"
+  [[ "$output" == *"ok brew"* ]]
+}
+
+@test "module doctors see per-user programs in ~/.local/bin when the caller's PATH lacks it" {
+  mkdir -p "$HOME/.local/bin"; printf '#!/bin/sh\n' > "$HOME/.local/bin/probe-tool"; chmod +x "$HOME/.local/bin/probe-tool"
+  printf '#!/usr/bin/env bash\ncommand -v probe-tool >/dev/null || { echo "probe-tool missing"; exit 1; }\n' > "$DOTFILES_MODULES/one/doctor.sh"
+  PATH="/usr/bin:/bin" run "$DOTFILES_DIR/doctor.sh"
+  [[ "$output" != *"probe-tool missing"* ]] || false
+  [ "$status" -eq 0 ]
+}
