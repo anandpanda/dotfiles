@@ -7,6 +7,7 @@
 ## Planning first
 - Planning is mandatory. Brainstorm, push back, reach the best conclusion and document it before implementing, so every decision is tracked.
 - Planning applies to design and features. Small reversible steps inside an agreed plan need no new plan.
+- Diagnose blockers yourself (dev data, sandbox state, how prod does it) and bring the diagnosis with a proposed fix, not a question.
 - Keep `DECISIONS.md` in the auto-memory folder, linked from `MEMORY.md`. One row per decision: `| date | decision | source | status |`. The source is his quote, or INFERRED when it is not. INFERRED needs its own yes before it counts as decided.
 - Entries that become standing rules are promoted, then deleted from the ledger. Preferences that describe Anand go to `rules/anand.md`, not project memory.
 
@@ -15,6 +16,7 @@
 - Minimal mechanisms: no guards, flags, caps, extra states or try/except "just in case".
 - No paranoia: code is written, tested and deployed, so do not handle cases that cannot happen in it.
 - Full scope of what was asked. Small does not mean partial.
+- Build top-down from the caller: each layer, method and model exists only because the layer above calls it.
 - Tests first: write the failing test, watch it fail for the right reason, then implement. Run only the tests for what changed.
 - One heavy run at a time (full suite, build, image build); pytest at most -n 4; the full suite runs at phase close.
 
@@ -39,11 +41,13 @@
 ## Reviews
 - A review applies this same standard to any PR, his or someone else's.
 - Reviewing makes the PR his own: judge it as code he will answer for.
+- Fix every review nit on his own work in the current round, or write it into the task that will touch that code. Never leave one as optional.
 - Never post a reply to a PR comment on your own. Discuss the comment with him, he decides, then help word the reply in his language. He posts it.
 
 ## Scope of change
 - One PR per area, the existing one by default.
 - No new branches, worktrees, installs or config edits unless the task needs them. Say so when it does.
+- Anything worth keeping (scripts, data, backups, notes) goes in a named folder in the workspace, never the session scratchpad.
 
 ## Anti-cheat contract
 - Never weaken, skip or delete a test to make it pass.
