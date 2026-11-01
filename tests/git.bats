@@ -354,3 +354,24 @@ coder_machine() { # extra lines appended after the template block
   bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
   grep -qxF "w@work namespaces=\"git\" $(cut -d' ' -f1,2 "$HOME/.ssh/id_ed25519_work.pub")" "$HOME/.local/state/git/allowed_signers"
 }
+
+@test "doctor reports an effective signing key that is not one of the identity's ssh keys" {
+  mkdir -p "$HOME/.ssh"; ssh-keygen -q -t ed25519 -N "" -C o -f "$HOME/.ssh/other"
+  ssh-keygen -q -t ed25519 -N "" -C w -f "$HOME/.ssh/id_ed25519_work"
+  ssh-keygen -q -t ed25519 -N "" -C p -f "$HOME/.ssh/id_ed25519_personal"
+  bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
+  run bash "$DOTFILES_DIR/$G/doctor.sh"
+  [ "$status" -eq 0 ]
+  printf '[user]\n    signingkey = %s/.ssh/other.pub\n' "$HOME" >> "$HOME/.gitconfig"
+  bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
+  run bash "$DOTFILES_DIR/$G/doctor.sh"
+  [ "$status" -ne 0 ]
+  [[ "$output" == *"signing key for work is $HOME/.ssh/other.pub, not one of its ssh keys"* ]] || false
+}
+
+@test "on a Coder-like machine the Coder key counts as the work identity's ssh key" {
+  coder_machine
+  run bash "$DOTFILES_DIR/$G/doctor.sh"
+  [ "$status" -eq 0 ]
+  case "$output" in *"not one of its ssh keys"*) false ;; esac
+}
