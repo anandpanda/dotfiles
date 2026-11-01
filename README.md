@@ -18,8 +18,12 @@ Day to day:
   `home/` (-> `~`), `install.sh`, `module.toml` (os restriction), `CHECKLIST.md`.
 - `profiles/<name>.toml`: which modules. `work` extends `personal` and adds the overlay.
 - overlay: a private repo with the same `modules/` shape for work-only config,
-  checked out at `~/personal/dotfiles-work`. Its url is given once and remembered
-  per machine; it is never in this repo.
+  checked out at `~/personal/dotfiles-work`. Its url is `--overlay`, else the
+  remembered one, else the default ssh alias url in `lib/overlay.sh`.
+- A Coder workspace (`CODER_WORKSPACE_ID` set) installs `server-work` when no
+  profile is given or remembered. `~/.gitconfig` is a plain machine file whose
+  first line includes the repo config, so tools that append to it never write
+  into the repo.
 - `~/.secrets/`: secret values, one file each, never in any repo.
 - work or personal is picked by directory: any module may list folders in
   `contexts/personal` or `contexts/work` (defaults `~/personal`, `~/work`); git

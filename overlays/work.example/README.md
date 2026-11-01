@@ -12,5 +12,6 @@ public modules. Same module rules as the public repo. Typical contents:
 Never commit secret values here either. Use ~/.secrets.
 Create a real one with: just overlay-init ~/personal/dotfiles-work
 Host it as a private repo on your own account (it is your config, it follows
-you between jobs) and give install the ssh-alias url:
+you between jobs). Install fetches it over the ssh alias url, ignoring the
+machine's global git config; give your own url once with
     just install work --overlay git@github.com-personal:you/dotfiles-work.git
