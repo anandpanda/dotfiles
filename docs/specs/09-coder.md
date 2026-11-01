@@ -27,6 +27,10 @@ personal work there).
 - Coder's HTTPS credential cannot read the private overlay (403). SSH with the
   Coder key can (the work account is a collaborator on the overlay, with push
   access; Anand accepted push over moving the overlay to an organization).
+- To verify on the real workspace: processes that do not start from zsh (the
+  VS Code server's own git, a non-zsh login shell where chsh is not possible)
+  still see the template's `GIT_AUTHOR_*`, `GIT_COMMITTER_*` and
+  `GIT_SSH_COMMAND`; the shell rule covers zsh and the dotfiles scripts only.
 - Home is a persistent volume; Claude history lives in `~/.claude/projects`
   (about 1,200 transcripts, 65 memory notes on the current workspace).
 
