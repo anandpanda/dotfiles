@@ -25,13 +25,16 @@ _contexts_read() { # CONTEXT FILE -> context<TAB>folder per usable line
 
 contexts_profile() { echo "${DOTFILES_PROFILE:-$(profile_default)}"; }
 
-# Unique context<TAB>folder lines, shortest folder first so a nested folder's include wins in git.
+# Unique context<TAB>folder lines for the identities the profile declares, shortest folder
+# first so a nested folder's include wins in git.
 contexts_collect() {
-  local dirs d m
-  dirs="$(profile_module_dirs "$(contexts_profile)")" || return 1
+  local profile dirs ids d m
+  profile="$(contexts_profile)"
+  dirs="$(profile_module_dirs "$profile")" || return 1
+  ids="$(profile_identities "$profile")"
   while IFS= read -r d; do
     [ -n "$d" ] || continue
-    for m in personal work; do
+    for m in $ids; do
       [ ! -f "$d/contexts/$m" ] || _contexts_read "$m" "$d/contexts/$m"
     done
   done <<<"$dirs" | awk -F'\t' '!seen[$0]++ { print length($2) "\t" $0 }' | sort -s -n -k1,1 | cut -f2-

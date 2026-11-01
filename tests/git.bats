@@ -10,10 +10,10 @@ setup() {
   [ ! -L "$HOME/.config/git/identity.work" ] || { echo "identity.work is still a link"; return 1; }
   export XDG_STATE_HOME="$HOME/.local/state"
   printf '[include] path = ~/.config/git/base.gitconfig\n' > "$HOME/.gitconfig"
-  printf '[user]\n  name = W\n  email = w@work\n  signingkey = ~/.ssh/id_ed25519_work.pub\n' > "$HOME/.config/git/identity.work"
+  printf '[user]\n  name = W\n  email = w@work\n  signingkey = ~/.ssh/id_ed25519_work.pub\n[commit]\n  gpgsign = true\n[url "git@github.com-work:"]\n  insteadOf = git@github.com:\n  insteadOf = https://github.com/\n  insteadOf = ssh://git@github.com/\n' > "$HOME/.config/git/identity.work"
   mkdir -p "$HOME/work/r" "$HOME/personal/r" "$HOME/elsewhere/r"
   for d in work personal elsewhere; do git -C "$HOME/$d/r" init -q; done
-  export GIT_CONFIG_NOSYSTEM=1
+  export GIT_CONFIG_NOSYSTEM=1 DOTFILES_PROFILE=work
   contexts_write "$(contexts_collect)" >/dev/null
 }
 teardown() { teardown_home; }
@@ -290,7 +290,7 @@ work_identity() {
 coder_machine() { # extra lines appended after the template block
   work_identity
   { printf '[include] path = ~/.config/git/base.gitconfig\n'; coder_template_block; printf '%b' "${1:-}"; } > "$HOME/.gitconfig"
-  export DOTFILES_PROFILE=work
+  export DOTFILES_PROFILE=server-work
   bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
 }
 
@@ -323,6 +323,7 @@ coder_machine() { # extra lines appended after the template block
 }
 
 @test "a profile without the work identity has no work folder checks" {
+  export DOTFILES_PROFILE=personal
   bash "$DOTFILES_DIR/$G/install.sh" >/dev/null
   printf '[commit]\n    gpgsign = false\n' >> "$HOME/.gitconfig"
   run bash "$DOTFILES_DIR/$G/doctor.sh"
@@ -333,6 +334,7 @@ coder_machine() { # extra lines appended after the template block
 @test "on a Coder-like machine allowed_signers holds the work email with the Coder key, and a work commit verifies" {
   coder_machine
   f="$HOME/.local/state/git/allowed_signers"
+  [ "$(grep -c . "$f")" = 1 ]
   grep -qxF "w@work namespaces=\"git\" $(ssh-keygen -y -f "$HOME/.ssh/git-commit-signing/coder" | cut -d' ' -f1,2)" "$f"
   cd "$HOME/work/r" && touch f && git add f && git commit -qm "feat: signed on coder"
   run git log -1 --show-signature

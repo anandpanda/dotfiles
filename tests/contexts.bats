@@ -14,8 +14,8 @@ teardown() { teardown_home; }
 fake_tree() {
   export DOTFILES_MODULES="$HOME/mods" DOTFILES_PROFILES="$HOME/profiles" DOTFILES_PROFILE=p
   mkdir -p "$DOTFILES_MODULES/a/contexts" "$DOTFILES_MODULES/b/contexts" "$DOTFILES_MODULES/c/contexts" "$DOTFILES_PROFILES" "$O/modules/x/contexts"
-  printf 'modules = ["a", "b"]\noverlay = true\n' > "$DOTFILES_PROFILES/p.toml"
-  printf 'modules = ["a", "b"]\n' > "$DOTFILES_PROFILES/q.toml"
+  printf 'identities = ["personal", "work"]\nmodules = ["a", "b"]\noverlay = true\n' > "$DOTFILES_PROFILES/p.toml"
+  printf 'identities = ["personal", "work"]\nmodules = ["a", "b"]\n' > "$DOTFILES_PROFILES/q.toml"
   printf '# personal roots\n~/personal\n\n' > "$DOTFILES_MODULES/a/contexts/personal"
   printf '~/work/\n' > "$DOTFILES_MODULES/a/contexts/work"
   printf '  ~/work   # again\n' > "$DOTFILES_MODULES/b/contexts/work"
@@ -25,7 +25,7 @@ fake_tree() {
 
 # Real git module in a temp HOME with two identities that differ only by email.
 real_git() {
-  link_tree "$DOTFILES_DIR/$G/home" "$HOME" >/dev/null
+  printf '[include] path = ~/.config/git/base.gitconfig\n' > "$HOME/.gitconfig"
   mkdir -p "$HOME/.config/git"; cp -RL "$DOTFILES_DIR/$G/config/." "$HOME/.config/git/"
   printf '[user]\n  name = P\n  email = p@personal\n' > "$HOME/.config/git/identity.personal"
   printf '[user]\n  name = W\n  email = w@work\n' > "$HOME/.config/git/identity.work"
@@ -59,7 +59,7 @@ email() { mkdir -p "$1" && git -C "$1" init -q && git -C "$1" config user.email 
 }
 
 @test "public defaults are exactly ~/personal and ~/work" {
-  DOTFILES_PROFILE=personal run contexts_collect
+  DOTFILES_PROFILE=work run contexts_collect
   [ "$status" -eq 0 ]
   [ "$output" = "work$TAB$HOME/work"$'\n'"personal$TAB$HOME/personal" ]
 }
@@ -141,4 +141,18 @@ email() { mkdir -p "$1" && git -C "$1" init -q && git -C "$1" config user.email 
   printf '~/company\n' > "$DOTFILES_MODULES/b/contexts/personal"
   run bash "$DOTFILES_DIR/$G/install.sh"
   [ "$status" -ne 0 ]; [[ "$output" == *"both personal and work"*"$HOME/company"* ]]
+}
+
+@test "collect keeps only the contexts whose identity the profile declares" {
+  fake_tree
+  printf 'identities = ["work"]\nmodules = ["a", "b"]\noverlay = true\n' > "$DOTFILES_PROFILES/p.toml"
+  run contexts_collect
+  [ "$status" -eq 0 ]; [[ "$output" != *personal* ]]; [[ "$output" == *"work$TAB$HOME/work"* ]]
+}
+
+@test "real profiles: work has personal and work folders, server-work only work folders" {
+  DOTFILES_PROFILE=work run contexts_collect
+  [[ "$output" == *"personal$TAB$HOME/personal"* ]]; [[ "$output" == *"work$TAB$HOME/work"* ]]
+  DOTFILES_PROFILE=server-work run contexts_collect
+  [ "$status" -eq 0 ]; [[ "$output" != *"personal$TAB"* ]]; [[ "$output" == *"work$TAB$HOME/work"* ]]
 }

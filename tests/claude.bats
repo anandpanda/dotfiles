@@ -298,8 +298,8 @@ frag_tree() {
   export DOTFILES_MODULES="$HOME/mods" DOTFILES_PROFILES="$HOME/profiles" DOTFILES_PROFILE=p
   O="$HOME/personal/dotfiles-work"
   mkdir -p "$DOTFILES_MODULES/a" "$DOTFILES_MODULES/b" "$DOTFILES_MODULES/c" "$DOTFILES_PROFILES" "$O/modules/x"
-  printf 'modules = ["a", "b"]\noverlay = true\n' >"$DOTFILES_PROFILES/p.toml"
-  printf 'modules = ["a", "b"]\n' >"$DOTFILES_PROFILES/q.toml"
+  printf 'identities = ["personal", "work"]\nmodules = ["a", "b"]\noverlay = true\n' >"$DOTFILES_PROFILES/p.toml"
+  printf 'identities = ["personal", "work"]\nmodules = ["a", "b"]\n' >"$DOTFILES_PROFILES/q.toml"
   echo '{"permissions":{"ask":["Bash(deploy *)","Bash(gh pr merge *)"]},"env":{"A":"1"}}' >"$DOTFILES_MODULES/a/claude-settings.json"
   echo '{"permissions":{"ask":["Bash(deploy *)"],"deny":["Read(~/.x/**)"]},"env":{"B":"2"}}' >"$DOTFILES_MODULES/b/claude-settings.json"
   echo '{"permissions":{"ask":["Bash(not-in-profile)"]}}' >"$DOTFILES_MODULES/c/claude-settings.json"
