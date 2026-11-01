@@ -5,7 +5,7 @@ setup_home() {
   export _TEST_HOME="$HOME"
   export DOTFILES_DIR="${BATS_TEST_DIRNAME}/.."
   export DRY_RUN=0
-  unset CODER_WORKSPACE_ID GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL GIT_SSH_COMMAND
+  unset CODER_WORKSPACE_ID GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL GIT_SSH_COMMAND SOPS_AGE_KEY_FILE SOPS_AGE_RECIPIENTS
   # mise resolves home from the user database, not $HOME: point every mise dir at
   # the temp home so no test reads or writes the real config, data, state or trust.
   export MISE_GLOBAL_CONFIG_FILE="$HOME/.config/mise/config.toml"
