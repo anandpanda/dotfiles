@@ -147,12 +147,17 @@ email() { mkdir -p "$1" && git -C "$1" init -q && git -C "$1" config user.email 
   fake_tree
   printf 'identities = ["work"]\nmodules = ["a", "b"]\noverlay = true\n' > "$DOTFILES_PROFILES/p.toml"
   run contexts_collect
-  [ "$status" -eq 0 ]; [[ "$output" != *personal* ]]; [[ "$output" == *"work$TAB$HOME/work"* ]]
+  [ "$status" -eq 0 ]
+  [[ "$output" != *personal* ]] || false
+  [[ "$output" == *"work$TAB$HOME/work"* ]] || false
 }
 
 @test "real profiles: work has personal and work folders, server-work only work folders" {
   DOTFILES_PROFILE=work run contexts_collect
-  [[ "$output" == *"personal$TAB$HOME/personal"* ]]; [[ "$output" == *"work$TAB$HOME/work"* ]]
+  [[ "$output" == *"personal$TAB$HOME/personal"* ]] || false
+  [[ "$output" == *"work$TAB$HOME/work"* ]] || false
   DOTFILES_PROFILE=server-work run contexts_collect
-  [ "$status" -eq 0 ]; [[ "$output" != *"personal$TAB"* ]]; [[ "$output" == *"work$TAB$HOME/work"* ]]
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"personal$TAB"* ]] || false
+  [[ "$output" == *"work$TAB$HOME/work"* ]] || false
 }

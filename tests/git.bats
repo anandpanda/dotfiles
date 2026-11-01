@@ -270,7 +270,8 @@ work_identity() {
   git config --global credential.helper store
   [ "$(head -1 "$HOME/.gitconfig")" = "[include] path = ~/.config/git/base.gitconfig" ]
   grep -q "helper = store" "$HOME/.gitconfig"
-  ! grep -q "helper" "$HOME/.config/git/base.gitconfig"
+  run grep -q "helper" "$HOME/.config/git/base.gitconfig"
+  [ "$status" -eq 1 ]
   [ "$(git config --get alias.st)" = "status -sb" ]
 }
 
