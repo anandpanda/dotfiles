@@ -169,8 +169,13 @@ private half lives in the overlay's `docs/08-work-layer.md`.
 ## Done: Phase 9, Coder workspaces
 
 Spec `docs/specs/09-coder.md` (four addenda written from the real workspace);
-the overlay's half is `docs/09-coder-cli.md`. Workspace JaiShreeRam runs the
-team's stable template with this repo as its Dotfiles URL.
+the overlay's half is `docs/09-coder-cli.md`. Workspaces JaiShreeRam and
+JaiShreeHanuman run the team's stable template with this repo as their Dotfiles
+URL; each has its own age key and its own copy of the secrets file. The old
+anand-hq and General were deleted on 2026-11-02 after their keepers moved over
+(Claude history and memory, the evals project to `~/zamp/evals_project` on
+JaiShreeRam, the missing secrets into sops). `coder-run` (overlay work-tools)
+runs a command on a workspace with binary-safe pipes.
 - Profile: inside a Coder workspace install defaults to `server-work` (work
   identity only). `~/.gitconfig` is a plain machine file that includes the repo
   config; the shell and the scripts clear the template's injected git identity
@@ -216,9 +221,6 @@ team's stable template with this repo as its Dotfiles URL.
 - Ruling (work dev setup, when Anand asks for it): servers and services
   (Postgres, Redis, queues, anything that listens on a port) run in Docker,
   per project via compose; CLIs, runtimes (mise), and the editor stay local.
-- Old workspaces anand-hq and General: deleting them is Anand's call. Everything
-  needed is on JaiShreeRam; anand-hq still holds the originals of the memory
-  notes deleted in the audit.
 - GitHub: register ~/.ssh/id_ed25519_personal.pub as a *Signing Key* so
   commits show "Verified" (they already verify locally).
 - Old configs are in `~/.dotfiles-backup/`.
