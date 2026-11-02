@@ -11,6 +11,9 @@ setup_home() {
   export MISE_GLOBAL_CONFIG_FILE="$HOME/.config/mise/config.toml"
   export MISE_CONFIG_DIR="$HOME/.config/mise" MISE_DATA_DIR="$HOME/.local/share/mise"
   export MISE_STATE_DIR="$HOME/.local/state/mise" MISE_CACHE_DIR="$HOME/.cache/mise"
+  # The shared env.sh puts mise's shims on PATH; with mise isolated here they cannot resolve
+  # a tool, so commands such as python3 must come from the system, not the shims.
+  PATH="$(printf '%s\n' "$PATH" | tr ':' '\n' | grep -v '/mise/shims$' | paste -sd: -)"
 }
 # Only ever removes the temp dir setup_home created. Never a real home.
 teardown_home() {
