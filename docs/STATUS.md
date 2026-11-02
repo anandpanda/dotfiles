@@ -166,10 +166,38 @@ private half lives in the overlay's `docs/08-work-layer.md`.
   overlay. Doctor reports recorded links that dangle. Dry runs now run module
   install scripts in dry mode and walk the overlay, so they show the full plan.
 
+## Done: Phase 9, Coder workspaces
+
+Spec `docs/specs/09-coder.md` (four addenda written from the real workspace);
+the overlay's half is `docs/09-coder-cli.md`. Workspace JaiShreeRam runs the
+team's stable template with this repo as its Dotfiles URL.
+- Profile: inside a Coder workspace install defaults to `server-work` (work
+  identity only). `~/.gitconfig` is a plain machine file that includes the repo
+  config; the shell and the scripts clear the template's injected git identity
+  and ssh command; the work identity signs with the Coder account key. The
+  overlay is fetched over SSH with that key.
+- Homebrew lives in the home on Linux (`~/.brew`): the template's root
+  filesystem resets every start, so the old prefix reinstalled every formula.
+- The repo owns only files no other tool writes. VS Code settings: install
+  merges the repo's keys into a plain settings file the machine owns (Remote
+  SSH had written a Coder hostname into the linked file). The working agreement
+  moved to `rules/working-agreement.md`; `~/.claude/CLAUDE.md` is the machine's
+  (the template writes its prompt there).
+- Login shells keep `~/.local/bin` and Homebrew ahead of the system folders
+  (macOS `path_helper` reordered them, so terminals used Apple's git).
+- The Coder CLI comes from our Coder server into `~/.local/bin` and matches its
+  version (overlay `work-tools`).
+- Doctor loads Homebrew and `~/.local/bin` itself, skips macOS-only casks on
+  Linux, and shows the errors mise reports.
+- Moved in: Claude history copied from the old workspace (45 projects); its 62
+  memory notes audited (17 deleted as duplicates or promoted to rules, 13 stale
+  deleted, the rest moved into per-repo folders); 7 team repos cloned with mise.
+- Left to the template's owners: the login shell is bash and the image lacks the
+  `en_US.UTF-8` locale; the template's background agent and its Claude prompt
+  return on every start.
+
 ## Pending for Anand
 
-- Coder remote (work) returns with the work overlay; until then
-  `code --install-extension coder.coder-remote` if needed.
 - ~/.secrets/age.key has no off-device backup, by Anand's decision (2026-10-29):
   if this Mac is lost, secrets.yaml is lost and its contents are re-collected.
   Do not raise it again unless he asks.
@@ -183,46 +211,23 @@ private half lives in the overlay's `docs/08-work-layer.md`.
 - Ruling (work dev setup, when Anand asks for it): servers and services
   (Postgres, Redis, queues, anything that listens on a port) run in Docker,
   per project via compose; CLIs, runtimes (mise), and the editor stay local.
-- Coder half, decided 2026-10-30, parked until after Phase 7 at Anand's request:
-  reuse the team's Coder template as is (it already has Coder's dotfiles
-  module: set the workspace's "Dotfiles URL" parameter to this repo and
-  `install.sh` runs on every start, no tty, log in ~/.dotfiles.log). No own
-  template, no write to the team repo. Needed on our side first: (1)
-  `~/.gitconfig` becomes a plain file that includes the repo config, because
-  the template's commit-signing module runs `git config --global` and would
-  write into the linked repo file; (2) `install.sh` detects a Coder workspace
-  (`CODER_WORKSPACE_ID` set) and defaults to the `server-work` profile; (3) the workspace can
-  clone the private overlay (key or access to decide). Extra team repos the
-  template does not clone are cloned by hand once per workspace (Anand,
-  2026-10-31: "cloning repo is one time, i can do it").
-  The template's own noise: extra clones, a company CLI, and a Claude bootstrap
-  that writes ~/.claude/settings.json only if absent (Phase 7 writes it first).
-  No new SSH key on a workspace: the work identity uses the Coder account key
-  (~/.ssh/git-commit-signing/coder), already on the work GitHub account.
-  Principle: a Coder workspace is only a bigger machine; the dev setup on it is
-  the same plain one as local (clone, mise, make), not the template's scripts.
+- Old workspaces anand-hq and General: deleting them is Anand's call. Everything
+  needed is on JaiShreeRam; anand-hq still holds the originals of the memory
+  notes deleted in the audit.
 - GitHub: register ~/.ssh/id_ed25519_personal.pub as a *Signing Key* so
   commits show "Verified" (they already verify locally).
 - Old configs are in `~/.dotfiles-backup/`.
 - A folder of old work checkouts with unpushed local branches (5.4 GB) stays
   until Anand decides; nothing else from the clutter review is left.
-- After all phases: a hands-on end-to-end walkthrough of the whole setup so
-  Anand can use every part of it (Anand asked for this explicitly).
 
-## Next: phases in order
+## Next
 
-(Phases 1 to 8 done. Use `dots <command>` from anywhere.)
-7. Claude harness: done (above). Secrets are guarded by the native deny rules
-   in `modules/claude/settings.owned.json` (use `with-secrets`).
-8. Work layer: done (above).
-Next, in Anand's order (updated 2026-11-01):
-1. The hands-on walkthrough of the Mac setup: done 2026-11-01.
-2. Coder: reuse the team's stable template with the Dotfiles URL field. First
-   decide how a workspace reaches the private overlay (Coder's own SSH key is
-   already on GitHub), then build Coder detection (server-work profile), a plain
-   ~/.gitconfig that includes the repo config, and overlay access; clone the
-   extra team repos by hand; copy ~/.claude/projects/ from the old workspace.
-3. `/retro` on the Phase 7-8 session (transcript kept 365 days).
+(Phases 1 to 9 done; the Mac walkthrough done 2026-11-01. Use `dots <command>`
+from anywhere.)
+1. `/retro` on the Phase 7-9 sessions (transcripts kept 365 days). Already
+   noted: on bash 3.2 a check that is not a test's last line checks nothing
+   (fix suite-wide); fakes that copied our code's assumption instead of the
+   real tool (mise `errors`); repo files at paths other tools write to.
 The learning-layer idea is folded into the explain, grill, retro and scout
 skills; revisit only if real use shows a gap.
 
