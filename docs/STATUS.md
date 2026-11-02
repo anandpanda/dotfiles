@@ -183,8 +183,13 @@ team's stable template with this repo as its Dotfiles URL.
   SSH had written a Coder hostname into the linked file). The working agreement
   moved to `rules/working-agreement.md`; `~/.claude/CLAUDE.md` is the machine's
   (the template writes its prompt there).
-- Login shells keep `~/.local/bin` and Homebrew ahead of the system folders
-  (macOS `path_helper` reordered them, so terminals used Apple's git).
+- One environment for every shell: `~/.config/shell/env.sh` (shell module,
+  plain sh) holds Homebrew and the PATH order `~/.local/bin`, mise shims,
+  Homebrew, the rest. zsh sources it from `.zshenv` and `.zprofile` (macOS
+  `path_helper` reorders PATH in login shells); bash and sh from the first line
+  of `~/.profile` and `~/.bashrc`; Claude Code's Bash tool through
+  `CLAUDE_ENV_FILE`. On Coder, bash terminals and Claude find the same tools
+  and each repo's mise versions. Settings fragments may write `${HOME}`.
 - The Coder CLI comes from our Coder server into `~/.local/bin` and matches its
   version (overlay `work-tools`).
 - Doctor loads Homebrew and `~/.local/bin` itself, skips macOS-only casks on
