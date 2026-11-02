@@ -12,22 +12,18 @@ for _dots_p in "$HOME/.brew" /opt/homebrew /usr/local; do
   fi
 done
 
-_dots_front() {
-  _dots_new=$1
-  _dots_rest=$PATH:
-  while [ -n "$_dots_rest" ]; do
-    _dots_d=${_dots_rest%%:*}
-    _dots_rest=${_dots_rest#*:}
-    [ "$_dots_d" = "$1" ] || _dots_new=$_dots_new:$_dots_d
-  done
-  PATH=$_dots_new
-}
-if [ -n "${HOMEBREW_PREFIX:-}" ]; then
-  _dots_front "$HOMEBREW_PREFIX/sbin"
-  _dots_front "$HOMEBREW_PREFIX/bin"
-fi
-_dots_front "${MISE_DATA_DIR:-$HOME/.local/share/mise}/shims"
-_dots_front "$HOME/.local/bin"
+_dots_first=$HOME/.local/bin:${MISE_DATA_DIR:-$HOME/.local/share/mise}/shims
+[ -z "${HOMEBREW_PREFIX:-}" ] || _dots_first=$_dots_first:$HOMEBREW_PREFIX/bin:$HOMEBREW_PREFIX/sbin
+_dots_new=$_dots_first
+_dots_rest=$PATH:
+while [ -n "$_dots_rest" ]; do
+  _dots_d=${_dots_rest%%:*}
+  _dots_rest=${_dots_rest#*:}
+  case ":$_dots_first:" in
+    *":$_dots_d:"*) ;;
+    *) _dots_new=$_dots_new:$_dots_d ;;
+  esac
+done
+PATH=$_dots_new
 export PATH
-unset -f _dots_front
-unset _dots_p _dots_new _dots_rest _dots_d
+unset _dots_p _dots_first _dots_new _dots_rest _dots_d
