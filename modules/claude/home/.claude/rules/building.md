@@ -8,7 +8,7 @@
 - Planning is mandatory. Brainstorm, push back, reach the best conclusion and document it before implementing, so every decision is tracked.
 - Planning applies to design and features. Small reversible steps inside an agreed plan need no new plan.
 - Diagnose blockers yourself (dev data, sandbox state, how prod does it) and bring the diagnosis with a proposed fix, not a question.
-- Keep `DECISIONS.md` in the auto-memory folder, linked from `MEMORY.md`. One row per decision: `| date | decision | source | status |`. The source is his quote, or INFERRED when it is not. INFERRED needs its own yes before it counts as decided.
+- Keep `DECISIONS.md` in the auto-memory folder, linked from `MEMORY.md`. One row per decision or fact he states about his setup: `| date | entry | source | status |`. The source is his quote, or INFERRED when it is not. INFERRED needs its own yes before it counts as decided. Check every plan against the ledger before presenting it.
 - Entries that become standing rules are promoted, then deleted from the ledger. Preferences that describe Anand go to `rules/anand.md`, not project memory.
 
 ## What to build
@@ -17,11 +17,12 @@
 - No paranoia: code is written, tested and deployed, so do not handle cases that cannot happen in it.
 - Full scope of what was asked. Small does not mean partial.
 - Build top-down from the caller: each layer, method and model exists only because the layer above calls it.
-- Tests first: write the failing test, watch it fail for the right reason, then implement. Run only the tests for what changed.
+- Tests first: write the failing test, watch it fail for the right reason, then implement. Run only the tests for what changed. A fake reproduces the real tool's output, captured from a real run.
 - One heavy run at a time (full suite, build, image build); pytest at most -n 4; the full suite runs at phase close.
 
 ## Explaining a change
 - Explain each change: what it does, the alternatives, the tradeoff and why the chosen one wins.
+- Every proposed fix names the cause, who owns what it changes, and whether it fixes the cause at its owner or only one consumer of it. Call it principled only in the first case; otherwise call it a workaround and name the principled fix beside it.
 - The explanation is the tradeoff and the why, given before or with the change, never a recap of the diff.
 - Anand understands every line, every tradeoff and why before it lands.
 

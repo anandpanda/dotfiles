@@ -10,9 +10,10 @@ disable-model-invocation: true
 One session in, harness proposals out. Edit nothing and commit nothing until Anand picks.
 
 ## 1. Read the session
-- `${CLAUDE_SKILL_DIR}/pairs.sh <transcript>` prints the conversation as JSON lines `{role, ts, text}`.
-- This session: `${CLAUDE_SKILL_DIR}/pairs.sh ~/.claude/projects/*/${CLAUDE_SESSION_ID}.jsonl`. A named session: the same with its id, or the transcript path he gives.
+- `${CLAUDE_SKILL_DIR}/pairs.sh <session-id or transcript>` prints the conversation as JSON lines `{role, ts, text}`. Given an id, it reads the newest copy, since a resumed session can exist in several project folders.
+- This session: `${CLAUDE_SKILL_DIR}/pairs.sh ${CLAUDE_SESSION_ID}`. A named session: its id, or the transcript path he gives. Save the output to the session scratchpad.
 - Read it all. Mark each place where he corrected, repeated, pushed back, re-asked, or where work was redone.
+- When the output is over 300 KB, read every one of his turns, then the assistant text around each marked one: `${CLAUDE_SKILL_DIR}/context.sh <pairs file> <line index>`.
 
 ## 2. Read the harness
 `~/.claude/rules/*.md`, `~/.claude/CLAUDE.md` when a tool wrote one, `~/.claude/skills/*/SKILL.md`, `~/.claude/agents/*.md`, the permission rules and `enabledPlugins` in `~/.claude/settings.json`. In the dotfiles repo, `modules/claude/RESOLVER.md` says which file owns each rule.

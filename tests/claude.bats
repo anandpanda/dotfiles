@@ -48,7 +48,8 @@ teardown() { teardown_home; }
     "No comments in code" "AI slop" "Do not overcorrect" "outrank plugin skills" \
     "senior principal engineer" "the tradeoff and why" "No paranoia" "Planning is mandatory" \
     "Never post a reply to a PR comment" "Assume I know nothing" "pick the type that fits" \
-    "resources to learn more" "small reversible steps inside an agreed plan need no new plan"; do
+    "resources to learn more" "small reversible steps inside an agreed plan need no new plan" \
+    "every fix names its cause and owner" "watch it with Monitor" "the permission prompt is my go"; do
     grep -qF "$p" "$f" || { echo "missing: $p"; return 1; }
   done
 }
@@ -221,12 +222,22 @@ OWNED="$BATS_TEST_DIRNAME/../modules/claude/settings.owned.json"
   f="$DOTFILES_DIR/$C/home/.claude/rules/building.md"
   grep -qF 'DECISIONS.md' "$f"
   grep -qF 'MEMORY.md' "$f"
-  grep -qF '| date | decision | source | status |' "$f"
+  grep -qF '| date | entry | source | status |' "$f"
+  grep -qF 'fact he states about his setup' "$f"
+  grep -qF 'Check every plan against the ledger' "$f"
   grep -qF 'INFERRED' "$f"
   grep -qF 'INFERRED needs its own yes' "$f"
   grep -qF 'promoted, then deleted' "$f"
   grep -qF 'go to `rules/anand.md`, not project memory' "$f"
   grep -qF 'DECISIONS.md' "$DOTFILES_DIR/$C/RESOLVER.md"
+}
+
+@test "building rules make every fix say whether it is principled" {
+  grep -qF 'Call it principled only in the first case' "$DOTFILES_DIR/$C/home/.claude/rules/building.md"
+}
+
+@test "building rules make fakes copy the real tool" {
+  grep -qF "A fake reproduces the real tool's output, captured from a real run." "$DOTFILES_DIR/$C/home/.claude/rules/building.md"
 }
 
 @test "building rules carry the test habits" {
@@ -585,4 +596,11 @@ sl() { printf '{"model":{"display_name":"Opus"},"context_window":{"used_percenta
   echo '{}' > "$HOME/owned.json"; echo '{"env": {"X": "${HOME}/a"}}' > "$HOME/frag.json"
   run claude_settings_expected "$HOME/owned.json" "$HOME/frag.json"
   [ "$(jq -r '.env.X' <<<"$output")" = "$HOME/a" ]
+}
+
+@test "the repo's CLAUDE.md carries its bats and file-ownership lessons" {
+  f="$DOTFILES_DIR/CLAUDE.md"
+  grep -qF '|| false' "$f"
+  grep -qF 'bash 3.2' "$f"
+  grep -qF 'no other tool writes' "$f"
 }

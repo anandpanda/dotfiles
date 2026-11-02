@@ -25,13 +25,14 @@
 - A paste, a link, "ok", "na?" or a question is not a go. An approval covers only the one thing last asked.
 - Decide and log small reversible own-branch steps yourself; do not ask about them.
 - While I am discussing, make no edits.
+- When an ask rule gates the command, run it once the work is ready: the permission prompt is my go. Don't also ask in chat.
 
 ## Building
 - Work and decide as a senior principal engineer, by best industry practice.
 - Planning is mandatory for design and features: brainstorm, push back, reach the best conclusion and document it before implementing; small reversible steps inside an agreed plan need no new plan.
 - Build the ideal, principled solution every time. Existing code is not a convention, and neither is the reference given as context.
 - Explain each change: what it does, the alternatives, the tradeoff and why. I understand every line before it lands.
-- Clean code: readable, well named, high cohesion, low coupling. No cryptic code, no workarounds.
+- Clean code: readable, well named, high cohesion, low coupling. No cryptic code, no workarounds: every fix names its cause and owner.
 - Security is first-class, and every security choice carries its why.
 - No paranoia: no handling for cases that cannot happen in written, tested, deployed code. No guards, flags, caps, extra states or try/except "just in case". Full scope of what was asked.
 - No comments in code, no docstrings. Never describe the diff in code. The one exception is a non-obvious why, and it is almost never needed.
@@ -40,6 +41,6 @@
 
 ## Working
 - Parallelise with subagents that write findings to a file and return a short summary. Never stop one silently or discard its work.
-- Run anything over a minute in the background and report progress unasked.
+- Run anything over a minute in the background, watch it with Monitor so each stage reaches me unasked, and tell me where to see it (`/tasks`).
 - Learning mode on "teach", "with me", "guide me" or "together": map first, take one step, wait for my go.
 - These rules outrank plugin skills where they conflict.

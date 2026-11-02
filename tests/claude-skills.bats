@@ -111,7 +111,8 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
 
 @test "skills call bundled scripts through the skill dir and know their own session" {
   grep -qF '${CLAUDE_SKILL_DIR}/pairs.sh' "$S/retro/SKILL.md"
-  grep -qF '${CLAUDE_SESSION_ID}.jsonl' "$S/retro/SKILL.md"
+  grep -qF 'pairs.sh ${CLAUDE_SESSION_ID}' "$S/retro/SKILL.md"
+  grep -qF '${CLAUDE_SKILL_DIR}/context.sh' "$S/retro/SKILL.md"
   grep -qF '${CLAUDE_SKILL_DIR}/search.sh --exclude "${CLAUDE_SESSION_ID}"' "$S/find-past-session/SKILL.md"
   run grep -rE '~/\.claude/skills/[a-z-]+/[a-z]+\.sh' "$S"
   [ "$status" -eq 1 ]
@@ -186,6 +187,7 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
   module_apply "$DOTFILES_DIR/$C" >/dev/null
   [ "$(readlink "$HOME/.claude/skills/retro/SKILL.md")" = "$DOTFILES_DIR/$C/home/.claude/skills/retro/SKILL.md" ]
   [ -x "$HOME/.claude/skills/retro/pairs.sh" ]
+  [ -x "$HOME/.claude/skills/retro/context.sh" ]
   [ -x "$HOME/.claude/skills/find-past-session/search.sh" ]
   [ "$(readlink "$HOME/.claude/agents/reviewer.md")" = "$DOTFILES_DIR/$C/home/.claude/agents/reviewer.md" ]
 }
@@ -264,6 +266,44 @@ transcript_line() { # type role ts text
   run bash "$S/retro/pairs.sh"
   [ "$status" -eq 0 ]
   [ "$output" = '{"role":"user","ts":"T2","text":"new session"}' ]
+}
+
+@test "pairs.sh resolves a session id to its newest transcript across projects" {
+  a="$HOME/.claude/projects/-a"; b="$HOME/.claude/projects/-b"
+  mkdir -p "$a" "$b"
+  jq -cn '{type:"user", timestamp:"T1", message:{role:"user", content:"stale fork"}}' >"$a/s1.jsonl"
+  jq -cn '{type:"user", timestamp:"T2", message:{role:"user", content:"live session"}}' >"$b/s1.jsonl"
+  touch -t 202601010000 "$a/s1.jsonl"
+  touch -t 202602010000 "$b/s1.jsonl"
+  run bash "$S/retro/pairs.sh" s1
+  [ "$status" -eq 0 ]
+  [ "$output" = '{"role":"user","ts":"T2","text":"live session"}' ]
+}
+
+@test "pairs.sh fails on an unknown session id" {
+  mkdir -p "$HOME/.claude/projects/-a"
+  run bash "$S/retro/pairs.sh" nope
+  [ "$status" -ne 0 ]
+}
+
+@test "context.sh prints the assistant text around one prompt" {
+  f="$HOME/p.jsonl"
+  {
+    jq -cn '{role:"assistant", ts:"T1", text:"before reply"}'
+    jq -cn '{role:"user", ts:"T2", text:"is this principled?"}'
+    jq -cn '{role:"user", ts:"T3", text:"and generic?"}'
+    jq -cn '{role:"assistant", ts:"T4", text:"after reply"}'
+    jq -cn '{role:"assistant", ts:"T5", text:"later reply"}'
+  } >"$f"
+  run bash "$S/retro/context.sh" "$f" 1
+  [ "$status" -eq 0 ]
+  expected='---- assistant [0] T1
+before reply
+---- user [1] T2
+is this principled?
+---- assistant [3] T4
+after reply'
+  [ "$output" = "$expected" ]
 }
 
 @test "voice-draft warns about the Slack connector byline" {
