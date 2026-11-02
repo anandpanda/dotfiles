@@ -206,3 +206,23 @@ print(int(min(t) * 1000))')
   [ "${lines[0]}" = "$HOME/.local/bin" ] || false
   [ "${lines[2]}" = "$HOME/.brew/bin" ]
 }
+
+@test "on Linux, VS Code's remote server opens the Homebrew zsh; its other machine settings stay; macOS writes nothing" {
+  m="$HOME/.vscode-server/data/Machine/settings.json"
+  mkdir -p "$HOME/bin" "$(dirname "$m")"; echo '{"git.useIntegratedAskPass": false}' > "$m"
+  printf '#!/bin/sh\ncase "$1" in -s) echo Linux ;; -m) echo x86_64 ;; esac\n' > "$HOME/bin/uname"; chmod +x "$HOME/bin/uname"
+  PATH="$HOME/bin:$PATH" run bash "$DOTFILES_DIR/$Z/install.sh"
+  [ "$status" -eq 0 ] || false
+  [ "$(jq -r '."terminal.integrated.profiles.linux".zsh.path' "$m")" = "$HOME/.brew/bin/zsh" ] || false
+  [ "$(jq -r '."terminal.integrated.defaultProfile.linux"' "$m")" = zsh ] || false
+  [ "$(jq -r '."git.useIntegratedAskPass"' "$m")" = false ] || false
+  PATH="$HOME/bin:$PATH" run bash "$DOTFILES_DIR/$Z/doctor.sh"
+  [ "$status" -eq 0 ] || false
+  jq '."terminal.integrated.defaultProfile.linux"="bash"' "$m" > "$m.t" && mv "$m.t" "$m"
+  PATH="$HOME/bin:$PATH" run bash "$DOTFILES_DIR/$Z/doctor.sh"
+  [[ "$output" == *"VS Code server setting drifted: terminal.integrated.defaultProfile.linux"* ]] || false
+  rm -rf "$HOME/.vscode-server"
+  printf '#!/bin/sh\ncase "$1" in -s) echo Darwin ;; -m) echo arm64 ;; esac\n' > "$HOME/bin/uname"
+  PATH="$HOME/bin:$PATH" run bash "$DOTFILES_DIR/$Z/install.sh"
+  [ ! -e "$m" ]
+}

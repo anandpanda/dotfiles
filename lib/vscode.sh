@@ -85,6 +85,13 @@ sys.exit(1 if drifted else 0)
 PY
 }
 
+# VS Code's remote server opens this machine's Homebrew zsh: a Linux box's login shell can
+# be its image's (a Coder template's bash), and only the server knows paths on this machine.
+vscode_server_settings_file() { echo "$HOME/.vscode-server/data/Machine/settings.json"; }
+vscode_server_zsh_settings() {
+  printf '{"terminal.integrated.profiles.linux": {"zsh": {"path": "%s"}}, "terminal.integrated.defaultProfile.linux": "zsh"}\n' "$(brew_prefix)/bin/zsh"
+}
+
 # Top-level keys of a JSONC object, one per line.
 jsonc_keys() {
   _jsonc_to_json "$1" | python3 -c 'import json,sys; [print(k) for k in json.load(sys.stdin)]'

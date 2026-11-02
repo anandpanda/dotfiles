@@ -178,11 +178,8 @@ FAKE
   ! grep -q 'C_Cpp.formatting' "$V/files/settings.json"
 }
 
-@test "settings: macOS terminals follow the login shell, Linux opens the Homebrew zsh in the home, font 14 with ligatures, updates default" {
-  s="$(_jsonc_to_json "$V/files/settings.json")"
-  [ "$(jq -r '."terminal.integrated.profiles.osx" // "none"' <<<"$s")" = none ] || false
-  [ "$(jq -r '."terminal.integrated.profiles.linux".zsh.path' <<<"$s")" = '${env:HOME}/.brew/bin/zsh' ] || false
-  [ "$(jq -r '."terminal.integrated.defaultProfile.linux"' <<<"$s")" = zsh ] || false
+@test "settings: no terminal profiles (the login shell, or on Linux the zsh module's machine setting, picks the shell), font 14 with ligatures, updates default" {
+  ! grep -q 'terminal.integrated.profiles\|terminal.integrated.defaultProfile' "$V/files/settings.json" || false
   grep -q '"terminal.integrated.fontSize": 14' "$V/files/settings.json"
   grep -q '"terminal.integrated.fontLigatures' "$V/files/settings.json"
   grep -q '"update.mode": "default"' "$V/files/settings.json"

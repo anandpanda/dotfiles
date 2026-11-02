@@ -90,11 +90,8 @@
   "gitlens.codeLens.enabled": false,
   "gitlens.currentLine.enabled": true,
 
-  // ---- Terminal: same font as Ghostty. macOS uses the login shell, which the zsh module
-  // sets to Homebrew zsh. On Linux the login shell can be an image's (a Coder template's
-  // bash), so terminals open the Homebrew zsh in the home by name.
-  "terminal.integrated.profiles.linux": { "zsh": { "path": "${env:HOME}/.brew/bin/zsh" } },
-  "terminal.integrated.defaultProfile.linux": "zsh",
+  // ---- Terminal: same font as Ghostty. No shell profile here: on macOS the login shell
+  // (Homebrew zsh) opens; on a Linux remote the zsh module sets the server's machine setting.
   "terminal.integrated.fontFamily": "'JetBrainsMono Nerd Font'",
   "terminal.integrated.fontSize": 14,
   "terminal.integrated.fontLigatures.enabled": true,
