@@ -2,4 +2,4 @@
 # stack plus the Claude harness. No apps, fonts, terminal emulator, containers or desktop defaults.
 # A work box: `dots install server-work` (adds the overlay).
 identities = ["personal"]
-modules = ["workspace", "secrets", "git", "ssh", "cli", "zsh", "starship", "atuin", "tmux", "gh", "mise", "claude"]
+modules = ["workspace", "secrets", "git", "ssh", "cli", "shell", "zsh", "starship", "atuin", "tmux", "gh", "mise", "claude"]

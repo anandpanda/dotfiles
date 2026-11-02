@@ -1,7 +1,7 @@
 load helper
 setup() {
   setup_home
-  for f in log profile ssh; do source "$DOTFILES_DIR/lib/$f.sh"; done
+  for f in log profile file ssh; do source "$DOTFILES_DIR/lib/$f.sh"; done
 }
 teardown() { teardown_home; }
 

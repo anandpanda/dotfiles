@@ -1,8 +1,9 @@
 load helper
 setup() {
   setup_home
-  for f in log os link module; do source "$DOTFILES_DIR/lib/$f.sh"; done
+  for f in log os link module file; do source "$DOTFILES_DIR/lib/$f.sh"; done
   export ANTIDOTE_HOME="$HOME/.cache/antidote"
+  module_apply "$DOTFILES_DIR/modules/shell" >/dev/null
 }
 teardown() { teardown_home; }
 Z="modules/zsh"
@@ -193,7 +194,8 @@ print(int(min(t) * 1000))')
   mkdir -p "$HOME/.brew/bin" "$HOME/.local/bin"; printf '#!/bin/sh\n' > "$HOME/.brew/bin/brew"; chmod +x "$HOME/.brew/bin/brew"
   run env -i HOME="$HOME" PATH=/usr/bin:/bin zsh -fc "source ~/.zshenv; path=(/usr/bin /bin \$path); source \$ZDOTDIR/.zprofile; print -l \$path"
   [ "${lines[0]}" = "$HOME/.local/bin" ] || false
-  [ "${lines[1]}" = "$HOME/.brew/bin" ] || false
+  [ "${lines[1]}" = "$HOME/.local/share/mise/shims" ] || false
+  [ "${lines[2]}" = "$HOME/.brew/bin" ] || false
   [ "$(printf '%s\n' "${lines[@]}" | grep -cx "$HOME/.local/bin")" = 1 ]
 }
 
@@ -202,5 +204,5 @@ print(int(min(t) * 1000))')
   mkdir -p "$HOME/.brew/bin" "$HOME/.local/bin"; printf '#!/bin/sh\n' > "$HOME/.brew/bin/brew"; chmod +x "$HOME/.brew/bin/brew"
   run env -i HOME="$HOME" PATH=/usr/bin:/bin zsh -lc 'print -l $path'
   [ "${lines[0]}" = "$HOME/.local/bin" ] || false
-  [ "${lines[1]}" = "$HOME/.brew/bin" ]
+  [ "${lines[2]}" = "$HOME/.brew/bin" ]
 }

@@ -203,6 +203,56 @@ dotfiles never create: absent on the Mac, the template's prompt on Coder.
 - Out of scope: the template's prompt still loads on Coder; removing it is the
   team's template.
 
+## Addendum: one environment for every shell (2026-11-02)
+
+Status: approved ("yes", 2026-11-02)
+
+**Found.** The environment (Homebrew, `~/.local/bin`, the PATH order) lived
+only in zsh's startup files. On Coder every entry point starts bash (the
+template's login shell; `SHELL=/bin/bash` in the VS Code server and in Claude
+Code's processes), and a bash login shell there finds neither `mise`, `rg` nor
+`delta`; git's pager fails in every bash terminal.
+
+**Decision.** The environment is defined once, in a POSIX sh file, and every
+shell includes it.
+
+- `modules/shell/home/.config/shell/env.sh` (new `shell` module, in every
+  profile): Homebrew's variables from the first prefix that has `brew`
+  (`~/.brew`, `/opt/homebrew`, `/usr/local`), and the PATH order
+  `~/.local/bin`, mise shims, Homebrew `bin` and `sbin`, then the rest. A
+  folder already on PATH moves to its place instead of repeating, so sourcing
+  twice is harmless.
+- mise shims: "Put the shim directory on PATH for editors and other programs
+  that never see an activated shell"; interactive shells keep
+  `mise activate`, which puts real tool folders ahead of the shims ("You can
+  do both", mise.jdx.dev/dev-tools/shims.html). `not_found_auto_install` stays
+  off.
+- zsh: `.zshenv` and `.zprofile` run `env.sh` under `emulate sh`; `path.zsh`
+  goes. zsh-only extras (fpath, MANPATH, INFOPATH, ZDOTDIR, the git variable
+  clearing) stay in `.zshenv`.
+- bash and sh: `~/.profile` (login) and `~/.bashrc` (interactive) are machine
+  files; install makes their first line source `env.sh`, before any
+  "non-interactive, return" guard. Doctor reports a missing line.
+- One helper for "this machine file's first line includes ours", used by the
+  shell module, `~/.ssh/config` and `~/.gitconfig`, which today each carry
+  their own copy.
+
+**Rejected.** Pointing VS Code and Claude Code at zsh (`terminal.integrated`
+profile, `CLAUDE_CODE_SHELL`): a setting per consumer, and `coder ssh`, tasks
+and scripts stay broken. Writing the environment into bash's files directly
+(copies the source of truth).
+
+**Out of scope.** The login shell stays the template's bash on Coder; a
+terminal there opens a bash prompt with the same environment.
+
+**Tests first.** `env.sh` from a clean `sh` puts `~/.local/bin`, the shims and a
+fake `~/.brew` first in that order; sourcing twice changes nothing; zsh login
+and non-login, and bash login and interactive, all get the same order; install
+writes the include as the first line of an existing `~/.bashrc` that has an
+interactive guard, keeps the rest, and is a no-op on rerun; doctor reports a
+missing line; the ssh and git includes behave as before through the shared
+helper.
+
 ## Out of scope
 
 `/retro` (after this phase). Retiring old workspaces is Anand's call.

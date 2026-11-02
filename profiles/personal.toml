@@ -2,7 +2,7 @@
 identities = ["personal"]
 modules = [
   "workspace", "secrets", "git", "ssh", "macos",
-  "fonts", "cli", "zsh", "starship", "atuin", "tmux", "ghostty",
+  "fonts", "cli", "shell", "zsh", "starship", "atuin", "tmux", "ghostty",
   "vscode", "lazygit", "gh", "mise", "docker",
   "apps", "raycast", "claude",
 ]

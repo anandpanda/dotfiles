@@ -4,7 +4,7 @@
 # Also writes the context folder lists, the includeIf file that picks the identity, and
 # the machine's ~/.gitconfig whose first line includes the repo config.
 set -euo pipefail
-for f in log os link profile module contexts git; do
+for f in log os link profile module contexts file git; do
   # shellcheck disable=SC1090
   source "$DOTFILES_DIR/lib/$f.sh"
 done

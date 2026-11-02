@@ -6,17 +6,11 @@ unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL GI
 # The repo root, found through this file's own symlink: ~/.zshenv -> <repo>/modules/zsh/home/.zshenv
 export DOTFILES_DIR="${DOTFILES_DIR:-${${(%):-%x}:A:h:h:h:h}}"
 
-# Homebrew on PATH for every zsh, login or script. Static instead of `brew shellenv`:
-# same result, no process spawn.
-for _p in "$HOME/.brew" /opt/homebrew /usr/local; do
-  [[ -x $_p/bin/brew ]] || continue
-  export HOMEBREW_PREFIX="$_p" HOMEBREW_CELLAR="$_p/Cellar" HOMEBREW_REPOSITORY="$_p"
-  [[ -d $_p/Homebrew ]] && HOMEBREW_REPOSITORY="$_p/Homebrew"
+# The environment every shell shares: Homebrew and the PATH order (shell module).
+emulate sh -c '. "$HOME/.config/shell/env.sh"'
+# zsh's own share of Homebrew: completions, man and info pages.
+if [[ -n $HOMEBREW_PREFIX ]]; then
   typeset -U fpath
-  fpath=("$_p/share/zsh/site-functions" $fpath)
-  export MANPATH="$_p/share/man${MANPATH+:$MANPATH}:" INFOPATH="$_p/share/info:${INFOPATH:-}"
-  break
-done
-unset _p
-
-source "${${(%):-%x}:A:h}/.config/zsh/path.zsh"
+  fpath=("$HOMEBREW_PREFIX/share/zsh/site-functions" $fpath)
+  export MANPATH="$HOMEBREW_PREFIX/share/man${MANPATH+:$MANPATH}:" INFOPATH="$HOMEBREW_PREFIX/share/info:${INFOPATH:-}"
+fi

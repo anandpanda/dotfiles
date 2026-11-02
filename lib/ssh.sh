@@ -68,27 +68,12 @@ ssh_ensure_key() { # CTX EMAIL
   if ssh_test "$key"; then log_ok "github.com-$ctx authenticates"; else log_warn "github.com-$ctx does not authenticate yet"; fi
 }
 
-# Make ~/.ssh/config start with an Include of ~/.ssh/conf.d/*.conf.
-# Never replaces the file: other tools (Coder, VS Code Remote) write into it.
+# Make ~/.ssh/config start with an Include of ~/.ssh/conf.d/*.conf. Never replaces the
+# file: other tools (Coder, VS Code Remote) write into it. An Include applies to every
+# host only above the first Host block, so it is the first line.
 ssh_ensure_include() {
-  local cfg="$HOME/.ssh/config" line='Include ~/.ssh/conf.d/*.conf' tmp
-  if [ -f "$cfg" ] && grep -qxF "$line" "$cfg"; then
-    printf 'skip %s include\n' "$cfg"
-    return 0
-  fi
-  if [ "${DRY_RUN:-0}" = 1 ]; then
-    log_dry "prepend '$line' to $cfg"
-    return 0
-  fi
-  mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"
-  # Edit the real file: if ~/.ssh/config is a symlink, keep it a symlink.
-  local real="$cfg"
-  [ -L "$cfg" ] && real="$(readlink "$cfg")"
-  tmp="$(mktemp)"
-  {
-    printf '%s\n\n' "$line"
-    [ -f "$real" ] && cat "$real"
-  } >"$tmp"
-  cat "$tmp" >"$real" && rm -f "$tmp" && chmod 600 "$real"
-  printf 'prepend %s include\n' "$cfg"
+  local cfg="$HOME/.ssh/config"
+  if [ "${DRY_RUN:-0}" != 1 ]; then mkdir -p "$HOME/.ssh" && chmod 700 "$HOME/.ssh"; fi
+  file_ensure_first_line "$cfg" 'Include ~/.ssh/conf.d/*.conf'
+  if [ "${DRY_RUN:-0}" != 1 ]; then chmod 600 "$cfg"; fi
 }
