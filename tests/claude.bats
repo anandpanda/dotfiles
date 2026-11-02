@@ -279,10 +279,13 @@ OWNED="$BATS_TEST_DIRNAME/../modules/claude/settings.owned.json"
 }
 
 @test "doctor reports drift on owned keys only" {
+  source "$DOTFILES_DIR/lib/contexts.sh"
   live="$HOME/.claude/settings.json"
   mkdir -p "$HOME/.claude"
   echo '{}' >"$live"
-  claude_settings_merge "$OWNED" "$live" >/dev/null
+  # shellcheck disable=SC2046
+  claude_settings_expected "$OWNED" $(claude_settings_fragments) >"$HOME/expected.json"
+  claude_settings_merge "$HOME/expected.json" "$live" >/dev/null
   jq -r '.enabledPlugins | keys[]' "$OWNED" >"$HOME/fake/plugins"
   jq '.model="sonnet"' "$live" >"$live.t" && mv "$live.t" "$live"
   run bash "$DOTFILES_DIR/$C/doctor.sh"
@@ -576,4 +579,10 @@ sl() { printf '{"model":{"display_name":"Opus"},"context_window":{"used_percenta
 
 @test "machine rules say how to use secrets" {
   grep -qF 'with-secrets' "$DOTFILES_DIR/$C/home/.claude/rules/machine.md"
+}
+
+@test "settings fragments may name the home folder as \${HOME}" {
+  echo '{}' > "$HOME/owned.json"; echo '{"env": {"X": "${HOME}/a"}}' > "$HOME/frag.json"
+  run claude_settings_expected "$HOME/owned.json" "$HOME/frag.json"
+  [ "$(jq -r '.env.X' <<<"$output")" = "$HOME/a" ]
 }

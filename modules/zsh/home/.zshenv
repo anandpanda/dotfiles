@@ -7,7 +7,7 @@ unset GIT_AUTHOR_NAME GIT_AUTHOR_EMAIL GIT_COMMITTER_NAME GIT_COMMITTER_EMAIL GI
 export DOTFILES_DIR="${DOTFILES_DIR:-${${(%):-%x}:A:h:h:h:h}}"
 
 # The environment every shell shares: Homebrew and the PATH order (shell module).
-emulate sh -c '. "$HOME/.config/shell/env.sh"'
+source "$HOME/.config/shell/env.sh"
 # zsh's own share of Homebrew: completions, man and info pages.
 if [[ -n $HOMEBREW_PREFIX ]]; then
   typeset -U fpath

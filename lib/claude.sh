@@ -48,7 +48,8 @@ claude_settings_expected() { # OWNED [FRAGMENT...]
           if (($acc.permissions[$k] // []) + ($f.permissions[$k] // [])) == [] then .
           else .permissions[$k] = ((($acc.permissions[$k] // []) + ($f.permissions[$k] // [])) | uniq) end);
     reduce .[1:][] as $f (.[0]; layer($f))
-  ' "$owned" "$@"
+    | walk(if type == "string" then gsub("\\$\\{HOME\\}"; $home) else . end)
+  ' --arg home "$HOME" "$owned" "$@"
 }
 
 # Prints the claude-settings.json of every module the active profile applies, public first, then the overlay's.

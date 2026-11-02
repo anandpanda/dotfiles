@@ -8,10 +8,16 @@ setup() {
 }
 teardown() { teardown_home; }
 
-@test "env.sh from a clean sh puts ~/.local/bin, mise shims and Homebrew first, and twice changes nothing" {
-  run env -i HOME="$HOME" PATH=/usr/bin:/bin sh -c ". '$DOTFILES_DIR/$S/config/env.sh'; echo \"\$PATH \$HOMEBREW_PREFIX\"; . '$DOTFILES_DIR/$S/config/env.sh'; echo \"\$PATH\""
-  [ "${lines[0]}" = "$want $HOME/.brew" ] || false
-  [ "${lines[1]}" = "$want" ]
+@test "env.sh from a clean sh or plain zsh puts ~/.local/bin, mise shims and Homebrew first, and twice changes nothing" {
+  for sh in "sh -c" "zsh -fc"; do
+    run env -i HOME="$HOME" PATH=/usr/bin:/bin $sh ". '$DOTFILES_DIR/$S/config/env.sh'; echo \"\$PATH \$HOMEBREW_PREFIX\"; . '$DOTFILES_DIR/$S/config/env.sh'; echo \"\$PATH\""
+    [ "${lines[0]}" = "$want $HOME/.brew" ] || false
+    [ "${lines[1]}" = "$want" ] || false
+  done
+}
+
+@test "the shell module points Claude Code's Bash tool at env.sh" {
+  [ "$(jq -r '.env.CLAUDE_ENV_FILE' "$DOTFILES_DIR/$S/claude-settings.json")" = '${HOME}/.config/shell/env.sh' ]
 }
 
 @test "install makes env.sh the first line of an existing .bashrc that returns early when not interactive" {

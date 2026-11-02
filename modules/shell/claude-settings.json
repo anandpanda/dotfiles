@@ -1,0 +1,5 @@
+{
+  "env": {
+    "CLAUDE_ENV_FILE": "${HOME}/.config/shell/env.sh"
+  }
+}
