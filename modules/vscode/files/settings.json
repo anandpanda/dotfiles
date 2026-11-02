@@ -90,8 +90,11 @@
   "gitlens.codeLens.enabled": false,
   "gitlens.currentLine.enabled": true,
 
-  // ---- Terminal: same font as Ghostty. No shell profile on purpose: VS Code uses the
-  // login shell, which the zsh module sets to Homebrew zsh on both OSes.
+  // ---- Terminal: same font as Ghostty. macOS uses the login shell, which the zsh module
+  // sets to Homebrew zsh. On Linux the login shell can be an image's (a Coder template's
+  // bash), so terminals open the Homebrew zsh in the home by name.
+  "terminal.integrated.profiles.linux": { "zsh": { "path": "${env:HOME}/.brew/bin/zsh" } },
+  "terminal.integrated.defaultProfile.linux": "zsh",
   "terminal.integrated.fontFamily": "'JetBrainsMono Nerd Font'",
   "terminal.integrated.fontSize": 14,
   "terminal.integrated.fontLigatures.enabled": true,
