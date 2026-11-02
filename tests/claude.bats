@@ -577,8 +577,8 @@ sl() { printf '{"model":{"display_name":"Opus"},"context_window":{"used_percenta
   grep -qF "When I dictate a format or bullets, return exactly that shape" "$DOTFILES_DIR/$C/home/.claude/rules/anand.md"
 }
 
-@test "machine rules say how to use secrets" {
-  grep -qF 'with-secrets' "$DOTFILES_DIR/$C/home/.claude/rules/machine.md"
+@test "machine rules say how to list and use secrets" {
+  grep -qF 'with-secrets --list' "$DOTFILES_DIR/$C/home/.claude/rules/machine.md"
 }
 
 @test "settings fragments may name the home folder as \${HOME}" {

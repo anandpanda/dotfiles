@@ -115,3 +115,20 @@ FAKE
   run grep -q 'with-secrets()' "$DOTFILES_DIR/$S/shell.zsh"
   [ "$status" -eq 1 ]
 }
+
+@test "with-secrets --list prints the secret names without decrypting anything" {
+  f="$DOTFILES_DIR/$S/home/.local/bin/with-secrets"
+  mkdir -p "$HOME/.secrets"
+  cat > "$HOME/.secrets/secrets.yaml" <<'YAML'
+PRD_DB_PASSWORD: ENC[AES256_GCM,data:abc,iv:x,tag:y,type:str]
+DEV_GRAFANA_TOKEN: ENC[AES256_GCM,data:def,iv:x,tag:y,type:str]
+sops:
+    age:
+        - recipient: age1example
+    lastmodified: "2026-11-02T00:00:00Z"
+YAML
+  printf '#!/bin/sh\nexit 9\n' > "$HOME/bin/sops"; chmod +x "$HOME/bin/sops"
+  run env -i HOME="$HOME" PATH="$HOME/bin:/usr/bin:/bin" /bin/bash "$f" --list
+  [ "$status" -eq 0 ] || false
+  [ "$output" = $'PRD_DB_PASSWORD\nDEV_GRAFANA_TOKEN' ]
+}
