@@ -187,3 +187,20 @@ print(int(min(t) * 1000))')
   [ "${lines[0]}" = "$HOME/.brew $HOME/.brew/Homebrew" ]
   [[ "$output" == *$'\n'"$HOME/.brew/bin"$'\n'* ]]
 }
+
+@test ".zprofile restores the PATH order after a system profile moves system folders first" {
+  module_apply "$DOTFILES_DIR/$Z" >/dev/null
+  mkdir -p "$HOME/.brew/bin" "$HOME/.local/bin"; printf '#!/bin/sh\n' > "$HOME/.brew/bin/brew"; chmod +x "$HOME/.brew/bin/brew"
+  run env -i HOME="$HOME" PATH=/usr/bin:/bin zsh -fc "source ~/.zshenv; path=(/usr/bin /bin \$path); source \$ZDOTDIR/.zprofile; print -l \$path"
+  [ "${lines[0]}" = "$HOME/.local/bin" ] || false
+  [ "${lines[1]}" = "$HOME/.brew/bin" ] || false
+  [ "$(printf '%s\n' "${lines[@]}" | grep -cx "$HOME/.local/bin")" = 1 ]
+}
+
+@test "a real login zsh keeps ~/.local/bin and Homebrew ahead of /usr/bin" {
+  module_apply "$DOTFILES_DIR/$Z" >/dev/null
+  mkdir -p "$HOME/.brew/bin" "$HOME/.local/bin"; printf '#!/bin/sh\n' > "$HOME/.brew/bin/brew"; chmod +x "$HOME/.brew/bin/brew"
+  run env -i HOME="$HOME" PATH=/usr/bin:/bin zsh -lc 'print -l $path'
+  [ "${lines[0]}" = "$HOME/.local/bin" ] || false
+  [ "${lines[1]}" = "$HOME/.brew/bin" ]
+}

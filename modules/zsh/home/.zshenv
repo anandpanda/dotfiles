@@ -12,14 +12,11 @@ for _p in "$HOME/.brew" /opt/homebrew /usr/local; do
   [[ -x $_p/bin/brew ]] || continue
   export HOMEBREW_PREFIX="$_p" HOMEBREW_CELLAR="$_p/Cellar" HOMEBREW_REPOSITORY="$_p"
   [[ -d $_p/Homebrew ]] && HOMEBREW_REPOSITORY="$_p/Homebrew"
-  typeset -U path fpath
-  path=("$_p/bin" "$_p/sbin" $path)
+  typeset -U fpath
   fpath=("$_p/share/zsh/site-functions" $fpath)
   export MANPATH="$_p/share/man${MANPATH+:$MANPATH}:" INFOPATH="$_p/share/info:${INFOPATH:-}"
   break
 done
 unset _p
 
-# Per-user programs (the official Claude installer, uv, pipx) win over Homebrew copies.
-typeset -U path
-path=("$HOME/.local/bin" $path)
+source "${${(%):-%x}:A:h}/.config/zsh/path.zsh"
