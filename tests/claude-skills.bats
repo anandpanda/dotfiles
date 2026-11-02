@@ -309,3 +309,9 @@ after reply'
 @test "voice-draft warns about the Slack connector byline" {
   grep -qF "Sent using @Claude" "$DOTFILES_DIR/modules/claude/home/.claude/skills/voice-draft/SKILL.md"
 }
+
+@test "review-pr follows a repo's REVIEW.md and has a fresh reviewer refute each finding" {
+  f="$S/review-pr/SKILL.md"
+  grep -qF "REVIEW.md" "$f" || false
+  grep -qF 'A fresh `reviewer` agent' "$f"
+}

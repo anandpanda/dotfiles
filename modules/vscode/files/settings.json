@@ -113,6 +113,8 @@
   "telemetry.telemetryLevel": "off",
   "update.mode": "default",
   "extensions.autoUpdate": "on",
+  // Wait three days before installing an extension update, so a bad release is caught first.
+  "extensions.autoUpdateDelay": 72,
   "workbench.tips.enabled": false,
   "security.workspace.trust.startupPrompt": "once",
   "cSpell.language": "en",

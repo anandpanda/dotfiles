@@ -257,3 +257,7 @@ FAKE
   [ ! -L "$HOME/live.json" ] || false
   python3 -c 'import json,sys; json.load(open(sys.argv[1]))' "$HOME/live.json"
 }
+
+@test "settings: extension updates wait 72 hours after release" {
+  [ "$(_jsonc_to_json "$V/files/settings.json" | jq -r '."extensions.autoUpdateDelay"')" = 72 ]
+}
