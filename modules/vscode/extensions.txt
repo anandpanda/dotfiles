@@ -17,7 +17,6 @@ mechatroner.rainbow-csv                # CSV columns coloured
 davidanson.vscode-markdownlint         # markdown lint
 yzhang.markdown-all-in-one             # markdown toc, lists, preview
 streetsidesoftware.code-spell-checker  # typos in identifiers and comments
-gruntfuggly.todo-tree                  # every TODO in one panel
 oderwat.indent-rainbow                 # faint colour per indent level
 christian-kohler.path-intellisense     # path completion in strings
 

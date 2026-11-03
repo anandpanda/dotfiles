@@ -261,3 +261,7 @@ FAKE
 @test "settings: extension updates wait 72 hours after release" {
   [ "$(_jsonc_to_json "$V/files/settings.json" | jq -r '."extensions.autoUpdateDelay"')" = 72 ]
 }
+
+@test "Todo Tree is not wanted: no extension entry and no settings for it" {
+  ! grep -qi 'todo-tree' "$V/extensions.txt" "$V/files/settings.json" || false
+}

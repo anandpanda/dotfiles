@@ -119,7 +119,6 @@
   "security.workspace.trust.startupPrompt": "once",
   "cSpell.language": "en",
   "cSpell.diagnosticLevel": "Hint",
-  "todo-tree.general.tags": ["TODO", "FIXME", "HACK", "NOTE"],
   // Deliberate (Anand's choice, 2026-10-28): Claude Code acts without permission prompts.
   "claudeCode.allowDangerouslySkipPermissions": true,
   "security.workspace.trust.untrustedFiles": "open",
