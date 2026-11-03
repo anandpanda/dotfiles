@@ -32,7 +32,10 @@ fi
 if [ "${DRY_RUN:-0}" = 1 ]; then
   echo "[dry] merge settings into $udir/settings.json"
 else
-  vscode_settings_merge "$here/files/settings.json" "$udir/settings.json"
+  owned="$(mktemp)"
+  vscode_owned_settings "$here/files/settings.json" >"$owned"
+  vscode_settings_merge "$owned" "$udir/settings.json"
+  rm -f "$owned"
 fi
 for f in keybindings.json tasks.json; do link_file "$here/files/$f" "$udir/$f"; done
 for f in "$here"/files/snippets/*.json; do link_file "$f" "$udir/snippets/$(basename "$f")"; done

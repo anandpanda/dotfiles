@@ -265,3 +265,20 @@ FAKE
 @test "Todo Tree is not wanted: no extension entry and no settings for it" {
   ! grep -qi 'todo-tree' "$V/extensions.txt" "$V/files/settings.json" || false
 }
+
+@test "install lists every wanted extension, overlay's included, in remote.SSH.defaultExtensions" {
+  fake_code; mkdir -p "$HOME/personal/dotfiles-work/modules/vscode"; echo "coder.coder-remote" > "$HOME/personal/dotfiles-work/modules/vscode/extensions.txt"
+  bash "$V/install.sh" >/dev/null
+  live="$(vscode_user_dir)/settings.json"
+  [ "$(jq -r '."remote.SSH.defaultExtensions" | join(",")' "$live")" = "$(vscode_wanted | paste -sd, -)" ] || false
+  jq -e '."remote.SSH.defaultExtensions" | index("coder.coder-remote") and index("charliermarsh.ruff")' "$live" >/dev/null
+}
+
+@test "doctor reports remote.SSH.defaultExtensions that no longer match the lists" {
+  fake_code
+  bash "$V/install.sh" >/dev/null
+  live="$(vscode_user_dir)/settings.json"
+  jq '."remote.SSH.defaultExtensions" |= .[1:]' "$live" > "$live.t" && mv "$live.t" "$live"
+  run bash "$V/doctor.sh"
+  [[ "$output" == *"setting drifted: remote.SSH.defaultExtensions"* ]]
+}

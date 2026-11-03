@@ -74,6 +74,17 @@ PY
   fi
 }
 
+# The repo's settings plus remote.SSH.defaultExtensions built from the extension lists, so
+# every SSH host VS Code connects to (a Coder workspace) gets the same extensions. JSON.
+vscode_owned_settings() { # SETTINGS_JSONC
+  _jsonc_to_json "$1" | python3 -c '
+import json, sys
+settings = json.load(sys.stdin)
+settings["remote.SSH.defaultExtensions"] = [i for i in sys.argv[1].split("\n") if i]
+print(json.dumps(settings))
+' "$(vscode_wanted)"
+}
+
 # Prints each owned key whose live value differs; exit 1 if any.
 vscode_settings_drift() { # OWNED LIVE
   python3 - <(_jsonc_to_json "$1") <(_jsonc_to_json "$2") <<'PY'
