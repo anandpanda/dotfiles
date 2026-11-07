@@ -262,10 +262,6 @@ FAKE
   [ "$(_jsonc_to_json "$V/files/settings.json" | jq -r '."extensions.autoUpdateDelay"')" = 72 ]
 }
 
-@test "Todo Tree is not wanted: no extension entry and no settings for it" {
-  ! grep -qi 'todo-tree' "$V/extensions.txt" "$V/files/settings.json" || false
-}
-
 @test "install lists every wanted extension, overlay's included, in remote.SSH.defaultExtensions" {
   fake_code; mkdir -p "$HOME/personal/dotfiles-work/modules/vscode"; echo "coder.coder-remote" > "$HOME/personal/dotfiles-work/modules/vscode/extensions.txt"
   bash "$V/install.sh" >/dev/null

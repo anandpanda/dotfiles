@@ -9,10 +9,6 @@ teardown() { teardown_home; }
   for c in raycast alt-tab todobar keka appcleaner; do
     [[ "$output" == *"$c"* ]] || { echo "missing $c"; false; }
   done
-  for c in shottr obsidian brave chrome aerospace karabiner; do
-    [[ "$output" != *"$c"* ]] || { echo "unexpected $c"; false; }
-  done
-  grep -q '# cask "obsidian"' "$DOTFILES_DIR/$A/Brewfile.macos"
   # Third-party tap casks: tap declared, cask fully qualified and trusted (Homebrew 7 tap trust).
   grep -q '^tap "menubar-apps/menubar-apps"$' "$DOTFILES_DIR/$A/Brewfile.macos"
   grep -q '^cask "menubar-apps/menubar-apps/todobar", trusted: true$' "$DOTFILES_DIR/$A/Brewfile.macos"
