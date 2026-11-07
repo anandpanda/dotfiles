@@ -105,7 +105,7 @@ with no sudo.
 ## Done: Phase 6, macOS desktop apps
 
 Spec `docs/specs/06-apps.md`, plan `docs/plans/06-apps.md`. Modules (both
-`os = "macos"`): apps (Brewfile: Raycast, Shottr, AltTab, todobar,
+`os = "macos"`): apps (Brewfile: Raycast, AltTab, todobar,
 Keka, AppCleaner (Stats, Ice and MonitorControl removed 2026-10-30, unused); Obsidian commented optional; browsers
 hand-installed because their updaters lock the bundles; the todobar tap cask
 declared `trusted: true` for Homebrew 7; install.sh moves AltTab's hold key to

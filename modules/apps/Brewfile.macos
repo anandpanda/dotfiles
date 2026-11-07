@@ -7,7 +7,6 @@ tap "menubar-apps/menubar-apps"
 # Launcher, clipboard history, snippets (replaces Spotlight, Maccy)
 cask "raycast"
 # Screenshots: annotate, OCR, measure. Cmd-Shift-2
-cask "shottr"
 # Cmd-Tab with per-window previews (install.sh moves its hold key from Option to Command)
 cask "alt-tab"
 # Quick todo list in the menu bar
