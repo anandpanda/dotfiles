@@ -12,8 +12,8 @@ A phase is done only when every check below has run and passed, or is reported a
 1. **Tests.** Run the full suite, so the count compares with the previous count (from STATUS or the last close). Report pass and fail. A drop in the count needs a reason.
 2. **Lint.** Run the repo's linter. Zero findings, or each one listed.
 3. **Doctor.** Run the repo's health or drift check if it has one.
-4. **Fresh review.** Write the phase's diff to a diff file in the session scratchpad (`git diff <first>^..HEAD > <scratchpad>/phase.diff`). Dispatch the `reviewer` agent with the task, its acceptance criteria and that path. Give it the claims to check, not your reasoning.
-5. **Fix all.** Fix every finding you can confirm. Disagree with a finding only with evidence.
+4. **Fresh review.** Follow `~/.claude/review/run.md` with mode `own`, base `<first>^`, head `HEAD`, the task and its acceptance criteria as the goal, and checks 1 to 3 as `checks.md`. Give the reviewers the claims to check, not your reasoning.
+5. **Fix all.** Fix every finding that stands, blocking and should fix alike. Disagree with a finding only with evidence. Questions go to "Yours to do". Remove the `head/` worktree.
 6. **doc-drift.** Compare the README, specs, plans and rule files against what was built. Fix each place where a document now says something untrue.
 7. **STATUS.** Update the repo's STATUS file: what is done, the test count, what is next.
 8. **Clean tree.** Commit the fixes, doc and STATUS edits, then re-run checks 1 to 3. Last, `git status` shows a clean tree on the agreed branch with no stray files.
