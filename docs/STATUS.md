@@ -173,7 +173,7 @@ the overlay's half is `docs/09-coder-cli.md`. Workspaces JaiShreeRam and
 JaiShreeHanuman run the team's stable template with this repo as their Dotfiles
 URL; each has its own age key and its own copy of the secrets file. The old
 anand-hq and General were deleted on 2026-11-02 after their keepers moved over
-(Claude history and memory, the evals project to `~/zamp/evals_project` on
+(Claude history and memory, the evals project to the work folder on
 JaiShreeRam, the missing secrets into sops). `coder-run` (overlay work-tools)
 runs a command on a workspace with binary-safe pipes.
 - Profile: inside a Coder workspace install defaults to `server-work` (work
