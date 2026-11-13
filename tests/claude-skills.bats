@@ -1,7 +1,7 @@
 load helper
 C="modules/claude"
-SKILLS="explain grill phase-close pr-description voice-draft review-pr research find-past-session handoff retro scout"
-USER_ONLY="phase-close handoff retro scout"
+SKILLS="explain grill pr-description voice-draft review-change research find-past-session handoff retro scout"
+USER_ONLY="review-change handoff retro scout"
 setup() {
   setup_home
   S="$DOTFILES_DIR/$C/home/.claude/skills"
@@ -19,7 +19,7 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
     [ "$(field "$f" name)" = "$s" ] || { echo "bad name: $s"; return 1; }
     [ -n "$(field "$f" description)" ] || { echo "no description: $s"; return 1; }
   done
-  [ "$(find "$S" -name SKILL.md | wc -l | tr -d ' ')" -eq 11 ]
+  [ "$(find "$S" -name SKILL.md | wc -l | tr -d ' ')" -eq 10 ]
 }
 
 @test "side-effect skills disable model invocation" {
@@ -62,10 +62,13 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
 
 @test "every agent body carries the subagent standing rules" {
   for a in reviewer researcher worker; do
-    for p in "Nothing fake" "Skip no check" "Stay on the task" "Return the path and the count"; do
+    for p in "Nothing fake" "Skip no check" "Stay on the task"; do
       grep -qF "$p" "$A/$a.md" || { echo "$a missing: $p"; return 1; }
     done
   done
+  grep -qF "Return the path and the count" "$A/researcher.md"
+  grep -qF "Return the path and the count" "$A/worker.md"
+  grep -qF "You cannot write files. Put your findings in your final message" "$A/reviewer.md"
   grep -qF "Write your findings to the file" "$A/researcher.md"
   grep -qF "Write your findings to the file" "$A/worker.md"
   grep -qF "anti-cheat contract" "$A/worker.md"
@@ -94,19 +97,11 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
   grep -qF "explicit go" "$S/voice-draft/SKILL.md"
 }
 
-@test "skills hand the reviewer a diff file it can read" {
-  for s in phase-close review-pr; do
-    grep -qF "diff file" "$S/$s/SKILL.md" || { echo "$s passes no diff file"; return 1; }
-  done
-  grep -qF "gh pr diff" "$S/review-pr/SKILL.md"
-  grep -qF "git diff" "$S/phase-close/SKILL.md"
-}
-
-@test "phase-close runs the full suite and ends on a clean tree" {
-  f="$S/phase-close/SKILL.md"
-  grep -qF "full suite" "$f"
-  last=$(grep -E '^[0-9]+\. \*\*' "$f" | tail -1)
-  [[ "$last" == *"Clean tree"* ]]
+@test "the review engine hands the reviewer a diff from the merge base" {
+  R="$DOTFILES_DIR/$C/home/.claude/review"
+  grep -qF '`diff.patch`' "$R/run.md"
+  grep -qF "never a two-dot diff" "$R/run.md"
+  grep -qF "git merge-base" "$S/review-change/SKILL.md"
 }
 
 @test "skills call bundled scripts through the skill dir and know their own session" {
@@ -123,18 +118,22 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
   grep -qF "scratchpad" "$S/scout/SKILL.md"
 }
 
-@test "review-pr finds, refutes and drafts replies through voice-draft" {
-  f="$S/review-pr/SKILL.md"
-  for p in "refute" "a line you read" "Comment ledger" "voice-draft" "Never post"; do
+@test "review-change finds, refutes and drafts replies through voice-draft" {
+  f="$S/review-change/SKILL.md"
+  R="$DOTFILES_DIR/$C/home/.claude/review"
+  grep -qF "refute.md" "$R/run.md"
+  grep -qF "needs a line you read" "$R/lenses.md"
+  for p in "Ledger" "voice-draft" "Never post"; do
     grep -qF "$p" "$f" || { echo "missing: $p"; return 1; }
   done
 }
 
-@test "phase-close carries doc-drift and the anti-cheat contract" {
-  f="$S/phase-close/SKILL.md"
-  for p in "doc-drift" "anti-cheat contract" "What I got wrong" "STATUS" "Yours to do" "previous count" "reviewer"; do
-    grep -qF "$p" "$f" || { echo "missing: $p"; return 1; }
-  done
+@test "review-change reviews his own work with the tests lens and the anti-cheat contract" {
+  R="$DOTFILES_DIR/$C/home/.claude/review"
+  grep -qF "mode \`own\`" "$S/review-change/SKILL.md"
+  grep -qF "## 8. Tests (own mode only)" "$R/lenses.md"
+  grep -qF "Anti-cheat contract" "$R/lenses.md"
+  [ ! -e "$S/phase-close" ]
 }
 
 @test "explain and grill follow the agreed shape" {
@@ -172,10 +171,11 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
 
 @test "resolver rows point at files that exist" {
   r="$DOTFILES_DIR/$C/RESOLVER.md"
-  for s in pr-description review-pr voice-draft explain phase-close retro scout; do
+  for s in pr-description review-change voice-draft explain retro scout; do
     grep -qF "home/.claude/skills/$s/SKILL.md" "$r" || { echo "no resolver row: $s"; return 1; }
   done
   grep -qF "home/.claude/agents/reviewer.md" "$r"
+  grep -qF "home/.claude/review/run.md" "$r"
   for o in $(grep -oE '`home/[^`]+`' "$r" | tr -d '`'); do
     [ -f "$DOTFILES_DIR/$C/$o" ] || { echo "missing $o"; return 1; }
   done
@@ -190,6 +190,7 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
   [ -x "$HOME/.claude/skills/retro/context.sh" ]
   [ -x "$HOME/.claude/skills/find-past-session/search.sh" ]
   [ "$(readlink "$HOME/.claude/agents/reviewer.md")" = "$DOTFILES_DIR/$C/home/.claude/agents/reviewer.md" ]
+  [ "$(readlink "$HOME/.claude/review/run.md")" = "$DOTFILES_DIR/$C/home/.claude/review/run.md" ]
 }
 
 transcript_line() { # type role ts text
@@ -310,8 +311,8 @@ after reply'
   grep -qF "Sent using @Claude" "$DOTFILES_DIR/modules/claude/home/.claude/skills/voice-draft/SKILL.md"
 }
 
-@test "review-pr follows a repo's REVIEW.md and has a fresh reviewer refute each finding" {
-  f="$S/review-pr/SKILL.md"
-  grep -qF "REVIEW.md" "$f" || false
-  grep -qF 'A fresh `reviewer` agent' "$f"
+@test "the review engine follows a repo's REVIEW.md and has a fresh reviewer refute each finding" {
+  f="$DOTFILES_DIR/$C/home/.claude/review/run.md"
+  grep -qF "REVIEW.md" "$f"
+  grep -qF 'One fresh `reviewer` per batch' "$f"
 }

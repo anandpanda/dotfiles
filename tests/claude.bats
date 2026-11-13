@@ -42,8 +42,8 @@ teardown() { teardown_home; }
   [ "$n" -lt 200 ]
 }
 
-@test "working agreement carries the agreed rules" {
-  f="$DOTFILES_DIR/$C/home/.claude/rules/working-agreement.md"
+@test "the rules carry the agreed rules" {
+  f="$(mktemp)"; cat "$DOTFILES_DIR/$C"/home/.claude/rules/*.md >"$f"
   for p in "literal question" "UNVERIFIED" "stands because" "not a go" "small reversible" \
     "No comments in code" "AI slop" "Do not overcorrect" "outrank plugin skills" \
     "senior principal engineer" "the tradeoff and why" "No paranoia" "Planning is mandatory" \
@@ -71,7 +71,7 @@ teardown() { teardown_home; }
 
 @test "resolver names an existing owner file for every rule heading" {
   f="$DOTFILES_DIR/$C/home/.claude/rules/working-agreement.md"
-  n=$(grep -c '^## ' "$f"); [ "$n" -ge 6 ]
+  n=$(grep -c '^## ' "$f"); [ "$n" -ge 3 ]
   while IFS= read -r h; do
     row=$(grep -F "| ${h#\#\# } |" "$DOTFILES_DIR/$C/RESOLVER.md") || { echo "no owner: $h"; return 1; }
     owners=$(printf '%s\n' "$row" | grep -oE '`[^`]+`' | tr -d '`')
@@ -236,6 +236,14 @@ OWNED="$BATS_TEST_DIRNAME/../modules/claude/settings.owned.json"
   grep -qF 'Call it principled only in the first case' "$DOTFILES_DIR/$C/home/.claude/rules/building.md"
 }
 
+@test "building rules carry the principles the review lenses check" {
+  f="$DOTFILES_DIR/$C/home/.claude/rules/building.md"
+  for h in "Intent and change risk" "Correctness" "Failure, concurrency and cost" "Security" "Design and simplicity" "Interfaces and structure" "Readability" "Tests"; do
+    grep -qx "### [1-8]\. $h" "$f" || { echo "missing principle: $h"; return 1; }
+    grep -qF "`building.md`, Principles" "$DOTFILES_DIR/$C/home/.claude/review/lenses.md"
+  done
+}
+
 @test "building rules make fakes copy the real tool" {
   grep -qF "A fake reproduces the real tool's output, captured from a real run." "$DOTFILES_DIR/$C/home/.claude/rules/building.md"
 }
@@ -244,7 +252,7 @@ OWNED="$BATS_TEST_DIRNAME/../modules/claude/settings.owned.json"
   f="$DOTFILES_DIR/$C/home/.claude/rules/building.md"
   grep -qF 'watch it fail' "$f"
   grep -qF 'only the tests for what changed' "$f"
-  grep -qF 'One heavy run at a time (full suite, build, image build); pytest at most -n 4; the full suite runs at phase close.' "$f"
+  grep -qF 'One heavy run at a time (full suite, build, image build); pytest at most -n 4; the full suite runs before the work is handed over.' "$f"
 }
 
 @test "resolver names the owner of guard rails, plugins and statusline" {
