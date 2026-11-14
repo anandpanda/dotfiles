@@ -23,7 +23,7 @@ Every explanation is a Claude Doc built from `reference.md`: the change shape wh
 
 ## "check"
 
-1. List every thread on the doc's tab.
+1. List every thread under the tab's file, not its prose body: comments on a diagram sit under that diagram's widget, and only the file-level query returns them.
 2. Answer each unanswered comment of his in its own thread, from this session's context.
 3. When a comment shows a point is wrong or unclear, fix the doc text and say so in the thread.
 4. When his comments settle a preference about the form (length, a diagram, order), add it to `reference.md`.
