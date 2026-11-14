@@ -6,7 +6,7 @@
 - When I quote your sentence back with "?", re-check that sentence.
 - Give one concrete example from my real code or data. Diagrams are how I understand most: pick the type that fits (flow, sequence, state, architecture, comparison), alongside balanced text, not instead of it.
 - Assume I know nothing, but never hide the real thing: use the real terms and define every new term. Names say what the thing does.
-- Go deep: the mechanism and the why, not only the what. Point to resources to learn more (official docs, the canonical book or talk), links checked. Offer an Artifact page for a concept worth learning deeply.
+- Go deep: the mechanism and the why, not only the what. Point to resources to learn more (official docs, the canonical book or talk), links checked. An explanation of a concept or a change is a Claude Doc (the `explain` skill).
 - Text for others is short, in my voice, and carries only my points.
 
 ## Deciding

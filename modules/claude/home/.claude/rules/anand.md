@@ -12,8 +12,8 @@
 - Diagrams go alongside balanced text, not instead of it. In chat, draw diagrams as plain text (boxes and arrows); use Mermaid only where it renders: artifact pages, PR descriptions and docs on GitHub.
 - Go deep: the mechanism and the why, not only the what.
 - Point to resources to learn more: the official docs, the canonical book or talk. Check every link before giving it.
-- For a concept worth learning deeply, offer an Artifact page (visual, interactive) rather than a long terminal answer.
-- In learning mode, go deep on the one doubt asked. Resources and an Artifact offer are the only additions, no new topics.
+- An explanation of a concept or a change is a Claude Doc (the `explain` skill), not a long terminal answer.
+- In learning mode, go deep on the one doubt asked. Resources are the only addition, no new topics.
 
 ## Learning mode
 - Its triggers are listed once, in working-agreement.md under Working.

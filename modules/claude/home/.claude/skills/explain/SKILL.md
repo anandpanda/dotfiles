@@ -1,17 +1,33 @@
 ---
 name: explain
-description: Use when Anand asks how or why something works, asks to explain, walk through or teach a concept, file, flow or error, or asks what a technical term or mechanism means. Explains from his own files with the diagram type that fits.
+description: Use when Anand asks to explain, walk through or teach a concept, mechanism, flow, term or error, or a change (a PR, a branch, his local diff, a colleague's commit), or asks how or why something works. Also when he says "check" about comments on an explainer doc.
 ---
 
 # Explain
 
-Teach the real thing from his own code. How he learns (diagram types, depth, the Artifact offer, the learning-mode stop, never simplifying away the mechanism) is in `rules/anand.md`. This is the shape.
+Every explanation is a Claude Doc built from `reference.md`: the change shape when the subject is a change, the concept shape otherwise. How he learns is in `rules/anand.md`; how he writes is in `rules/writing.md`; the shapes, form rules and grounding are in `reference.md`.
 
-1. **Map.** The whole thing in three to five lines: the parts, how they connect, where his question sits.
-2. **Take one step.** The part he asked about: what it does, the mechanism, and why it is built that way. One concrete example from his files or data, cited as file:line.
-3. **Diagram.** The type that fits (flow, sequence, state, architecture), as mermaid where it renders, with balanced text beside it.
-4. **Real terms.** The real names, each new one defined in one line the first time it appears.
-5. **Resources.** One to three, every link opened before giving it.
-6. **Restate.** The core idea in one or two plain sentences.
+## Route the request
 
-For a deep topic, offer an Artifact page. In learning mode, stop after each step and wait for his go.
+| He asks | Output |
+|---|---|
+| Explain or teach a change or a concept | A new Claude Doc, change or concept shape |
+| A doubt about a point in an existing explainer | His comment thread on that doc, answered after he says "check" |
+| A one-line fact, not an explanation | A sentence in chat |
+
+## Build the doc
+
+1. Read the subject first: for a change, the diff, its description and the code around it; for a concept, the official docs and where it shows up in his system.
+2. Plant the outline (title, byline, one pending block per section of the shape), give him the link, then fill one section per call while he watches.
+3. Give the link once and say he can comment on any sentence with "Send to Claude" unticked, then type "check".
+
+## "check"
+
+1. List every thread on the doc's tab.
+2. Answer each unanswered comment of his in its own thread, from this session's context.
+3. When a comment shows a point is wrong or unclear, fix the doc text and say so in the thread.
+4. When his comments settle a preference about the form (length, a diagram, order), add it to `reference.md`.
+
+## Learning mode
+
+Same doc, filled one section at a time: the frame's map first, then stop and wait for his go before each next section.
