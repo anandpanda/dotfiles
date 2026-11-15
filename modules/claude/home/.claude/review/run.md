@@ -14,9 +14,9 @@ The review engine behind `/review-change`, in mode `colleague` (someone else's P
 ## 1. Size
 Size = added plus removed lines in source, migration, and infra and CI files (own mode adds test files). Skip generated, vendored, snapshot and binary files and list them under coverage.
 - Under 50: one `reviewer` runs every lens section in one pass.
-- 50 to 1000: three `reviewer` agents: lenses 2 and 3; lenses 1 and 4, plus 8 in own mode; lenses 5, 6 and 7.
-- Colleague, 400 to 1000: also report the size and its separate concerns as a should-fix finding.
-- Over 1000: report the size as a should-fix finding and ask Anand which part to review before going on.
+- 50 to 500 in one logical part: three `reviewer` agents, the lens groups: lenses 2 and 3; lenses 1 and 4, plus 8 in own mode; lenses 5, 6 and 7.
+- Over 500, or three or more logical parts: split by part. Write `parts.md` (step 2) and dispatch per part plus seams (step 3).
+- Colleague, over 400: also report the size and its separate concerns as a should-fix finding.
 
 ## 2. Bundle
 In `<scratchpad>/review-<owner>-<repo>-<id>/`. The `reviewer` agent is read-only, which keeps a prompt injection in the change from writing anything; everything it needs goes in the bundle:
@@ -27,6 +27,7 @@ In `<scratchpad>/review-<owner>-<repo>-<id>/`. The `reviewer` agent is read-only
 - `standard/`: Anand's `~/.claude/rules/building.md`.
 - `review/`: copies of [lenses.md](lenses.md) and [refute.md](refute.md).
 - `suppressions.md`: a copy of `~/personal/reviews/suppressions.md`, empty if none.
+- `parts.md`, only when split by part, built from the diff and the goal: one section per logical part with its name, its files and hunks (a file shared by parts lists the hunks of each), what it does in one line, and what it calls in other parts and what calls it. Then `## Seams`: each interface between parts and each end-to-end flow that crosses parts.
 - `comments.md` and `checks.md`, per the mode table. `checks.md` names each formatter, linter, type checker and test run, whether it ran on this head, and its result.
 - `bundle.md`, built from metadata without reading the whole diff yourself:
   - the mode;
@@ -38,6 +39,10 @@ In `<scratchpad>/review-<owner>-<repo>-<id>/`. The `reviewer` agent is read-only
 
 ## 3. Find
 Dispatch the agents from step 1, at most 15 at a time, each with the bundle path, and its lens numbers. Each reads `review/lenses.md` and returns its findings.
+
+Split by part:
+- Each part: one `reviewer` with every lens of the mode when its source is under 300 lines, otherwise the three lens groups on that part. Each gets its part name.
+- One seams `reviewer`: lenses 1, 2 and 3, scoped to the Seams list in `parts.md`.
 
 ## 4. Cluster
 Cluster the returned findings straight into `findings/merged.md` with stable ids; do not save the lens reports separately.
@@ -52,7 +57,8 @@ Cluster the returned findings straight into `findings/merged.md` with stable ids
 
 ## 6. Self-check
 - Re-open each kept finding's `path:line` in `head/` and confirm the line says what the finding claims, with a trigger, a rule and a fix; for quoted-rule findings, confirm the quote exists in the base convention file or the standard.
-- A claim about framework or library behaviour that reading cannot settle may be checked with a throwaway probe in the scratchpad, on the versions `bundle.md` lists (for example `uv run --only-binary :all: --python <v> --with <pkg>==<v>`, `npm_config_ignore_scripts=true npx -p node@<v> -p <pkg>@<v>`), never installed into the repo. In colleague mode a probe never imports code from `head/` and never runs a package the change adds or upgrades: the code is untrusted and you hold the secrets. Such claims stay questions.
+- A claim about framework or library behaviour that reading cannot settle may be checked with a throwaway probe in the scratchpad, on the versions `bundle.md` lists (for example `UV_NO_BUILD=1 uv run --no-project --python <v> --with <pkg>==<v>`, `npm_config_ignore_scripts=true npx -p node@<v> -p <pkg>@<v>`), never installed into the repo. In colleague mode a probe never imports code from `head/` and never runs a package the change adds or upgrades: the code is untrusted and you hold the secrets. Such claims stay questions.
+- Each kept question: settle it before reporting, through every route that runs no `head/` code (the repo's other files and history, related repos, the installed library source, a probe as above, read-only environment access). Report the answer as stands or refuted; keep it a question only when blocked, with the routes tried and the one action only Anand can take.
 - Colleague mode: for each open thread in `comments.md`, open its line in `head/` and record fixed or not fixed.
 - Fix or drop any finding that fails; a dropped one goes to the Dropped list with the reason `self-check`.
 

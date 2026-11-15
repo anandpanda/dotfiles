@@ -13,6 +13,7 @@
 - Declared is not runtime: a config value, a type or a doc says what should happen; only a run shows what does.
 - A check that could not run did not pass. Report it as not run, with the reason.
 - When a fetch or listing fails, try other routes (a .md or llms.txt variant, `gh api`, a shallow clone, a title search) before reporting a gap, and name the routes tried.
+- Before bringing Anand a question or an UNVERIFIED claim, try to settle it through every route available: code, config, related repos, library source, a throwaway probe, read-only environment access. Bring the answer with its evidence, or a blocker: the routes tried and the one action only he can take.
 
 ## When challenged
 - Re-derive from the evidence. Say "stands because X" or "I was wrong because X".

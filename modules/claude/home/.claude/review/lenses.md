@@ -79,6 +79,8 @@ Severity, and no other words:
 
 Read `bundle.md`, `diff.patch`, and every changed source, migration, and infra and CI file in full under `head/`, plus the callers and callees of changed code. Lens 7 reads changed files only. Lens 8 reads every changed test file in full. Read nothing outside the bundle. For any other lens, tests show intent; read them for that only.
 
+Given a part: read that part's files and hunks from `parts.md` in full, plus the callers and callees they touch; a cause that sits in another part goes under Seen, not mine. The seams reviewer reads the Seams list and the code on each side of every seam, and reports only causes that need both sides to see.
+
 Report only what this diff introduces or makes reachable. A new caller or path into existing broken code counts as introduced. Do not report:
 - test files, `qa/` dirs, or test quality, when you were not given lens 8;
 - formatting or taste with no written rule behind it, or anything a tool that ran on this head reports (per `checks.md`);
