@@ -1,7 +1,6 @@
 ---
 name: review-change
 description: /review-change reviews the change Anand names in chat, a colleague's pull request or his own PR, branch or uncommitted work.
-disable-model-invocation: true
 ---
 
 # Review change
