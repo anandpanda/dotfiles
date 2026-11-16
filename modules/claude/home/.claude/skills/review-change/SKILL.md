@@ -6,7 +6,7 @@ disable-model-invocation: true
 
 # Review change
 
-The review is `~/.claude/review/run.md`. It checks the change against Anand's standard (`rules/building.md`, Principles), the same standard the work was built to. Block only for the blocking classes in the severity scale; do not hold a change to perfection.
+This is the Check stage of `rules/lifecycle.md`. The engine is `~/.claude/review/run.md`: readers hold every line against Anand's standard (`rules/building.md`, Principles) and the repo's written rules (`CLAUDE.md` or `AGENTS.md` and the convention and codebase guides they point to); breakers attack the running change from `~/.claude/review/areas.md`. Block only for the blocking classes in the severity scale; do not hold a change to perfection.
 
 ## 1. Pick the mode
 Take what to review from what Anand says in chat; if he has not said, ask.
@@ -29,12 +29,17 @@ Both: classify each file: source; migration; infra and CI (CI workflows, IaC, co
 ## 3. Run
 Follow `~/.claude/review/run.md` with the mode, base and head above. Colleague: conventions come from `baseRefOid`, `comments.md` holds the existing review threads with resolved state and the author's replies, and `checks.md` holds CI on head.
 
+Find the review stack from the repo's own docs (`run.md`) and bring it up on head the way they say; breakers start once the change runs there. With no stack named, say so in the report: readers stay read-only and breakers run what they can in-process.
+
 ## 4. Report
 Start with CI or check status and the goal; say first if a PR is a draft. Then blocking, should fix, questions, with severity as defined in `~/.claude/review/lenses.md`, Shared contract, each section ordered by harm, worst first: security, then data, then users, then code health. No praise.
 
-Each item is at most three lines: `path:line`, what goes wrong and when, the rule broken, the fix. A question names the one fact that would decide it. Then: existing comments still open (colleague), pre-existing problems, Dropped (`id | verdict | reason`, one line each), Coverage (lenses run, files skipped or split, areas not judged, claims probed).
+Each item is at most three lines: `path:line`, what goes wrong and when, the rule broken, the fix. A question names the one fact that would decide it. Then: existing comments still open (colleague), pre-existing problems, Dropped (`id | verdict | reason`, one line each), Coverage (lenses run, coverage-map gaps, breaker surface maps and areas attacked, files skipped or split, areas not judged, claims probed). Own mode adds the clusters from `findings/clusters.md`: each cause, its findings, and the design-level fix at its owner.
 
-Own mode ends here: fix every finding that stands, after Anand has seen the report, and bring the questions to him.
+Own mode is the Check loop of `rules/lifecycle.md`: the report is the loop sync. Fix each cluster at the design level, test first; a fix that changes the agreed design, or a workaround, goes to Anand first. Then run another round on the parts and seams still producing real findings, until a round is quiet and every map is complete.
+
+## Learn
+After the PR is up, for each comment a reviewer or bot leaves: say why it escaped and propose the line it suggests for the standard, `lenses.md` or `areas.md`. Add a line only on Anand's go, with the comment as its source.
 
 ## 5. Ledger (colleague)
 In `~/personal/reviews/<owner>-<repo>-<n>.md`, with the merge base and head reviewed: `| # | comment (who, path:line) | status | reply |`. Status: proposed (not posted yet), open, agreed, disputed, resolved, dropped. Add every existing comment and every kept finding. The reply column stays empty until Anand decides. When he drops a finding as wrong, add one line to `~/personal/reviews/suppressions.md`: what was flagged and why it was wrong.

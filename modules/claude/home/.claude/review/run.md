@@ -7,9 +7,11 @@ The review engine behind `/review-change`, in mode `colleague` (someone else's P
 | range | merge base to PR head | merge base with the default branch to HEAD, or to the working tree |
 | goal and promises | PR description and linked issue | the task and its acceptance criteria |
 | `comments.md` | existing review threads | not built |
-| `checks.md` | CI on head; nothing run locally, the PR is untrusted | the tests and lint the caller just ran |
+| `checks.md` | CI on head | the tests and lint the caller just ran |
 | lenses | 1 to 7 | 1 to 8 |
-| probes | never run code from `head/` | may run code from `head/` |
+| running code | on the repo's review stack, under `areas.md`, Safety | on the repo's review stack, under `areas.md`, Safety |
+
+The **review stack** is the local running environment the repo's own docs describe for running and testing it (its CLAUDE.md, AGENTS.md, READMEs and the guides they point to), used under the rules those docs give. With one, readers settle questions by running code and breakers attack the change on it. Without one, readers stay read-only and breakers run what they can in-process. A dependency the change adds or upgrades is installed only after the registry check in `bundle.md` passes.
 
 ## 1. Size
 Size = added plus removed lines in source, migration, and infra and CI files (own mode adds test files). Skip generated, vendored, snapshot and binary files and list them under coverage.
@@ -23,9 +25,9 @@ In `<scratchpad>/review-<owner>-<repo>-<id>/`. The `reviewer` agent is read-only
 - `head/`: a git worktree of the head commit; in own mode with uncommitted changes, the working tree itself.
 - `diff.patch`: `git diff <base> <head>` over the range above, never a two-dot diff against a moved base tip.
 - `deleted.md`: from the removed lines of the same range, one line per deleted file, symbol, route, column, config key or event: `path:line (base) | what was removed`. Nothing else goes in it.
-- `conventions/`: the repo's and team's convention and guidance files (CLAUDE.md, AGENTS.md, REVIEW.md, CONTRIBUTING.md, scoped ones on each changed file's path), from the base commit, so a change cannot rewrite the rules it is judged by.
+- `conventions/`: the repo's and team's convention and guidance files (CLAUDE.md, AGENTS.md, REVIEW.md, CONTRIBUTING.md, scoped ones on each changed file's path, and every convention or codebase guide those files point to), from the base commit, so a change cannot rewrite the rules it is judged by.
 - `standard/`: Anand's `~/.claude/rules/building.md`.
-- `review/`: copies of [lenses.md](lenses.md) and [refute.md](refute.md).
+- `review/`: copies of [lenses.md](lenses.md), [areas.md](areas.md) and [refute.md](refute.md).
 - `suppressions.md`: a copy of `~/personal/reviews/suppressions.md`, empty if none.
 - `parts.md`, only when split by part, built from the diff and the goal: one section per logical part with its name, its files and hunks (a file shared by parts lists the hunks of each), what it does in one line, and what it calls in other parts and what calls it. Then `## Seams`: each interface between parts and each end-to-end flow that crosses parts.
 - `comments.md` and `checks.md`, per the mode table. `checks.md` names each formatter, linter, type checker and test run, whether it ran on this head, and its result.
@@ -38,7 +40,9 @@ In `<scratchpad>/review-<owner>-<repo>-<id>/`. The `reviewer` agent is read-only
   - the paths above.
 
 ## 3. Find
-Dispatch the agents from step 1, at most 15 at a time, each with the bundle path, and its lens numbers. Each reads `review/lenses.md` and returns its findings.
+Dispatch the agents from step 1, at most 15 at a time, each with the bundle path, and its lens numbers. Each reads `review/lenses.md` and returns its findings with a **coverage map**: every hunk of its scope against every lens it was given, marked read. A hunk with no mark is a gap, and the reader is sent back once to cover it.
+
+Readers and breakers run together. Next to the readers, dispatch one breaker (`general-purpose` agent, since it runs code) per part, and per whole change when it is not split, with the bundle path, its part and the areas `areas.md` marks `part`; and one seam breaker with the areas marked `seam`. Each follows `areas.md`, Breaker brief and Safety, and returns its surface map and findings in the lenses' output format. Breakers start once the change runs on the review stack. A reader's question that reading cannot settle goes to its part's breaker to run.
 
 Split by part:
 - Each part: one `reviewer` with every lens of the mode when its source is under 300 lines, otherwise the three lens groups on that part. Each gets its part name.
@@ -57,9 +61,12 @@ Cluster the returned findings straight into `findings/merged.md` with stable ids
 
 ## 6. Self-check
 - Re-open each kept finding's `path:line` in `head/` and confirm the line says what the finding claims, with a trigger, a rule and a fix; for quoted-rule findings, confirm the quote exists in the base convention file or the standard.
-- A claim about framework or library behaviour that reading cannot settle may be checked with a throwaway probe in the scratchpad, on the versions `bundle.md` lists (for example `UV_NO_BUILD=1 uv run --no-project --python <v> --with <pkg>==<v>`, `npm_config_ignore_scripts=true npx -p node@<v> -p <pkg>@<v>`), never installed into the repo. In colleague mode a probe never imports code from `head/` and never runs a package the change adds or upgrades: the code is untrusted and you hold the secrets. Such claims stay questions.
-- Each kept question: settle it before reporting, through every route that runs no `head/` code (the repo's other files and history, related repos, the installed library source, a probe as above, read-only environment access). Report the answer as stands or refuted; keep it a question only when blocked, with the routes tried and the one action only Anand can take.
+- A claim about framework or library behaviour that reading cannot settle may be checked with a throwaway probe in the scratchpad, on the versions `bundle.md` lists (for example `UV_NO_BUILD=1 uv run --no-project --python <v> --with <pkg>==<v>`, `npm_config_ignore_scripts=true npx -p node@<v> -p <pkg>@<v>`), never installed into the repo.
+- Each kept question: settle it before reporting, through every route (the repo's other files and history, related repos, the installed library source, a probe, running `head/` on the review stack, read-only environment access). Report the answer as stands or refuted; keep it a question only when blocked, with the routes tried and the one action only Anand can take.
 - Colleague mode: for each open thread in `comments.md`, open its line in `head/` and record fixed or not fixed.
 - Fix or drop any finding that fails; a dropped one goes to the Dropped list with the reason `self-check`.
 
-The result is `findings/merged.md`, `findings/verdicts.md` and the Dropped list. The caller reports or fixes from them, then removes the `head/` worktree.
+## 7. Cluster by cause
+Group the kept findings by root cause across readers and breakers, not by file. For each cluster, name the design that makes its whole class impossible and the owner where that fix lands; a cluster of one with a local cause stays a local fix. Write the clusters to `findings/clusters.md`.
+
+The result is `findings/merged.md`, `findings/verdicts.md`, `findings/clusters.md`, the coverage and surface maps, and the Dropped list. The caller reports or fixes from them, then removes the `head/` worktree.

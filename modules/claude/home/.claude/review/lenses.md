@@ -12,14 +12,16 @@ One defect often touches several subjects. It belongs to the lens that owns its 
 | Deleted code and its remaining references, deploy order, new code on old data, migrations, backward compatibility, rollback, new dependencies, observability | 1 |
 | Wrong results, bad inputs, business rules, framework and library behaviour, APIs used exist in the pinned version, errors reported truthfully, user-visible behaviour | 2 |
 | Partial failure, atomicity, retries, idempotency, races, async, resources, timeouts, caches, framework runtime rules, cost at scale | 3 |
+| Failure visibility: who learns of each failure, bounded retries, size bounds on inputs and stores | 3 |
 | Authentication, authorization, data scoping, cache keys, trust-boundary input, injection, CSRF, CORS, SSRF, XSS, secrets, sensitive data in logs and errors, CI and infra permissions | 4 |
+| Identity and scope carried across process and service boundaries | 4 |
 | Structure, coupling, layering, one decision in two places, abstraction, indirection, flags, paranoia, hand-rolled code, hidden side effects | 5 |
 | Types, signatures, data models, convention files, placement, module boundaries, dead code and helpers with no caller | 6 |
 | Names, cryptic code, idioms, comments, docstrings, AI slop, magic values | 7 |
 | Test files, `qa/` dirs, fakes and fixtures, changed behaviour with no test (own mode only) | 8 |
 | A suppression this change adds | the lens owning what it hides |
 
-Each lens checks the change against one section of the owner's standard, `standard/building.md`, Principles. Read that section in full: it is the checklist. The steps below are how to check it.
+Each lens checks the change against one section of the owner's standard, `standard/building.md`, Principles. Read that section in full: it is the checklist. The steps below are how to check it. Breakers attack the running change from `review/areas.md`; each area names the lens that owns its harm, so the lenses and the areas are one checklist.
 
 ## 1. Intent, completeness & change risk
 Check against `building.md`, Principles, 1. Does the change do what it says, all of it, nothing else, and can it ship safely?
@@ -28,20 +30,26 @@ Check against `building.md`, Principles, 1. Does the change do what it says, all
 - A field removed, renamed or retyped in a public API, stored shape, event or file format is a finding in its own right, even when no consumer is visible in the repo.
 - In own mode, a change the task asks for that the standard forbids is a question for the owner, naming the task line and the rule.
 - For each new dependency, use the registry facts in `bundle.md`. A lockfile entry resolving outside the registry is a finding.
+- List every long-running job or process the change touches, and every one that could be mid-run at deploy, including work it spawned or handed off. Each is drained, kept compatible, or named in the deploy notes; one that is none of these is a finding.
 
 ## 2. Correctness
 Check against `building.md`, Principles, 2. Two passes, reported together. First, start at each entry point the change adds or changes (routes, handlers, jobs, components, public functions) and trace real inputs inward through every changed line. Then walk the diff hunk by hunk and ask what input or state makes each one wrong.
 - An import, function, argument or option you cannot confirm in the pinned version from `head/` is a question.
+- At each boundary, try the input empty, blank, huge, deeply nested, self-referencing, with non-finite numbers and with duplicates.
 
 ## 3. Failure, concurrency & cost
 Check against `building.md`, Principles, 3. What happens when things fail, run twice, run at once, or run at scale?
 - For each write or send, ask what fails after it and name the state left behind.
 - Identify the framework's runtime rules from the code, not from its name.
 - For cost findings, state the scale at which it hurts.
+- For each failure path, name who learns of it: the caller, the owner of the work, or monitoring. A failure nobody learns of is a finding. A retry with no bound, or a retry of an error that will fail the same way again, is a finding.
+- Every input and every store has a size bound; name the one that does not.
 
 ## 4. Security
 Check against `building.md`, Principles, 4. Can anyone do or see what they should not?
 - First learn how the repo already secures similar paths, then trace data from input to the sensitive operation.
+- Follow identity and scope (user, tenant, request, run) across every process or service boundary the change crosses. Rebuilt field by field, lost, or carried into work it does not belong to: each is a finding.
+- Secrets are checked at any depth inside a value, under any field name, and inside strings, wherever data is stored, returned, logged or sent.
 
 ## 5. Design & simplicity
 Check against `building.md`, Principles, 5. Is this the right structure, with the least mechanism?
@@ -65,6 +73,7 @@ Check against `building.md`, Principles, 8, and its Anti-cheat contract. Would e
 - A test weakened, skipped or deleted in this change, with no cause shown in the code.
 - Special-cased test inputs or hard-coded expected outputs copied from the implementation rather than from the rule.
 - A fake or fixture whose shape differs from what the real dependency returns; read the real code to compare.
+- A test, fixture or acceptance check that drives the code differently from production: fixed ids where production makes new ones, skipped retries, a stand-in that cannot fail.
 - A test whose name promises more than it asserts.
 - Each behaviour this change adds or changes has a test that would fail without it. Name each one with none.
 
