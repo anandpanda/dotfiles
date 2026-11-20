@@ -53,7 +53,10 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
   [ -z "$(field "$A/worker.md" tools)" ]
   [ "$(field "$A/worker.md" model)" = haiku ]
   [ "$(field "$A/worker.md" effort)" = low ]
-  for a in reviewer researcher worker; do
+  [ "$(field "$A/retro-reader.md" tools)" = Read ]
+  [ "$(field "$A/retro-reader.md" model)" = sonnet ]
+  [ "$(field "$A/retro-reader.md" effort)" = medium ]
+  for a in reviewer researcher worker retro-reader; do
     [ "$(head -1 "$A/$a.md")" = "---" ]
     [ "$(field "$A/$a.md" name)" = "$a" ]
     [ -n "$(field "$A/$a.md" description)" ]
@@ -61,7 +64,7 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
 }
 
 @test "every agent body carries the subagent standing rules" {
-  for a in reviewer researcher worker; do
+  for a in reviewer researcher worker retro-reader; do
     for p in "Nothing fake" "Skip no check" "Stay on the task"; do
       grep -qF "$p" "$A/$a.md" || { echo "$a missing: $p"; return 1; }
     done
@@ -71,6 +74,8 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
   grep -qF "You cannot write files. Put your findings in your final message" "$A/reviewer.md"
   grep -qF "Write your findings to the file" "$A/researcher.md"
   grep -qF "Write your findings to the file" "$A/worker.md"
+  grep -qF "Return the moments as your structured output" "$A/retro-reader.md"
+  grep -qF "Cite the \`i\` field" "$A/retro-reader.md"
   grep -qF "anti-cheat contract" "$A/worker.md"
 }
 
@@ -85,7 +90,7 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
   f="$S/pr-description/SKILL.md"
   grep -qF "No testing section" "$f"
   grep -qF "mermaid" "$f"
-  grep -qF "Merge risk" "$f"
+  grep -qF "No merge-risk section" "$f"
   grep -qF "What did not change" "$f"
   grep -qF "No AI attribution" "$f"
   run grep -F "only on his go" "$f"
@@ -107,7 +112,10 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
 @test "skills call bundled scripts through the skill dir and know their own session" {
   grep -qF '${CLAUDE_SKILL_DIR}/pairs.sh' "$S/retro/SKILL.md"
   grep -qF 'pairs.sh ${CLAUDE_SESSION_ID}' "$S/retro/SKILL.md"
-  grep -qF '${CLAUDE_SKILL_DIR}/context.sh' "$S/retro/SKILL.md"
+  grep -qF '${CLAUDE_SKILL_DIR}/chunk.sh' "$S/retro/SKILL.md"
+  grep -qF '${CLAUDE_SKILL_DIR}/harness-then.sh' "$S/retro/SKILL.md"
+  grep -qF '${CLAUDE_SKILL_DIR}/ledger.md' "$S/retro/SKILL.md"
+  grep -qF '${CLAUDE_SKILL_DIR}/read.js' "$S/retro/SKILL.md"
   grep -qF '${CLAUDE_SKILL_DIR}/search.sh --exclude "${CLAUDE_SESSION_ID}"' "$S/find-past-session/SKILL.md"
   run grep -rE '~/\.claude/skills/[a-z-]+/[a-z]+\.sh' "$S"
   [ "$status" -eq 1 ]
@@ -187,7 +195,9 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
   module_apply "$DOTFILES_DIR/$C" >/dev/null
   [ "$(readlink "$HOME/.claude/skills/retro/SKILL.md")" = "$DOTFILES_DIR/$C/home/.claude/skills/retro/SKILL.md" ]
   [ -x "$HOME/.claude/skills/retro/pairs.sh" ]
-  [ -x "$HOME/.claude/skills/retro/context.sh" ]
+  [ -x "$HOME/.claude/skills/retro/chunk.sh" ]
+  [ -x "$HOME/.claude/skills/retro/harness-then.sh" ]
+  [ -x "$HOME/.claude/skills/retro/harness-now.sh" ]
   [ -x "$HOME/.claude/skills/find-past-session/search.sh" ]
   [ "$(readlink "$HOME/.claude/agents/reviewer.md")" = "$DOTFILES_DIR/$C/home/.claude/agents/reviewer.md" ]
   [ "$(readlink "$HOME/.claude/review/run.md")" = "$DOTFILES_DIR/$C/home/.claude/review/run.md" ]
@@ -233,25 +243,25 @@ transcript_line() { # type role ts text
   [ "$output" = "aaa  2026-01-02  grep harbor notes.txt" ]
 }
 
-@test "pairs.sh prints only prompts and assistant text from a fixture transcript" {
+@test "pairs.sh prints prompts and one reply per turn with its tool trail from a fixture transcript" {
   f="$HOME/t.jsonl"
   {
     jq -cn '{type:"user", timestamp:"T1", message:{role:"user", content:"why does the cache miss?"}}'
-    jq -cn '{type:"assistant", timestamp:"T2", message:{role:"assistant", content:[{type:"thinking", thinking:"hmm"},{type:"text", text:"Because the key has the pid."},{type:"tool_use", name:"Bash", input:{command:"ls"}}]}}'
-    jq -cn '{type:"user", timestamp:"T3", message:{role:"user", content:[{type:"tool_result", content:"file list"}]}}'
+    jq -cn '{type:"assistant", timestamp:"T2", message:{role:"assistant", content:[{type:"thinking", thinking:"hmm"},{type:"text", text:"Because the key has the pid."},{type:"tool_use", id:"t1", name:"Bash", input:{command:"ls"}}]}}'
+    jq -cn '{type:"user", timestamp:"T3", message:{role:"user", content:[{type:"tool_result", tool_use_id:"t1", content:"file list"}]}}'
     jq -cn '{type:"user", timestamp:"T4", isMeta:true, message:{role:"user", content:"<local-command-caveat>x"}}'
     jq -cn '{type:"user", timestamp:"T5", isSidechain:true, message:{role:"user", content:"subagent brief"}}'
     jq -cn '{type:"user", timestamp:"T6", message:{role:"user", content:"<task-notification>\n<task-id>1</task-id>"}}'
     jq -cn '{type:"user", timestamp:"T7", isCompactSummary:true, message:{role:"user", content:"This session is being continued"}}'
     jq -cn '{type:"attachment", timestamp:"T8"}'
-    jq -cn '{type:"assistant", timestamp:"T9", message:{role:"assistant", content:[{type:"tool_use", name:"Read", input:{}}]}}'
+    jq -cn '{type:"assistant", timestamp:"T9", message:{role:"assistant", content:[{type:"tool_use", id:"t2", name:"Read", input:{}}]}}'
     jq -cn '{type:"user", timestamp:"T10", message:{role:"user", content:[{type:"text", text:"ok udade"}]}}'
   } >"$f"
   run bash "$S/retro/pairs.sh" "$f"
   [ "$status" -eq 0 ]
-  expected='{"role":"user","ts":"T1","text":"why does the cache miss?"}
-{"role":"assistant","ts":"T2","text":"Because the key has the pid."}
-{"role":"user","ts":"T10","text":"ok udade"}'
+  expected='{"i":0,"role":"user","kind":"prompt","ts":"T1","text":"why does the cache miss?"}
+{"i":1,"role":"assistant","kind":"reply","ts":"T2","text":"Because the key has the pid.","tools":"Bash(ls), Read"}
+{"i":2,"role":"user","kind":"prompt","ts":"T10","text":"ok udade"}'
   [ "$output" = "$expected" ]
 }
 
@@ -266,7 +276,7 @@ transcript_line() { # type role ts text
   touch -t 202602010000 "$d/new.jsonl"
   run bash "$S/retro/pairs.sh"
   [ "$status" -eq 0 ]
-  [ "$output" = '{"role":"user","ts":"T2","text":"new session"}' ]
+  [ "$output" = '{"i":0,"role":"user","kind":"prompt","ts":"T2","text":"new session"}' ]
 }
 
 @test "pairs.sh resolves a session id to its newest transcript across projects" {
@@ -278,33 +288,13 @@ transcript_line() { # type role ts text
   touch -t 202602010000 "$b/s1.jsonl"
   run bash "$S/retro/pairs.sh" s1
   [ "$status" -eq 0 ]
-  [ "$output" = '{"role":"user","ts":"T2","text":"live session"}' ]
+  [ "$output" = '{"i":0,"role":"user","kind":"prompt","ts":"T2","text":"live session"}' ]
 }
 
 @test "pairs.sh fails on an unknown session id" {
   mkdir -p "$HOME/.claude/projects/-a"
   run bash "$S/retro/pairs.sh" nope
   [ "$status" -ne 0 ]
-}
-
-@test "context.sh prints the assistant text around one prompt" {
-  f="$HOME/p.jsonl"
-  {
-    jq -cn '{role:"assistant", ts:"T1", text:"before reply"}'
-    jq -cn '{role:"user", ts:"T2", text:"is this principled?"}'
-    jq -cn '{role:"user", ts:"T3", text:"and generic?"}'
-    jq -cn '{role:"assistant", ts:"T4", text:"after reply"}'
-    jq -cn '{role:"assistant", ts:"T5", text:"later reply"}'
-  } >"$f"
-  run bash "$S/retro/context.sh" "$f" 1
-  [ "$status" -eq 0 ]
-  expected='---- assistant [0] T1
-before reply
----- user [1] T2
-is this principled?
----- assistant [3] T4
-after reply'
-  [ "$output" = "$expected" ]
 }
 
 @test "voice-draft warns about the Slack connector byline" {

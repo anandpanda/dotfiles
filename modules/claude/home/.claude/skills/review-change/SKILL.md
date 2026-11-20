@@ -11,6 +11,7 @@ This is the Check stage of `rules/lifecycle.md`. The engine is `~/.claude/review
 Take what to review from what Anand says in chat; if he has not said, ask.
 - A PR whose author is not Anand: mode `colleague`. Reviewing makes the PR his (`rules/building.md`, Reviews): judge it as code he will answer for.
 - His own work, current branch or uncommitted changes, or a PR he authored: mode `own`.
+- When the change is a stack of PRs, the scope is every PR in it unless he names fewer; state the scope in one line first. Feedback on a PR means its inline comments, review bodies and conversation comments, for every PR in the stack.
 
 ## 2. Triage
 Colleague:
@@ -35,7 +36,13 @@ Start with CI or check status and the goal; say first if a PR is a draft. Then b
 
 Each item is at most three lines: `path:line`, what goes wrong and when, the rule broken, the fix. A question names the one fact that would decide it. Then: existing comments still open (colleague), pre-existing problems, Dropped (`id | verdict | reason`, one line each), Coverage (lenses run, coverage-map gaps, breaker surface maps and areas attacked, files skipped or split, areas not judged, claims probed). Own mode adds the clusters from `findings/clusters.md`: each cause, its findings, and the design-level fix at its owner.
 
-Own mode is the Check loop of `rules/lifecycle.md`: the report is the loop sync. Fix each cluster at the design level, test first; a fix that changes the agreed design, or a workaround, goes to Anand first. Then run another round on the parts and seams still producing real findings, until a round is quiet and every map is complete.
+Own mode is the Check loop, and the report is the loop sync. Repeat until a round finds nothing worth fixing, minor items included:
+1. Split into parts and seams; a reader and a breaker each. Full coverage: every hunk against every lens, every surface on some breaker's map. Neutral prompts: a part or an area and a mindset, never the expected answers.
+2. Refute every finding with a fresh agent; only survivors count.
+3. Cluster survivors by root cause, not by file.
+4. Fix each cluster at the design level, once, at its owner. A guard, flag, special case or second home for one decision is a workaround: fix it properly, or bring it to Anand named as a workaround. A fix that changes the agreed design goes to him first.
+5. Every fix starts as a failing test that reproduces the finding.
+6. Then another round only on the parts and seams still producing real findings. The loop ends when a round is quiet and every map is complete.
 
 ## Learn
 After the PR is up, for each comment a reviewer or bot leaves: say why it escaped and propose the line it suggests for the standard, `lenses.md` or `areas.md`. Add a line only on Anand's go, with the comment as its source.

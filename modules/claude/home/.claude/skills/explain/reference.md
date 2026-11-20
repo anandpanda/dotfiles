@@ -4,7 +4,7 @@
 
 - Explain at the level of ideas: the problem, the concepts, the engineering, the design and how parts connect.
 - No code blocks, no file:line references, no walk through functions. The doc reads without opening the repo.
-- The running example comes from his real system, named in words ("pantheon's sso-required hook").
+- The running example comes from his real system, named in words.
 
 ## Change shape
 

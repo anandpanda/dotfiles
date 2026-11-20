@@ -9,7 +9,7 @@ Each breaker runs the change and attacks it. Reviewers read the change against t
 | Feature off | With the new feature unused or switched off, everything behaves exactly as on the base: same results, no extra calls, no new failure mode | 1 | seam |
 | Work in flight | Old runs, queued messages, cached values and stored data meet the new code; long-running work the change touches, including work it spawned or handed off, at the moment of deploy | 1 | seam |
 | Stored shapes and consumers | Files, records, events and APIs others read or write: old ones still load, new ones still read by existing consumers | 1 | seam |
-| Inputs and sizes | Every entry point with empty, blank, huge, deeply nested, self-referencing, non-finite, duplicated and wrong-typed values; every store and payload with no size bound | 2, 3 | part |
+| Inputs and sizes | Every entry point with empty, blank, huge, deeply nested, self-referencing, non-finite, duplicated and wrong-typed values; every collection or file loaded whole instead of paged or streamed | 2, 3 | part |
 | Sensitive data | Everywhere data comes to rest or leaves: stores, results, messages, logs, errors, job and event histories; secrets nested at any depth, under any name, inside strings | 4 | part |
 | Tenancy and identity | Another tenant's ids, ids from input instead of the authenticated identity, existence leaks, acting as the wrong party | 4 | part |
 | Context across boundaries | Identity and scope carried across every process or service hop: lost (work silently runs unscoped) or leaked (unrelated work picks it up) | 4 | seam |

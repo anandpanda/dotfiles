@@ -1,17 +1,18 @@
 ---
 name: explain
-description: Use when Anand asks to explain, walk through or teach a concept, mechanism, flow, term or error, or a change (a PR, a branch, his local diff, a colleague's commit), or asks how or why something works. Also when he says "check" about comments on an explainer doc.
+description: Use when Anand asks for a doc, write-up or explainer of a concept, mechanism, flow, term or error, or of a change (a PR, a branch, his local diff, a colleague's commit). Also when he says "check" about comments on an explainer doc. A doubt or a how/why question in the conversation is answered in chat, not here.
 ---
 
 # Explain
 
-Every explanation is a Claude Doc built from `reference.md`: the change shape when the subject is a change, the concept shape otherwise. How he learns is in `rules/anand.md`; how he writes is in `rules/writing.md`; the shapes, form rules and grounding are in `reference.md`.
+Every explainer he asks for is a Claude Doc built from `reference.md`: the change shape when the subject is a change, the concept shape otherwise. How he learns is in `rules/anand.md`; how he writes is in `rules/writing.md`; the shapes, form rules and grounding are in `reference.md`.
 
 ## Route the request
 
 | He asks | Output |
 |---|---|
-| Explain or teach a change or a concept | A new Claude Doc, change or concept shape |
+| A doc or explainer of a change or a concept | A new Claude Doc, change or concept shape |
+| A doubt or how/why question in the conversation | A chat answer, plain first, then the depth |
 | A doubt about a point in an existing explainer | His comment thread on that doc, answered after he says "check" |
 | A one-line fact, not an explanation | A sentence in chat |
 

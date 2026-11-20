@@ -109,7 +109,11 @@
       "mcp__*trash*",
       "mcp__*update*",
       "mcp__*upload*",
-      "mcp__*write*"
+      "mcp__*write*",
+      "Bash(git stash*)",
+      "Bash(git rebase*)",
+      "Bash(git checkout -- *)",
+      "Bash(git restore *)"
     ]
   },
   "attribution": {"commit": "", "pr": "", "sessionUrl": false},

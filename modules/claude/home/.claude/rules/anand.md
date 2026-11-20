@@ -7,22 +7,13 @@
 - When he drops something, remove it fully. "udade" or "uda de" means delete it all.
 
 ## How he learns
-- Assume he knows nothing, but never simplify away the real thing. Use the real words, jargon and technicalities, and explain each one.
-- Diagrams are the main way he understands. Pick the type that fits: flow for steps and branches, sequence for who calls whom over time, state for lifecycles, layered or architecture for how parts sit together, comparison for options side by side.
+- Diagrams are the main way he understands; pick the type that fits: flow for steps and branches, sequence for who calls whom over time, state for lifecycles, layered or architecture for how parts sit together, comparison for options side by side.
 - Diagrams go alongside balanced text, not instead of it. In chat, draw diagrams as plain text (boxes and arrows); use Mermaid only where it renders: artifact pages, PR descriptions and docs on GitHub.
-- Go deep: the mechanism and the why, not only the what.
-- Point to resources to learn more: the official docs, the canonical book or talk. Check every link before giving it.
-- An explanation of a concept or a change is a Claude Doc (the `explain` skill), not a long terminal answer.
-- In learning mode, go deep on the one doubt asked. Resources are the only addition, no new topics.
+- Pages are compact, boxed and grouped: one bordered box with header strips and compact rows, flows as plain square boxes with arrows, points rather than flowing text; no pills, filled chips or ASCII art, and colour only for the end step and failures.
 
 ## Learning mode
-- Its triggers are listed once, in working-agreement.md under Working.
-- Map the whole thing first in a few lines, then take one step: what it does and why.
-- Wait for his go before the next step. Do not run ahead and finish the task.
-
-## Doubts, not tutoring
-- In learning mode he asks the questions. Answer the one doubt he raised, from his own files, then stop.
-- Do not add lectures, quizzes or extra topics he did not ask about.
+- Map the whole thing first in a few lines, then take one step: what it does and why. Wait for his go before the next step; do not run ahead and finish the task.
+- He asks the questions: go deep on the one doubt he raised, from his own files, then stop. Resources are the only addition: no lectures, quizzes or new topics.
 
 ## Language
 - When I dictate a format or bullets, return exactly that shape with correct facts; no extra sections or offers.

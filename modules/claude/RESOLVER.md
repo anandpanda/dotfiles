@@ -22,7 +22,7 @@ One home per rule. Every rules file loads every session, so no rule is written t
 | Research and citing sources | `home/.claude/skills/research/SKILL.md`, `home/.claude/agents/researcher.md` |
 | Searching past sessions | `home/.claude/skills/find-past-session/SKILL.md` |
 | Handoff, STATUS | `home/.claude/skills/handoff/SKILL.md` |
-| Improving the harness from a session | `home/.claude/skills/retro/SKILL.md` |
+| Improving the harness from a session | `home/.claude/skills/retro/SKILL.md`, `home/.claude/agents/retro-reader.md`, `home/.claude/skills/retro/ledger.md` |
 | Finding new features and plugins | `home/.claude/skills/scout/SKILL.md` |
-| Subagent standing rules | `home/.claude/agents/reviewer.md`, `home/.claude/agents/researcher.md`, `home/.claude/agents/worker.md` |
+| Subagent standing rules | `home/.claude/agents/reviewer.md`, `home/.claude/agents/researcher.md`, `home/.claude/agents/worker.md`, `home/.claude/agents/retro-reader.md` |
 | How this machine is managed (tools, runtimes, packages) | `home/.claude/rules/machine.md` |

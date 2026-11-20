@@ -12,7 +12,7 @@ One defect often touches several subjects. It belongs to the lens that owns its 
 | Deleted code and its remaining references, deploy order, new code on old data, migrations, backward compatibility, rollback, new dependencies, observability | 1 |
 | Wrong results, bad inputs, business rules, framework and library behaviour, APIs used exist in the pinned version, errors reported truthfully, user-visible behaviour | 2 |
 | Partial failure, atomicity, retries, idempotency, races, async, resources, timeouts, caches, framework runtime rules, cost at scale | 3 |
-| Failure visibility: who learns of each failure, bounded retries, size bounds on inputs and stores | 3 |
+| Failure visibility: who learns of each failure, bounded retries, size limits on untrusted input, data paged or streamed instead of loaded whole | 3 |
 | Authentication, authorization, data scoping, cache keys, trust-boundary input, injection, CSRF, CORS, SSRF, XSS, secrets, sensitive data in logs and errors, CI and infra permissions | 4 |
 | Identity and scope carried across process and service boundaries | 4 |
 | Structure, coupling, layering, one decision in two places, abstraction, indirection, flags, paranoia, hand-rolled code, hidden side effects | 5 |
@@ -43,7 +43,7 @@ Check against `building.md`, Principles, 3. What happens when things fail, run t
 - Identify the framework's runtime rules from the code, not from its name.
 - For cost findings, state the scale at which it hurts.
 - For each failure path, name who learns of it: the caller, the owner of the work, or monitoring. A failure nobody learns of is a finding. A retry with no bound, or a retry of an error that will fail the same way again, is a finding.
-- Every input and every store has a size bound; name the one that does not.
+- Untrusted input has a size limit, and a collection or file loaded whole into memory is a finding; so is a cap that hides or refuses real data.
 
 ## 4. Security
 Check against `building.md`, Principles, 4. Can anyone do or see what they should not?
