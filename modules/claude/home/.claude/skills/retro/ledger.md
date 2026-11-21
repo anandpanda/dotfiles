@@ -87,3 +87,4 @@ Actions: New, Update, Supersede, Split, Delete, Noop. Status: picked, rejected.
 | 2026-11-21 | 7e3de85b | Read branch protection and release flow before a push plan | work rules | Update | rejected |
 | 2026-11-21 | 0e72d5aa, 47363342 | Tools built for a remote workspace never depend on the laptop | rules/anand.md | Update | rejected |
 | 2026-11-21 | 82cfbdd9 | Fill docs with the batch call to dodge per-call permission prompts | skills/explain/SKILL.md | Update | rejected |
+| 2026-11-21 | 541e4493 | Subagents return findings as text and the caller saves them; a harness refusal of report-named files is not worth a rule | rules/working-agreement.md, agents, skills | Update | rejected |
