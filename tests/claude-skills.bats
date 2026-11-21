@@ -189,7 +189,8 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
     grep -qF "Edit nothing and commit nothing until Anand picks" "$f" || { echo "$s may apply"; return 1; }
     grep -qF "researcher" "$f" || { echo "$s has no researcher"; return 1; }
   done
-  for p in "rule add" "permission rule" "skill or agent" "plugin or feature" "pairs.sh"; do
+  for p in "rule add" "permission rule" "skill or agent" "plugin or feature" "pairs.sh" \
+    "## 5. Reconcile" "**one home**" "**unused**" "**split**"; do
     grep -qF "$p" "$S/retro/SKILL.md" || { echo "retro missing: $p"; return 1; }
   done
   for p in "official" "marketplaces" "trending code" "discussion" "practitioners" "30 days" \

@@ -41,7 +41,14 @@ Sessions in, harness proposals out. Edit nothing and commit nothing until Anand 
   4. **plugin or feature**: the `researcher` cites current docs for it, with a checked link and the version it needs, in a findings file in the scratchpad.
 - With several sessions, list a proposal they share once and cite each session.
 - Report what was not read: unreadable lines, unread chunks and tails, moments dropped for a wrong `i` or quote, unversioned files.
-- Then stop. Apply only the numbers he picks, through the dotfiles repo so git carries them to every machine, and add a ledger row for every proposal shown, picked or rejected.
+
+## 5. Reconcile
+Walk today's harness as a whole (`now`, the private work overlay's rules and hooks, and the auto-memory of each project), not through the session's moments, and add what it finds to the numbered proposals, each with its evidence (`path:line`, or a use count from the transcripts):
+- **one home**: a rule, fact or step written in two places (rules, skills, memory, the resolver), or two that contradict each other. Keep one; point to it or delete the rest.
+- **unused**: a skill, agent or plugin with no use in the transcripts of the window, a leftover file or folder, a memory fact that is now a rule.
+- **split**: the public `modules/claude` names no company, product, repo or person; work facts go to the private work overlay, path-scoped where they touch one repo; a durable work fact kept in one workspace's memory moves to the overlay.
+
+Then stop. Apply only the numbers he picks, through the dotfiles repos so git carries them to every machine, and add a ledger row for every proposal shown, picked or rejected.
 
 ## Ledger
 `ledger.md` lives in a public repo. Each row is a generalised learning in project-neutral words: never a quote, name, path or piece of work content.
