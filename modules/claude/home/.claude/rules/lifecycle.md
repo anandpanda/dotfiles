@@ -13,7 +13,7 @@ Set the appetite at Ask: how much the change deserves. A one-file fix runs the s
 6. **Build** (per slice). Tests first, then code, in commits split by kind. Walk the lenses, the break areas and the repo's written rules (`CLAUDE.md` or `AGENTS.md` and the convention and codebase guides they point to) while writing each piece. Keep the repo's own acceptance checks in sync in the same change as the tests, whatever the repo uses to state and check behaviour (acceptance tests, specs, QA claims): add, change or delete them alongside. Linters and types clean.
 7. **Check** (per slice). `/review-change` in own mode: readers and breakers per part and per seam, on the review stack when the repo has one, looping until a round finds nothing worth fixing, minor items included.
 8. **Verify** (per slice). Run the change end to end yourself on the local stack, calling it as its real caller does (the same identity and entry point); never leave him a test you can run. Then the affected checks, then the full test suite once. A check that could not run is reported as not run.
-9. **Ship** (per slice). PR and description per `pr-description`; replies to reviewers drafted per `voice-draft` and posted by Claude once he confirms the draft.
+9. **Ship** (per slice). PR and description per `pr-description`; replies to reviewers per `voice-draft`.
 10. **Learn.** For each comment that still lands: why it escaped and the checklist line it suggests (a lens, an area, a line of the standard). **His go on each line**; the source is the comment.
 
 ## Where he is involved

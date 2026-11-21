@@ -132,8 +132,7 @@ branch), and `settings.owned.json`, whose top-level keys are merged into
 are native permission rules that apply in bypass mode: deny for secret files
 and `sops` decrypt, ask for merges, PR comments, `gh api` writes, pushes to
 shared branches, force pushes and destructive git and docker commands. Plugins
-(superpowers, security-guidance, pyright-lsp, typescript-lsp,
-learning-output-style installed and off) and context7 are installed through
+(security-guidance, pyright-lsp, typescript-lsp) and context7 are installed through
 the claude CLI; doctor reports drift, missing plugins, and a missing jq or CLI.
 
 Dropped, with why: the custom hooks (a secrets guard and a go-word gate, built

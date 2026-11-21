@@ -61,9 +61,9 @@ fi
 while IFS= read -r id; do
   printf '%s\n' "$installed" | grep -qxF "$id" || act "installed plugin $id" claude plugin install "$id" --scope user
 done < <(jq -r '.enabledPlugins | keys[]' "$owned")
-for dup in code-review code-simplifier; do
-  if printf '%s\n' "$installed" | grep -qxF "$dup@$marketplace"; then
-    act "removed plugin $dup@$marketplace" claude plugin uninstall "$dup@$marketplace"
+for dropped in code-review code-simplifier superpowers learning-output-style; do
+  if printf '%s\n' "$installed" | grep -qxF "$dropped@$marketplace"; then
+    act "removed plugin $dropped@$marketplace" claude plugin uninstall "$dropped@$marketplace"
   fi
 done
 if [ "$has_context7" = 0 ]; then

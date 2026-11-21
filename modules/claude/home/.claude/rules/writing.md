@@ -14,7 +14,7 @@
 - Simplify the words, never the substance. Every fact and caveat that matters stays.
 
 ## Text posted for others
-- Short, in his voice, only his points.
-- Name the target of every action and result: repo and branch, environment (local, dev, prod US or EU), and the start point of any time.
+- Short, in his voice, only his points. A ticket is a short problem and at most the one open question to settle first: no proposed solution, agent notes, blocked-by or output lines.
+- Name the target of every action and result: repo and branch, environment (local, dev, or prod and its region), and the start point of any time.
 - PR descriptions follow the `pr-description` skill: what changed, before and after, a diagram, no testing section.
 - No AI attribution anywhere: no `Co-Authored-By` trailer, no "Generated with" footer, in commits, PRs or comments.

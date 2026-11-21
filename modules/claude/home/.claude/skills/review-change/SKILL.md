@@ -44,9 +44,6 @@ Own mode is the Check loop, and the report is the loop sync. Repeat until a roun
 5. Every fix starts as a failing test that reproduces the finding.
 6. Then another round only on the parts and seams still producing real findings. The loop ends when a round is quiet and every map is complete.
 
-## Learn
-After the PR is up, for each comment a reviewer or bot leaves: say why it escaped and propose the line it suggests for the standard, `lenses.md` or `areas.md`. Add a line only on Anand's go, with the comment as its source.
-
 ## 5. Ledger (colleague)
 In `~/personal/reviews/<owner>-<repo>-<n>.md`, with the merge base and head reviewed: `| # | comment (who, path:line) | status | reply |`. Status: proposed (not posted yet), open, agreed, disputed, resolved, dropped. Add every existing comment and every kept finding. The reply column stays empty until Anand decides. When he drops a finding as wrong, add one line to `~/personal/reviews/suppressions.md`: what was flagged and why it was wrong.
 
@@ -61,6 +58,4 @@ Run as in step 3, with these differences:
 - Say in the report what was not re-reviewed.
 
 ## Replies
-- Discuss each comment with him. He decides.
-- Draft the reply in his voice with the `voice-draft` skill.
-- Post a review, comment or reply only through `voice-draft`, once he confirms the draft.
+Replies go through the `voice-draft` skill.

@@ -75,10 +75,10 @@
 - Magic numbers and strings get a name.
 
 ### 8. Tests
-- Tests first: write the failing test, watch it fail for the right reason, then implement. Run only the tests for what changed.
+- Tests first: write the failing test, watch it fail for the right reason, then implement. Run only the tests for what changed. For a batch of mechanical fixes (refactors, renames, moves), implement them all, then run the affected tests once; after fixing failures, rerun only what failed plus what was edited.
 - Each behaviour added or changed has a test that would fail without it, and fails on a no-op implementation.
 - A fake reproduces the real tool's output, captured from a real run. A test's name says what it asserts, and it asserts that.
-- One heavy run at a time (full suite, build, image build); pytest at most -n 4; the full suite runs before the work is handed over. The limit counts heavy processes, not agents.
+- One heavy run at a time (full suite, build, image build); the full suite runs before the work is handed over. The limit counts heavy processes, not agents.
 
 ## Explaining a change
 - Explain each change before or with it: what it does, the alternatives, the tradeoff and why the chosen one wins; never a recap of the diff.
@@ -86,8 +86,8 @@
 
 ## Reviews
 - Reviewing makes the PR his own: judge it as code he will answer for.
-- Fix every review nit on his own work in the current round, or write it into the task that will touch that code. Never leave one as optional.
-- Discuss each comment or reply with him; he decides what it says, and it is worded in his language through `voice-draft`. Claude posts it once he confirms the draft.
+- Fix every review nit on his own work in the current round, or write it into the task that will touch that code. Never leave one as optional. Show each fix (problem, fix, alternatives) and get his yes before committing it; implementer agents leave changes uncommitted.
+- Review comments and replies go through `voice-draft`, which owns how they are agreed, worded and posted.
 
 ## Scope of change
 - One PR per slice (`rules/lifecycle.md`, Slice); a fix to work already in a PR goes in that PR by default.

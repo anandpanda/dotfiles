@@ -47,9 +47,11 @@ teardown() { teardown_home; }
   for p in "literal question" "UNVERIFIED" "stands because" "not a go" "small reversible" \
     "No comments in code" "AI slop" "Do not overcorrect" "outrank plugin skills" \
     "senior principal engineer" "the tradeoff and why" "No paranoia" "Planning is mandatory" \
-    "Claude posts it once he confirms the draft" "Assume I know nothing" "pick the type that fits" \
+    "go through \`voice-draft\`" "Assume I know nothing" "pick the type that fits" \
     "resources to learn more" "small reversible steps inside an agreed plan need no new plan" \
-    "every fix names its cause and owner" "watch it with Monitor" "the permission prompt is my go"; do
+    "every fix names its cause and owner" "watch it with Monitor" "the permission prompt is my go" \
+    "rerun only what failed plus what was edited" "answer only the item I raised" "get his yes before committing it" \
+    "in IST (UTC+5:30)" "at most the one open question"; do
     grep -qF "$p" "$f" || { echo "missing: $p"; return 1; }
   done
 }
@@ -252,7 +254,9 @@ OWNED="$BATS_TEST_DIRNAME/../modules/claude/settings.owned.json"
   f="$DOTFILES_DIR/$C/home/.claude/rules/building.md"
   grep -qF 'watch it fail' "$f"
   grep -qF 'only the tests for what changed' "$f"
-  grep -qF 'One heavy run at a time (full suite, build, image build); pytest at most -n 4; the full suite runs before the work is handed over.' "$f"
+  grep -qF 'One heavy run at a time (full suite, build, image build); the full suite runs before the work is handed over.' "$f"
+  run grep -F -- '-n 4' "$f"
+  [ "$status" -eq 1 ] || false
 }
 
 @test "resolver names the owner of guard rails, plugins and statusline" {
@@ -392,11 +396,11 @@ frag_tree() {
 plugins() { jq -r '.enabledPlugins | keys[]' "$OWNED"; }
 
 @test "owned file enables the agreed plugins and sets the review model" {
-  run jq -e '.enabledPlugins["superpowers@claude-plugins-official"]==true
+  run jq -e '(.enabledPlugins|has("superpowers@claude-plugins-official")|not)
     and .enabledPlugins["security-guidance@claude-plugins-official"]==true
     and .enabledPlugins["pyright-lsp@claude-plugins-official"]==true
     and .enabledPlugins["typescript-lsp@claude-plugins-official"]==true
-    and .enabledPlugins["learning-output-style@claude-plugins-official"]==false
+    and (.enabledPlugins|has("learning-output-style@claude-plugins-official")|not)
     and (.enabledPlugins|has("code-review@claude-plugins-official")|not)
     and (.enabledPlugins|has("code-simplifier@claude-plugins-official")|not)
     and .env.SECURITY_REVIEW_MODEL=="claude-sonnet-5-5"' "$OWNED"
@@ -407,20 +411,13 @@ plugins() { jq -r '.enabledPlugins | keys[]' "$OWNED"; }
   for t in jq pyright typescript-language-server; do grep -q "^brew \"$t\"" "$DOTFILES_DIR/$C/Brewfile"; done
 }
 
-@test "installs every listed plugin once, the disabled one included" {
+@test "installs every listed plugin once" {
   run bash "$DOTFILES_DIR/$C/install.sh"
   [ "$status" -eq 0 ]
   while IFS= read -r id; do
     [ "$(grep -cxF "plugin install $id --scope user" "$HOME/fake/calls")" -eq 1 ] || { echo "not once: $id"; return 1; }
   done < <(plugins)
-  grep -qxF "plugin install learning-output-style@claude-plugins-official --scope user" "$HOME/fake/calls"
   grep -qxF "plugin marketplace add anthropics/claude-plugins-official" "$HOME/fake/calls"
-}
-
-@test "a plugin installed but owned as off stays off in settings" {
-  run bash "$DOTFILES_DIR/$C/install.sh"
-  [ "$status" -eq 0 ]
-  jq -e '.enabledPlugins["learning-output-style@claude-plugins-official"]==false' "$HOME/.claude/settings.json"
 }
 
 @test "second run calls nothing" {
@@ -431,11 +428,13 @@ plugins() { jq -r '.enabledPlugins | keys[]' "$OWNED"; }
   ! grep -qE "install|uninstall|marketplace add|mcp add" "$HOME/fake/calls"
 }
 
-@test "removes the duplicated review plugins" {
-  printf '%s\n' code-review@claude-plugins-official code-simplifier@claude-plugins-official >"$HOME/fake/plugins"
+@test "removes the dropped plugins" {
+  dropped="code-review code-simplifier superpowers learning-output-style"
+  for p in $dropped; do echo "$p@claude-plugins-official"; done >"$HOME/fake/plugins"
   run bash "$DOTFILES_DIR/$C/install.sh"
-  grep -qxF "plugin uninstall code-review@claude-plugins-official" "$HOME/fake/calls"
-  grep -qxF "plugin uninstall code-simplifier@claude-plugins-official" "$HOME/fake/calls"
+  for p in $dropped; do
+    grep -qxF "plugin uninstall $p@claude-plugins-official" "$HOME/fake/calls" || { echo "kept: $p"; return 1; }
+  done
 }
 
 @test "adds context7 once" {
@@ -458,7 +457,7 @@ plugins() { jq -r '.enabledPlugins | keys[]' "$OWNED"; }
   run env PATH="$HOME/fakebin:$(dirname "$(command -v jq)"):/usr/bin:/bin" bash "$DOTFILES_DIR/$C/install.sh"
   [ "$status" -eq 0 ]
   [[ "$output" == *"failed: curl -fsSL https://claude.ai/install.sh | bash"* ]]
-  [[ "$output" == *"run: claude plugin install superpowers@claude-plugins-official --scope user"* ]]
+  [[ "$output" == *"run: claude plugin install security-guidance@claude-plugins-official --scope user"* ]]
   [[ "$output" == *"run: claude mcp add --scope user --transport http context7"* ]]
   jq -e '.attribution=={"commit":"","pr":"","sessionUrl":false}' "$HOME/.claude/settings.json"
 }
@@ -486,7 +485,7 @@ FAKE
   [ "$(grep -c ran "$HOME/fake/installer")" -eq 1 ]
   grep -qxF -- "-fsSL https://claude.ai/install.sh" "$HOME/fake/curl"
   [ -x "$HOME/.local/bin/claude" ]
-  grep -qxF "plugin install superpowers@claude-plugins-official --scope user" "$HOME/fake/calls"
+  grep -qxF "plugin install security-guidance@claude-plugins-official --scope user" "$HOME/fake/calls"
   [[ "$output" != *"run: claude"* ]]
 }
 
@@ -496,7 +495,7 @@ FAKE
   run env PATH="$NOCLAUDE_PATH" bash "$DOTFILES_DIR/$C/install.sh"
   [ "$status" -eq 0 ]
   [ ! -e "$HOME/fake/installer" ]
-  grep -qxF "plugin install superpowers@claude-plugins-official --scope user" "$HOME/fake/calls"
+  grep -qxF "plugin install security-guidance@claude-plugins-official --scope user" "$HOME/fake/calls"
   bash "$DOTFILES_DIR/$C/install.sh" >/dev/null
   [ ! -e "$HOME/fake/installer" ]
 }
@@ -514,7 +513,7 @@ FAKE
   claude_settings_merge "$OWNED" "$HOME/.claude/settings.json" >/dev/null
   run bash "$DOTFILES_DIR/$C/doctor.sh"
   [ "$status" -ne 0 ]
-  [[ "$output" == *"plugin not installed: superpowers@claude-plugins-official"* ]]
+  [[ "$output" == *"plugin not installed: security-guidance@claude-plugins-official"* ]]
 }
 
 @test "doctor fails when the claude CLI is missing" {
@@ -635,10 +634,11 @@ sl() { printf '{"model":{"display_name":"Opus"},"context_window":{"used_percenta
   grep -qF "report or plan step" "$f"
 }
 
-@test "Claude posts review comments and replies once he confirms the draft" {
-  grep -qF "Claude posts it once he confirms the draft" "$DOTFILES_DIR/$C/home/.claude/rules/building.md"
-  grep -qF "posted by Claude once he confirms the draft" "$DOTFILES_DIR/$C/home/.claude/rules/lifecycle.md"
-  run grep -F "He posts it" "$DOTFILES_DIR/$C/home/.claude/rules/building.md"
+@test "review comments and replies have one home, voice-draft" {
+  grep -qF "go through \`voice-draft\`" "$DOTFILES_DIR/$C/home/.claude/rules/building.md"
+  grep -qF "replies to reviewers per \`voice-draft\`." "$DOTFILES_DIR/$C/home/.claude/rules/lifecycle.md"
+  grep -qF "Post only once he confirms the draft" "$DOTFILES_DIR/$C/home/.claude/skills/voice-draft/SKILL.md"
+  run grep -rF "once he confirms the draft" "$DOTFILES_DIR/$C/home/.claude/rules"
   [ "$status" -eq 1 ] || false
 }
 
@@ -647,4 +647,11 @@ sl() { printf '{"model":{"display_name":"Opus"},"context_window":{"used_percenta
   grep -qF "Settle it before you state it" "$f"
   grep -qF "a name in a code snippet" "$f"
   grep -qF "is a report, not the thing" "$f"
+}
+
+@test "writing names the environment without one employer's regions" {
+  f="$DOTFILES_DIR/$C/home/.claude/rules/writing.md"
+  grep -qF "environment (local, dev, or prod and its region)" "$f"
+  run grep -F "US or EU" "$f"
+  [ "$status" -eq 1 ] || false
 }

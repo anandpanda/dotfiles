@@ -1,7 +1,7 @@
 load helper
 C="modules/claude"
-SKILLS="explain grill pr-description voice-draft review-change research find-past-session handoff retro scout"
-USER_ONLY="review-change handoff retro scout"
+SKILLS="explain grill pr-description voice-draft review-change research find-past-session retro scout"
+USER_ONLY="review-change retro scout"
 setup() {
   setup_home
   S="$DOTFILES_DIR/$C/home/.claude/skills"
@@ -19,7 +19,7 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
     [ "$(field "$f" name)" = "$s" ] || { echo "bad name: $s"; return 1; }
     [ -n "$(field "$f" description)" ] || { echo "no description: $s"; return 1; }
   done
-  [ "$(find "$S" -name SKILL.md | wc -l | tr -d ' ')" -eq 10 ]
+  [ "$(find "$S" -name SKILL.md | wc -l | tr -d ' ')" -eq 9 ]
 }
 
 @test "side-effect skills disable model invocation" {
@@ -140,9 +140,29 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
   R="$DOTFILES_DIR/$C/home/.claude/review"
   grep -qF "refute.md" "$R/run.md"
   grep -qF "needs a line you read" "$R/lenses.md"
-  for p in "Ledger" "voice-draft" "once he confirms the draft"; do
+  for p in "Ledger" "Replies go through the \`voice-draft\` skill"; do
     grep -qF "$p" "$f" || { echo "missing: $p"; return 1; }
   done
+  run grep -F "once he confirms the draft" "$f"
+  [ "$status" -eq 1 ] || false
+}
+
+@test "review-change leaves Learn to the lifecycle" {
+  run grep -qx "## Learn" "$S/review-change/SKILL.md"
+  [ "$status" -eq 1 ] || false
+  grep -qF "**Learn.**" "$DOTFILES_DIR/$C/home/.claude/rules/lifecycle.md"
+}
+
+@test "handoff is gone with its resolver row" {
+  [ ! -e "$S/handoff" ]
+  run grep -F "handoff" "$DOTFILES_DIR/$C/RESOLVER.md"
+  [ "$status" -eq 1 ] || false
+}
+
+@test "grill names its own triggers and wins over other grill skills" {
+  d="$(field "$S/grill/SKILL.md" description)"
+  [[ "$d" == *'"grill me"'* ]] || false
+  [[ "$d" == *"over any other grill skill"* ]] || false
 }
 
 @test "review-change reviews his own work with the tests lens and the anti-cheat contract" {

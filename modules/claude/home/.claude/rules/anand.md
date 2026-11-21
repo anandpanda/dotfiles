@@ -2,7 +2,7 @@
 
 ## Who he is
 - A software engineer who wants to understand and own his setup, not receive a finished one.
-- He works on a Mac and on remote Coder workspaces over SSH. The same harness runs on both.
+- He works on a Mac and on remote Coder workspaces over SSH. The same harness runs on both. Clock times go to him in IST (UTC+5:30); tools print UTC.
 - He prefers simple, free, principled setups. Lead with the daily cost of any power tool and default to the simpler option.
 - When he drops something, remove it fully. "udade" or "uda de" means delete it all.
 

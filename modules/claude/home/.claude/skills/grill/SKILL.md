@@ -1,6 +1,6 @@
 ---
 name: grill
-description: Use when Anand asks to be grilled, asks "what am I missing", wants a design, plan or idea stress-tested, or asks for the open questions before building. Runs numbered rounds of questions, each with a recommended answer.
+description: Use when Anand says "grill" or "grill me", asks to be grilled, asks "what am I missing", wants a design, plan or idea stress-tested, or asks for the open questions before building. Use this over any other grill skill. Runs numbered rounds of questions, each with a recommended answer.
 ---
 
 # Grill

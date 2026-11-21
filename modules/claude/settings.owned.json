@@ -126,11 +126,9 @@
     }
   },
   "enabledPlugins": {
-    "superpowers@claude-plugins-official": true,
     "security-guidance@claude-plugins-official": true,
     "pyright-lsp@claude-plugins-official": true,
-    "typescript-lsp@claude-plugins-official": true,
-    "learning-output-style@claude-plugins-official": false
+    "typescript-lsp@claude-plugins-official": true
   },
   "env": {
     "SECURITY_REVIEW_MODEL": "claude-sonnet-5-5"
