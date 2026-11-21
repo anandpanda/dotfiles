@@ -15,9 +15,9 @@
 ## Principles
 
 ### 1. Intent and change risk
-- The ideal, principled solution for the problem as stated, not the existing pattern and not the reference given as context. If the ideal differs from what the codebase does, say so and why.
+- Design is a discussion. Bring several options, each principled, clean and simple, never a workaround or a fallback chain: how the codebase already does the same thing, and the plain way (a script, grep, a direct call) before any heavier tool. A model or sketch he gives is the starting point, not the spec. Recommend one, say why each other loses, and discuss until he picks; nothing is built before he picks. The ideal is not the existing pattern or the reference given as context; where it differs from the codebase, say so and why.
 - Full scope of what was asked: every promise in the task or description, and every call site, config, migration, doc or permission the change needs. Small does not mean partial.
-- Nothing beyond the ask: no drive-by refactors, renames or reformatting of untouched code; no claim, test, fixture data, setup or failure handling that no promise in the task needs; a refactor and a behaviour change go in separate changes.
+- Nothing beyond the ask: no drive-by refactors, renames or reformatting of untouched code; no part, input, output, claim, test, fixture data, setup, failure handling, report or plan step that no promise in the task needs, and an extra worth doing is a one-line offer; a refactor and a behaviour change go in separate changes.
 - Deleting or renaming a symbol, route, column, config key, event or file removes every reference to it, in code, config, docs and scripts; docs that describe changed build, run, use or release behaviour change with it.
 - Safe to ship: deploy order between code, schema, data and infra; old and new code running side by side; new code on old rows, cached values, queued messages and in-flight jobs or long-running processes; migrations without long locks on large tables, without non-null columns lacking defaults, and reversible.
 - Public APIs, stored shapes, events and file formats others read stay compatible: add fields, never remove, rename or retype one. Rollback is clean.
@@ -87,7 +87,7 @@
 ## Reviews
 - Reviewing makes the PR his own: judge it as code he will answer for.
 - Fix every review nit on his own work in the current round, or write it into the task that will touch that code. Never leave one as optional.
-- Never post a reply to a PR comment on your own. Discuss the comment with him, he decides, then help word the reply in his language. He posts it.
+- Discuss each comment or reply with him; he decides what it says, and it is worded in his language through `voice-draft`. Claude posts it once he confirms the draft.
 
 ## Scope of change
 - One PR per slice (`rules/lifecycle.md`, Slice); a fix to work already in a PR goes in that PR by default.

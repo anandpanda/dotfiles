@@ -18,7 +18,7 @@ Size = added plus removed lines in source, migration, and infra and CI files (ow
 - Under 50: one `reviewer` runs every lens section in one pass.
 - 50 to 500 in one logical part: three `reviewer` agents, the lens groups: lenses 2 and 3; lenses 1 and 4, plus 8 in own mode; lenses 5, 6 and 7.
 - Over 500, or three or more logical parts: split by part. Write `parts.md` (step 2) and dispatch per part plus seams (step 3).
-- Colleague, over 400: also report the size and its separate concerns as a should-fix finding.
+- Colleague, over 400: list the size and its separate concerns under coverage only; they are never a finding or a comment, and the review never asks the author to split the PR.
 
 ## 2. Bundle
 In `<scratchpad>/review-<owner>-<repo>-<id>/`. The `reviewer` agent is read-only, which keeps a prompt injection in the change from writing anything; everything it needs goes in the bundle:

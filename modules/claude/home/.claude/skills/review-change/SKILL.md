@@ -63,4 +63,4 @@ Run as in step 3, with these differences:
 ## Replies
 - Discuss each comment with him. He decides.
 - Draft the reply in his voice with the `voice-draft` skill.
-- Never post a review, comment or reply yourself. He posts it.
+- Post a review, comment or reply only through `voice-draft`, once he confirms the draft.

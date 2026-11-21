@@ -97,9 +97,18 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
   [ "$status" -eq 1 ]
 }
 
-@test "voice-draft is model-invocable and sends only on his explicit go" {
+@test "voice-draft is model-invocable and posts only once he confirms the draft" {
   [ -z "$(field "$S/voice-draft/SKILL.md" disable-model-invocation)" ]
-  grep -qF "explicit go" "$S/voice-draft/SKILL.md"
+  grep -qF "Post only once he confirms the draft" "$S/voice-draft/SKILL.md"
+  run grep -F "he posts it himself" "$S/voice-draft/SKILL.md"
+  [ "$status" -eq 1 ] || false
+}
+
+@test "voice-draft asks with should we, one problem and one ask per review comment" {
+  f="$S/voice-draft/SKILL.md"
+  grep -qF '"should we X?"' "$f"
+  grep -qF 'never "can we X?"' "$f"
+  grep -qF "one problem and one ask" "$f"
 }
 
 @test "the review engine hands the reviewer a diff from the merge base" {
@@ -131,7 +140,7 @@ field() { front "$1" | sed -n "s/^$2: //p"; }
   R="$DOTFILES_DIR/$C/home/.claude/review"
   grep -qF "refute.md" "$R/run.md"
   grep -qF "needs a line you read" "$R/lenses.md"
-  for p in "Ledger" "voice-draft" "Never post"; do
+  for p in "Ledger" "voice-draft" "once he confirms the draft"; do
     grep -qF "$p" "$f" || { echo "missing: $p"; return 1; }
   done
 }
@@ -295,6 +304,12 @@ transcript_line() { # type role ts text
   mkdir -p "$HOME/.claude/projects/-a"
   run bash "$S/retro/pairs.sh" nope
   [ "$status" -ne 0 ]
+}
+
+@test "a colleague review never asks the author to split the PR" {
+  grep -qF "never asks the author to split the PR" "$DOTFILES_DIR/$C/home/.claude/review/run.md"
+  run grep -F "as a should-fix finding" "$DOTFILES_DIR/$C/home/.claude/review/run.md"
+  [ "$status" -eq 1 ] || false
 }
 
 @test "voice-draft warns about the Slack connector byline" {

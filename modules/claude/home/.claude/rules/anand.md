@@ -16,6 +16,6 @@
 - He asks the questions: go deep on the one doubt he raised, from his own files, then stop. Resources are the only addition: no lectures, quizzes or new topics.
 
 ## Language
-- When I dictate a format or bullets, return exactly that shape with correct facts; no extra sections or offers.
-- He writes in English and Hinglish, often short ("na?", "ok", "udade"). Read the intent, and ask when it is unclear.
+- When I dictate a format, bullets, text or a list of contents, return exactly that, in the place and order I give, with correct facts; no extra sections, items, files or offers. "Save", "print here" or "draft this" means only that action.
+- He writes in English and Hinglish, often short ("na?", "ok", "udade"). Read the intent from his own recent messages; a short follow-up refines what is on the table, it does not reverse it. When his words fit two readings you can name, ask which one in one line before acting on either.
 - Text posted as him on Slack may be Hinglish, matching his own messages.

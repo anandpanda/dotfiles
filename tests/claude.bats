@@ -47,7 +47,7 @@ teardown() { teardown_home; }
   for p in "literal question" "UNVERIFIED" "stands because" "not a go" "small reversible" \
     "No comments in code" "AI slop" "Do not overcorrect" "outrank plugin skills" \
     "senior principal engineer" "the tradeoff and why" "No paranoia" "Planning is mandatory" \
-    "Never post a reply to a PR comment" "Assume I know nothing" "pick the type that fits" \
+    "Claude posts it once he confirms the draft" "Assume I know nothing" "pick the type that fits" \
     "resources to learn more" "small reversible steps inside an agreed plan need no new plan" \
     "every fix names its cause and owner" "watch it with Monitor" "the permission prompt is my go"; do
     grep -qF "$p" "$f" || { echo "missing: $p"; return 1; }
@@ -593,7 +593,7 @@ sl() { printf '{"model":{"display_name":"Opus"},"context_window":{"used_percenta
 }
 
 @test "dictated formats are returned exactly" {
-  grep -qF "When I dictate a format or bullets, return exactly that shape" "$DOTFILES_DIR/$C/home/.claude/rules/anand.md"
+  grep -qF "When I dictate a format, bullets, text or a list of contents, return exactly that" "$DOTFILES_DIR/$C/home/.claude/rules/anand.md"
 }
 
 @test "machine rules say how to list and use secrets" {
@@ -611,4 +611,40 @@ sl() { printf '{"model":{"display_name":"Opus"},"context_window":{"used_percenta
   grep -qF '|| false' "$f"
   grep -qF 'bash 3.2' "$f"
   grep -qF 'no other tool writes' "$f"
+}
+
+@test "scope is exact both ways and a short message with two readings is asked about" {
+  grep -qF "A narrower one is not yours to pick" "$DOTFILES_DIR/$C/home/.claude/rules/working-agreement.md"
+  grep -qF "an extra step I did not ask for" "$DOTFILES_DIR/$C/home/.claude/rules/working-agreement.md"
+  grep -qF "ask which one in one line" "$DOTFILES_DIR/$C/home/.claude/rules/anand.md"
+}
+
+@test "answers carry one real case, terms defined each time, and the draft itself in chat" {
+  f="$DOTFILES_DIR/$C/home/.claude/rules/working-agreement.md"
+  grep -qF "with its actual values" "$f"
+  grep -qF "in every reply that uses it" "$f"
+  grep -qF "never only behind a link or a file" "$f"
+  grep -qF "full absolute path" "$f"
+}
+
+@test "design is a discussion of principled options before anything is built" {
+  f="$DOTFILES_DIR/$C/home/.claude/rules/building.md"
+  grep -qF "Design is a discussion" "$f"
+  grep -qF "the starting point, not the spec" "$f"
+  grep -qF "nothing is built before he picks" "$f"
+  grep -qF "report or plan step" "$f"
+}
+
+@test "Claude posts review comments and replies once he confirms the draft" {
+  grep -qF "Claude posts it once he confirms the draft" "$DOTFILES_DIR/$C/home/.claude/rules/building.md"
+  grep -qF "posted by Claude once he confirms the draft" "$DOTFILES_DIR/$C/home/.claude/rules/lifecycle.md"
+  run grep -F "He posts it" "$DOTFILES_DIR/$C/home/.claude/rules/building.md"
+  [ "$status" -eq 1 ] || false
+}
+
+@test "reasons, snippets, commands and reports are claims to settle" {
+  f="$DOTFILES_DIR/$C/home/.claude/rules/evidence.md"
+  grep -qF "Settle it before you state it" "$f"
+  grep -qF "a name in a code snippet" "$f"
+  grep -qF "is a report, not the thing" "$f"
 }

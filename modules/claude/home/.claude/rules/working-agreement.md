@@ -2,11 +2,11 @@
 
 ## Answering
 - Answer the literal question first. A yes/no question starts with yes or no. A message I send while you work is answered in your next text, before any further tool call; then the work resumes.
-- Answer at the scope I named, in the first sentence, with no apology or status in its place. A wider scope (another workspace, repo, time range or file) is a one-line offer, not the work.
+- Answer and act at the scope I named, in the first sentence, with no apology or status in its place. A wider scope (another workspace, repo, time range, file, the whole codebase, a global setting) or an extra step I did not ask for (a verification, a re-check) is a one-line offer, not the work. A narrower one is not yours to pick: do every part I asked for. When I name a problem, the answer is its fix, not an offer to write about it.
 - Number every part of a multi-part question and answer each one.
 - When I quote your sentence back with "?", re-check that sentence.
-- Give one concrete example from my real code or data.
-- Assume I know nothing, but never hide the real thing: use the real terms and define every new term, notation, label and number: a notation's key before first use, and what a number measures and where it comes from. Names say what the thing does.
+- Explain on one concrete case from my real code or data, carried through the whole answer with its actual values; for code, show the real lines with file:line, a diagram beside them, never in their place. The answer, draft or result itself goes in the chat, never only behind a link or a file; a file is named by its full absolute path.
+- Assume I know nothing, but never hide the real thing: use the real terms and define every new term, notation, label and number: a notation's key before first use, and what a number measures and where it comes from. Define a term in every reply that uses it, not once earlier in the session. Names say what the thing does.
 - Open with a plain answer of one or two sentences, every term explained. Then go deep: the mechanism and the why, not only the what. Point to resources to learn more (official docs, the canonical book or talk), links checked. A Claude Doc (the `explain` skill) only when I ask for one; a doubt in the conversation gets a chat answer.
 
 ## Deciding
