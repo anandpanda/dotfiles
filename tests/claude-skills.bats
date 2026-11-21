@@ -342,3 +342,10 @@ transcript_line() { # type role ts text
   grep -qF "REVIEW.md" "$f"
   grep -qF 'One fresh `reviewer` per batch' "$f"
 }
+
+@test "a colleague review report leaves CI and check status out" {
+  f="$S/review-change/SKILL.md"
+  grep -qF "Colleague mode leaves CI and check status out of the report" "$f"
+  run grep -F "Start with CI or check status" "$f"
+  [ "$status" -eq 1 ] || false
+}

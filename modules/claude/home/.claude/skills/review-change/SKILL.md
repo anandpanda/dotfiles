@@ -24,7 +24,7 @@ Own:
 - The goal is the task and its acceptance criteria from this session, or the PR description.
 - `checks.md`: run the tests for what changed and the linter first, and record the results.
 
-Both: classify each file: source; migration; infra and CI (CI workflows, IaC, container and deploy manifests, access policies); test or `qa/`; docs and config; manifest or lockfile; generated; vendored; snapshot; binary. If nothing reviewable remains, report CI and coverage and stop.
+Both: classify each file: source; migration; infra and CI (CI workflows, IaC, container and deploy manifests, access policies); test or `qa/`; docs and config; manifest or lockfile; generated; vendored; snapshot; binary. If nothing reviewable remains, report coverage (own mode: and check status) and stop.
 
 ## 3. Run
 Follow `~/.claude/review/run.md` with the mode, base and head above. Colleague: conventions come from `baseRefOid`, `comments.md` holds the existing review threads with resolved state and the author's replies, and `checks.md` holds CI on head.
@@ -32,7 +32,7 @@ Follow `~/.claude/review/run.md` with the mode, base and head above. Colleague: 
 Find the review stack from the repo's own docs (`run.md`) and bring it up on head the way they say; breakers start once the change runs there. With no stack named, say so in the report: readers stay read-only and breakers run what they can in-process.
 
 ## 4. Report
-Start with CI or check status and the goal; say first if a PR is a draft. Then blocking, should fix, questions, with severity as defined in `~/.claude/review/lenses.md`, Shared contract, each section ordered by harm, worst first: security, then data, then users, then code health. No praise.
+Start with the goal; own mode first gives check status. Colleague mode leaves CI and check status out of the report; say first if a PR is a draft. Then blocking, should fix, questions, with severity as defined in `~/.claude/review/lenses.md`, Shared contract, each section ordered by harm, worst first: security, then data, then users, then code health. No praise.
 
 Each item is at most three lines: `path:line`, what goes wrong and when, the rule broken, the fix. A question names the one fact that would decide it. Then: existing comments still open (colleague), pre-existing problems, Dropped (`id | verdict | reason`, one line each), Coverage (lenses run, coverage-map gaps, breaker surface maps and areas attacked, files skipped or split, areas not judged, claims probed). Own mode adds the clusters from `findings/clusters.md`: each cause, its findings, and the design-level fix at its owner.
 
